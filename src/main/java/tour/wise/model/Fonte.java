@@ -7,19 +7,19 @@ public class Fonte {
     private String titulo_fonte;
     private String edicao;
     private String orgao_emissor;
-    private String url;
+    private String url_origem;
     private LocalDate data_coleta;
     private String observacoes;
 
     public Fonte() {
     }
 
-    public Fonte(Integer id_edicao, String titulo_fonte, String edicao, String orgao_emissor, String url, LocalDate data_coleta, String observacoes) {
+    public Fonte(Integer id_edicao, String titulo_fonte, String edicao, String orgao_emissor, String url_origem, LocalDate data_coleta, String observacoes) {
         this.id_edicao = id_edicao;
         this.titulo_fonte = titulo_fonte;
         this.edicao = edicao;
         this.orgao_emissor = orgao_emissor;
-        this.url = url;
+        this.url_origem = url_origem;
         this.data_coleta = data_coleta;
         this.observacoes = observacoes;
     }
@@ -56,12 +56,12 @@ public class Fonte {
         this.orgao_emissor = orgao_emissor;
     }
 
-    public String getUrl() {
-        return url;
+    public String getUrlOrigem() {
+        return url_origem;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void getUrlOrigem(String url_origem) {
+        this.url_origem = url_origem;
     }
 
     public LocalDate getData_coleta() {
@@ -87,7 +87,7 @@ public class Fonte {
                 ", titulo_fonte='" + titulo_fonte + '\'' +
                 ", edicao='" + edicao + '\'' +
                 ", orgao_emissor='" + orgao_emissor + '\'' +
-                ", url='" + url + '\'' +
+                ", url='" + url_origem + '\'' +
                 ", data_coleta=" + data_coleta +
                 ", observacoes='" + observacoes + '\'' +
                 '}';

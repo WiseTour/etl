@@ -5,21 +5,14 @@ import java.util.List;
 public class Pais {
     private Integer id_pais;
     private String pais;
-    private String continente;
-    private List<Idioma> idiomas;
+
 
     public Pais() {
     }
 
-    public Pais(String pais) {
-        this.pais = pais;
-    }
-
-    public Pais(Integer id_pais, String pais, String continente, List<Idioma> idiomas) {
+    public Pais(Integer id_pais, String pais) {
         this.id_pais = id_pais;
         this.pais = pais;
-        this.continente = continente;
-        this.idiomas = idiomas;
     }
 
     public Integer getId_pais() {
@@ -38,29 +31,11 @@ public class Pais {
         this.pais = pais;
     }
 
-    public String getContinente() {
-        return continente;
-    }
-
-    public void setContinente(String continente) {
-        this.continente = continente;
-    }
-
-    public List<Idioma> getIdiomas() {
-        return idiomas;
-    }
-
-    public void setIdiomas(List<Idioma> idiomas) {
-        this.idiomas = idiomas;
-    }
-
     @Override
     public String toString() {
         return "Pais{" +
                 "id_pais=" + id_pais +
                 ", pais='" + pais + '\'' +
-                ", continente='" + continente + '\'' +
-                ", idiomas=" + idiomas +
                 '}';
     }
 }

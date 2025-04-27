@@ -3,7 +3,7 @@ package tour.wise.model;
 public class Unidade_Federativa_Brasil{
    private String sigla;
    private String unidade_federativa;
-   private String regiao_brasil;
+   private String regiao;
 
     public Unidade_Federativa_Brasil() {
     }
@@ -12,10 +12,10 @@ public class Unidade_Federativa_Brasil{
         this.unidade_federativa = unidade_federativa;
     }
 
-    public Unidade_Federativa_Brasil(String sigla, String unidade_federativa, String regiao_brasil) {
+    public Unidade_Federativa_Brasil(String sigla, String unidade_federativa, String regiao) {
         this.sigla = sigla;
         this.unidade_federativa = unidade_federativa;
-        this.regiao_brasil = regiao_brasil;
+        this.regiao = regiao;
     }
 
     public String getSigla() {
@@ -34,8 +34,12 @@ public class Unidade_Federativa_Brasil{
         this.unidade_federativa = unidade_federativa;
     }
 
-    public String getRegiao_brasil() {
-        return regiao_brasil;
+    public String getRegiao() {
+        return regiao;
+    }
+
+    public void setRegiao(String regiao) {
+        this.regiao = regiao;
     }
 
     @Override
@@ -43,13 +47,10 @@ public class Unidade_Federativa_Brasil{
         return "Unidade_Federativa_Brasil{" +
                 "sigla='" + sigla + '\'' +
                 ", unidade_federativa='" + unidade_federativa + '\'' +
-                ", regiao_brasil='" + regiao_brasil + '\'' +
+                ", regiao_brasil='" + regiao + '\'' +
                 '}';
     }
 
-    public void setRegiao_brasil(String regiao_brasil) {
-        this.regiao_brasil = regiao_brasil;
-    }
 }
 
 

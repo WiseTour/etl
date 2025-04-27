@@ -1,52 +1,37 @@
 package tour.wise.model;
 
 public class Chegada_Turistas_Internacionais_Brasil_Mensal {
-    private Unidade_Federativa_Brasil destino;
-    private Pais pais_origem;
-    private String via_acesso;
+    private Integer id_chegada_turistas_internacionais_brasil_mensal;
     private Integer mes;
     private Integer ano;
     private Integer chegadas;
-    private String fonte;
-    private String edicao;
+    private String via_acesso;
+    private String fk_uf_destino;
+    private Integer fk_fonte_dados;
+    private Integer fk_pais_origem;
 
 
     public Chegada_Turistas_Internacionais_Brasil_Mensal() {
     }
 
-    public Chegada_Turistas_Internacionais_Brasil_Mensal(Unidade_Federativa_Brasil destino, Pais pais_origem, String via_acesso, Integer mes, Integer ano, Integer chegadas, String fonte, String edicao) {
-        this.destino = destino;
-        this.pais_origem = pais_origem;
-        this.via_acesso = via_acesso;
+
+    public Chegada_Turistas_Internacionais_Brasil_Mensal(Integer id_chegada_turistas_internacionais_brasil_mensal, Integer mes, Integer ano, Integer chegadas, String via_acesso, String fk_uf_destino, Integer fk_fonte_dados, Integer fk_pais_origem) {
+        this.id_chegada_turistas_internacionais_brasil_mensal = id_chegada_turistas_internacionais_brasil_mensal;
         this.mes = mes;
         this.ano = ano;
         this.chegadas = chegadas;
-        this.fonte = fonte;
-        this.edicao = edicao;
-    }
-
-    public Unidade_Federativa_Brasil getDestino() {
-        return destino;
-    }
-
-    public void setDestino(Unidade_Federativa_Brasil destino) {
-        this.destino = destino;
-    }
-
-    public Pais getPais_origem() {
-        return pais_origem;
-    }
-
-    public void setPais_origem(Pais pais_origem) {
-        this.pais_origem = pais_origem;
-    }
-
-    public String getVia_acesso() {
-        return via_acesso;
-    }
-
-    public void setVia_acesso(String via_acesso) {
         this.via_acesso = via_acesso;
+        this.fk_uf_destino = fk_uf_destino;
+        this.fk_fonte_dados = fk_fonte_dados;
+        this.fk_pais_origem = fk_pais_origem;
+    }
+
+    public Integer getId_chegada_turistas_internacionais_brasil_mensal() {
+        return id_chegada_turistas_internacionais_brasil_mensal;
+    }
+
+    public void setId_chegada_turistas_internacionais_brasil_mensal(Integer id_chegada_turistas_internacionais_brasil_mensal) {
+        this.id_chegada_turistas_internacionais_brasil_mensal = id_chegada_turistas_internacionais_brasil_mensal;
     }
 
     public Integer getMes() {
@@ -73,33 +58,49 @@ public class Chegada_Turistas_Internacionais_Brasil_Mensal {
         this.chegadas = chegadas;
     }
 
-    public String getFonte() {
-        return fonte;
+    public String getVia_acesso() {
+        return via_acesso;
     }
 
-    public void setFonte(String fonte) {
-        this.fonte = fonte;
+    public void setVia_acesso(String via_acesso) {
+        this.via_acesso = via_acesso;
     }
 
-    public String getEdicao() {
-        return edicao;
+    public String getFk_uf_destino() {
+        return fk_uf_destino;
     }
 
-    public void setEdicao(String edicao) {
-        this.edicao = edicao;
+    public void setFk_uf_destino(String fk_uf_destino) {
+        this.fk_uf_destino = fk_uf_destino;
+    }
+
+    public Integer getFk_fonte_dados() {
+        return fk_fonte_dados;
+    }
+
+    public void setFk_fonte_dados(Integer fk_fonte_dados) {
+        this.fk_fonte_dados = fk_fonte_dados;
+    }
+
+    public Integer getFk_pais_origem() {
+        return fk_pais_origem;
+    }
+
+    public void setFk_pais_origem(Integer fk_pais_origem) {
+        this.fk_pais_origem = fk_pais_origem;
     }
 
     @Override
     public String toString() {
-        return "Chegadas_Turistas_Internacionais_Brasil{" +
-                "destino=" + destino +
-                ", pais_origem=" + pais_origem +
-                ", via_acesso='" + via_acesso + '\'' +
+        return "Chegada_Turistas_Internacionais_Brasil_Mensal{" +
+                "id_chegada_turistas_internacionais_brasil_mensal=" + id_chegada_turistas_internacionais_brasil_mensal +
                 ", mes=" + mes +
                 ", ano=" + ano +
                 ", chegadas=" + chegadas +
-                ", fonte='" + fonte + '\'' +
-                ", edicao=" + edicao +
+                ", via_acesso='" + via_acesso + '\'' +
+                ", fk_uf_destino='" + fk_uf_destino + '\'' +
+                ", fk_fonte_dados=" + fk_fonte_dados +
+                ", fk_pais_origem=" + fk_pais_origem +
                 '}';
     }
 }

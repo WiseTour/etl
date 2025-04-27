@@ -9,6 +9,7 @@ import tour.wise.model.Perfil_Estimado_Turistas;
 import tour.wise.dto.Ficha_Sintese_Pais;
 import tour.wise.dto.ficha_sintese_brasil.*;
 import tour.wise.dto.ficha_sintese_estado.Ficha_Sintese_Estado;
+import tour.wise.util.Util;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,13 +17,9 @@ import java.util.List;
 
 public class Perfil_Estimado_Turistas_ETL {
 
+    Util util = new Util();
 
-    String fileNameFichaSintesePais = "../../database/dados-originais/demanda-turistica-internacional/demanda_turistica_internacional_-_fichas_sinteses_2015-2019/05 - Ficha Síntese Países 2015-2019_DIVULGAÇÃO.xlsx";
-    String fileNameFichaSinteseBrasil = "../../database/dados-originais/demanda-turistica-internacional/demanda_turistica_internacional_-_fichas_sinteses_2015-2019/01 - Ficha Síntese Brasil - 2015-2019_DIVULGAÇÃO.xlsx";
-    String fileNameFichaSinteseEstado = "../../database/dados-originais/demanda-turistica-internacional/demanda_turistica_internacional_-_fichas_sinteses_2015-2019/06 - Ficha Síntese UF 2015-2019_DIVULGAÇÃO.xlsx";
-
-
-    public List<Perfil_Estimado_Turistas> extractTransform(String fonte_perfil, String fonte_chegadas) throws IOException {
+    public List<Perfil_Estimado_Turistas> extractTransform(String fonte_perfil, String fonte_chegadas, String fileNameFichaSintesePais, String fileNameFichaSinteseBrasil,String fileNameFichaSinteseEstado) throws IOException {
 
         Ficha_Sintese_Brasil_ET ficha_sintese_brasil_etl = new Ficha_Sintese_Brasil_ET();
 
@@ -35,7 +32,6 @@ public class Perfil_Estimado_Turistas_ETL {
         Ficha_Sintese_Estado_ET ficha_sintese_estado_etl = new Ficha_Sintese_Estado_ET();
 
         List<Ficha_Sintese_Estado> fichas_sintese_por_estado =  ficha_sintese_estado_etl.extractTransformFicha_Sintese_Estado(fileNameFichaSinteseEstado, 0, 0);
-
 
         System.out.println();
         System.out.println("Ficha Sintese Brasil");

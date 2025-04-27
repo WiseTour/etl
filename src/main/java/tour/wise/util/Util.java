@@ -10,6 +10,14 @@ import java.util.List;
 
 public class Util {
 
+    public Util() {
+    }
+
+    public boolean fileExists(String filePath) {
+        File file = new File(filePath);
+        return file.exists();
+    }
+
     public List<String> getAllFilesName(String dirName){
         File dir = new File(dirName);
         File[] filesArray = dir.listFiles();
