@@ -10,18 +10,16 @@ public class Perfil_Estimado_Turistas {
     private String fonte_informacao_viagem;
     private String servico_agencia_turismo;
     private String motivo_viagem;
-    private Double permanencia_media;
     private Double gasto_medio_percapita_em_reais;
     private Integer ano;
     private Integer turistas;
     private String via_acesso;
-    private String fk_uf_destino;
     private Integer fk_pais_origem;
 
     public Perfil_Estimado_Turistas() {
     }
 
-    public Perfil_Estimado_Turistas(Integer id_perfil_estimado_visistantes, String genero, String faixa_etaria, String composicao_grupo_familiar, String fonte_informacao_viagem, String servico_agencia_turismo, String motivo_viagem, Double permanencia_media, Double gasto_medio_percapita_em_reais, Integer ano, Integer turistas, String via_acesso, String fk_uf_destino, Integer fk_pais_origem) {
+    public Perfil_Estimado_Turistas(Integer id_perfil_estimado_visistantes, String genero, String faixa_etaria, String composicao_grupo_familiar, String fonte_informacao_viagem, String servico_agencia_turismo, String motivo_viagem, Double gasto_medio_percapita_em_reais, Integer ano, Integer turistas, String via_acesso,  Integer fk_pais_origem) {
         this.id_perfil_estimado_visistantes = id_perfil_estimado_visistantes;
         this.genero = genero;
         this.faixa_etaria = faixa_etaria;
@@ -29,12 +27,10 @@ public class Perfil_Estimado_Turistas {
         this.fonte_informacao_viagem = fonte_informacao_viagem;
         this.servico_agencia_turismo = servico_agencia_turismo;
         this.motivo_viagem = motivo_viagem;
-        this.permanencia_media = permanencia_media;
         this.gasto_medio_percapita_em_reais = gasto_medio_percapita_em_reais;
         this.ano = ano;
         this.turistas = turistas;
         this.via_acesso = via_acesso;
-        this.fk_uf_destino = fk_uf_destino;
         this.fk_pais_origem = fk_pais_origem;
     }
 
@@ -94,13 +90,6 @@ public class Perfil_Estimado_Turistas {
         this.motivo_viagem = motivo_viagem;
     }
 
-    public Double getPermanencia_media() {
-        return permanencia_media;
-    }
-
-    public void setPermanencia_media(Double permanencia_media) {
-        this.permanencia_media = permanencia_media;
-    }
 
     public Double getGasto_medio_percapita_em_reais() {
         return gasto_medio_percapita_em_reais;
@@ -134,14 +123,6 @@ public class Perfil_Estimado_Turistas {
         this.via_acesso = via_acesso;
     }
 
-    public String getFk_uf_destino() {
-        return fk_uf_destino;
-    }
-
-    public void setFk_uf_destino(String fk_uf_destino) {
-        this.fk_uf_destino = fk_uf_destino;
-    }
-
     public Integer getFk_pais_origem() {
         return fk_pais_origem;
     }
@@ -160,12 +141,10 @@ public class Perfil_Estimado_Turistas {
                 ", fonte_informacao_viagem='" + fonte_informacao_viagem + '\'' +
                 ", servico_agencia_turismo='" + servico_agencia_turismo + '\'' +
                 ", motivo_viagem='" + motivo_viagem + '\'' +
-                ", permanencia_media=" + permanencia_media +
                 ", gasto_medio_percapita_em_reais=" + gasto_medio_percapita_em_reais +
                 ", ano=" + ano +
                 ", turistas=" + turistas +
                 ", via_acesso='" + via_acesso + '\'' +
-                ", fk_uf_destino='" + fk_uf_destino + '\'' +
                 ", fk_pais_origem=" + fk_pais_origem +
                 '}';
     }

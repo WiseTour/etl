@@ -60,19 +60,20 @@ public class Ficha_Sintese_Pais_ET extends Ficha_Sintese_Brasil_ET {
     public List<List<List<Object>>> extract(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException  {
 
         String sheetName = service.getSheetName(fileName, sheetNumber);
-        String pais = sheetName.split("\\s+", 2)[1]; // divide no primeiro espaço
+        String pais = sheetName.split("\\s+", 2)[1]; // pais de origem
 
         // Parâmetros das seções a serem lidas
         List<int[]> ranges = List.of(
-                new int[]{5, 5},
-                new int[]{7, 9},
-                new int[]{11, 17},
-                new int[]{29, 33},
-                new int[]{35, 37},
-                new int[]{46, 50},
-                new int[]{52, 56},
-                new int[]{58, 62},
-                new int[]{69, 76}
+                new int[]{5, 5}, // ano
+                new int[]{7, 9}, // motivo da viagem
+                new int[]{11, 17}, // motivacao da vaigem a lazer
+                new int[]{29, 33}, // composicao do grupo turístico
+                new int[]{35, 37}, // gasto médio percapita dia no Brasil
+                new int[]{40, 42}, // permanencia média no Brasil
+                new int[]{46, 50}, // destinos mais visitados a lazer
+                new int[]{52, 56}, // destinos mais visitados a negócios, eventos e convenções
+                new int[]{58, 62}, // destinos mais visitados outros motivos
+                new int[]{69, 76} // fonte de informação
         );
 
         // Lista para consolidar todos os blocos de dados
@@ -98,9 +99,9 @@ public class Ficha_Sintese_Pais_ET extends Ficha_Sintese_Brasil_ET {
 
         // Parâmetros das seções a serem lidas
         ranges = List.of(
-                new int[]{7, 9},
-                new int[]{27, 28},
-                new int[]{30, 36}
+                new int[]{7, 9}, // utilização de agência de viagem
+                new int[]{27, 28}, // gênero
+                new int[]{30, 36} // faixa etária
         );
 
         // Leitura dos dados e consolidação
@@ -134,15 +135,19 @@ public class Ficha_Sintese_Pais_ET extends Ficha_Sintese_Brasil_ET {
     @Override
     public Ficha_Sintese_Pais transform(List<List<List<Object>>> data) {
         return new Ficha_Sintese_Pais(
-                extractNomePais(data, 0),
+
                 transformAno(data, 1),
+                transformGenero(data, 12),
+                transformFaixaEtaria(data, 13),
+                transformComposicoesGrupo(data, 4),
+                transformFontesInformacao(data, 10),
+                transformUtilizacaoAgenciaViagem(data, 11),
                 transformMotivosViagem(data, 2),
                 transformMotivacaoViagemLazer(data, 3),
-                transformComposicoesGrupo(data, 4),
                 transformGastosMedioMotivo(data, 5),
-                transformDestinosMaisVisitadosPorMotivo(data, 6),
-                transformFontesInformacao(data, 9),
-                transformUsosAgenciaViagem(data, 10)
+                transformPermanenciaMediaMotivo(data, 6),
+                transformDestinosMaisVisitadosPorMotivo(data, 7),
+                extractNomePais(data, 0)
         );
     }
 

@@ -6,7 +6,6 @@ public class Chegada_Turistas_Internacionais_Brasil_Mensal {
     private Integer ano;
     private Integer chegadas;
     private String via_acesso;
-    private String fk_uf_destino;
     private Integer fk_fonte_dados;
     private Integer fk_pais_origem;
 
@@ -15,13 +14,13 @@ public class Chegada_Turistas_Internacionais_Brasil_Mensal {
     }
 
 
-    public Chegada_Turistas_Internacionais_Brasil_Mensal(Integer id_chegada_turistas_internacionais_brasil_mensal, Integer mes, Integer ano, Integer chegadas, String via_acesso, String fk_uf_destino, Integer fk_fonte_dados, Integer fk_pais_origem) {
+    public Chegada_Turistas_Internacionais_Brasil_Mensal(Integer id_chegada_turistas_internacionais_brasil_mensal, Integer mes, Integer ano, Integer chegadas, String via_acesso, Integer fk_fonte_dados, Integer fk_pais_origem) {
         this.id_chegada_turistas_internacionais_brasil_mensal = id_chegada_turistas_internacionais_brasil_mensal;
         this.mes = mes;
         this.ano = ano;
         this.chegadas = chegadas;
         this.via_acesso = via_acesso;
-        this.fk_uf_destino = fk_uf_destino;
+
         this.fk_fonte_dados = fk_fonte_dados;
         this.fk_pais_origem = fk_pais_origem;
     }
@@ -66,13 +65,6 @@ public class Chegada_Turistas_Internacionais_Brasil_Mensal {
         this.via_acesso = via_acesso;
     }
 
-    public String getFk_uf_destino() {
-        return fk_uf_destino;
-    }
-
-    public void setFk_uf_destino(String fk_uf_destino) {
-        this.fk_uf_destino = fk_uf_destino;
-    }
 
     public Integer getFk_fonte_dados() {
         return fk_fonte_dados;
@@ -98,7 +90,6 @@ public class Chegada_Turistas_Internacionais_Brasil_Mensal {
                 ", ano=" + ano +
                 ", chegadas=" + chegadas +
                 ", via_acesso='" + via_acesso + '\'' +
-                ", fk_uf_destino='" + fk_uf_destino + '\'' +
                 ", fk_fonte_dados=" + fk_fonte_dados +
                 ", fk_pais_origem=" + fk_pais_origem +
                 '}';

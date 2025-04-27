@@ -2,11 +2,11 @@ package tour.wise.dto.ficha_sintese_brasil;
 
 import java.util.List;
 
-public class Destinos_Mais_Visistados_Por_Motivo {
+public class Destinos_Mais_Visitados_Por_Motivo {
     private String motivo;
-    private List<Destino_Mais_Visistado> destinos_mais_visistado;
+    private List<Destino_Mais_Visitado> destinos_mais_visistado;
 
-    public Destinos_Mais_Visistados_Por_Motivo(String motivo, List<Destino_Mais_Visistado> destinos_mais_visistado) {
+    public Destinos_Mais_Visitados_Por_Motivo(String motivo, List<Destino_Mais_Visitado> destinos_mais_visistado) {
         this.motivo = motivo;
         this.destinos_mais_visistado = destinos_mais_visistado;
     }
@@ -19,11 +19,11 @@ public class Destinos_Mais_Visistados_Por_Motivo {
         this.motivo = motivo;
     }
 
-    public List<Destino_Mais_Visistado> getDestinos_mais_visistado() {
+    public List<Destino_Mais_Visitado> getDestinos_mais_visistado() {
         return destinos_mais_visistado;
     }
 
-    public void setDestinos_mais_visistado(List<Destino_Mais_Visistado> destinos_mais_visistado) {
+    public void setDestinos_mais_visistado(List<Destino_Mais_Visitado> destinos_mais_visistado) {
         this.destinos_mais_visistado = destinos_mais_visistado;
     }
 

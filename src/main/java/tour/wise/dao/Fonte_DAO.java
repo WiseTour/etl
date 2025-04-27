@@ -10,11 +10,11 @@ public class Fonte_DAO {
         this.connection = connection;
     }
 
-    public void insertFonteIgnore(String titulo_fonte, String edicao, String orgao_emissor, String url_origem) {
+    public void insertIgnoreFonte(String titulo_fonte, String edicao, String orgao_emissor, String url_origem) {
         System.out.println("Tentando inserir a fonte: " + titulo_fonte);
 
         int rows_affected = connection.update(
-                "INSERT IGNORE INTO Fonte (titulo_arquivo_fonte, edicao, orgao_emissor, url_origem, data_coleta) VALUES (?, ?, ?, ?, NOW())",
+                "INSERT IGNORE INTO Fonte (titulo_edicao, edicao, orgao_emissor, url_origem, data_coleta) VALUES (?, ?, ?, ?, NOW())",
                 titulo_fonte,
                 edicao,
                 orgao_emissor,

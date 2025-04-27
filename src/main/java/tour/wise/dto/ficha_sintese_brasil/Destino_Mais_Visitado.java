@@ -1,10 +1,10 @@
 package tour.wise.dto.ficha_sintese_brasil;
 
-public class Destino_Mais_Visistado {
+public class Destino_Mais_Visitado {
     private String destino;
     private Double porcentagem;
 
-    public Destino_Mais_Visistado(String destino, Double porcentagem) {
+    public Destino_Mais_Visitado(String destino, Double porcentagem) {
         this.destino = destino;
         this.porcentagem = porcentagem;
     }
