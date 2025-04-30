@@ -1,4 +1,4 @@
-package tour.wise.etl.perfil_estimado_turista_etl;
+package tour.wise.etl.fichas_sintese;
 
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Workbook;

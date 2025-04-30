@@ -11,23 +11,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class Chegada_Turistas_Internacionais_Brasil_Mensal_ETL {
 
     Service service = new Service();
-
-    public void extractTransformLoad(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, String orgao_emissor, String edicao, String titulo_edicao, String url_fonte, JdbcTemplate connection) throws IOException {
-
-        // EXTRACT
-        List<List<Object>> data = extract(fileName, sheetNumber, header, colluns, types);
-
-        // TRANSFORM
-
-        List<Chegada_Turistas_Internacionais_Brasil_Mensal_DTO> chegadas_turistas_internacionais_brasil_mensal_dto = transform(data, orgao_emissor, edicao);
-
-
-        load(connection, orgao_emissor, edicao, titulo_edicao, url_fonte, chegadas_turistas_internacionais_brasil_mensal_dto);
-    }
 
     public List<List<Object>> extract(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
 

@@ -1,8 +1,6 @@
 package tour.wise.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.dto.Chegada_Turistas_Internacionais_Brasil_Mensal_DTO;
-import tour.wise.model.Chegada_Turistas_Internacionais_Brasil_Mensal;
 
 public class Chegada_Turistas_Internacionais_Brasil_MensalDAO {
     private JdbcTemplate connection; // Conexão com o banco

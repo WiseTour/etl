@@ -1,4 +1,4 @@
-package tour.wise.etl.perfil_estimado_turista_etl;
+package tour.wise.etl.fichas_sintese;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import tour.wise.dto.Ficha_Sintese_Pais;
