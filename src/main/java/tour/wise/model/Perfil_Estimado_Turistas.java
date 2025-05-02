@@ -101,7 +101,7 @@ public class Perfil_Estimado_Turistas {
     }
 
     public void setQuantida_turistas(Integer quantida_turistas) {
-        this.quantida_turistas = qunatida_turistas;
+        this.quantida_turistas = quantida_turistas;
     }
 
     public String getGenero() {

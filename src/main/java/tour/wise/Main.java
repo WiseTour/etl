@@ -2,8 +2,8 @@ package tour.wise;
 
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.dao.Data_Base;
-import tour.wise.etl.Perfil_Estimado_Turistas_ETL;
+import tour.wise.dao.DataBase;
+import tour.wise.etl.PerfilEstimadoTuristasETL;
 
 import java.io.IOException;
 
@@ -12,12 +12,12 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        Data_Base data_base = new Data_Base();
+        DataBase data_base = new DataBase();
 
 
         JdbcTemplate connection = data_base.getConnection();
 
-        Perfil_Estimado_Turistas_ETL relatorioTurismoBrasilEtl = new Perfil_Estimado_Turistas_ETL();
+        PerfilEstimadoTuristasETL relatorioTurismoBrasilEtl = new PerfilEstimadoTuristasETL();
         relatorioTurismoBrasilEtl.exe(
                 "https://www.gov.br/turismo/pt-br/acesso-a-informacao/acoes-e-programas/observatorio/demanda-turistica/demanda-turistica-internacional-1)",
                 "https://dados.gov.br/dados/conjuntos-dados/estimativas-de-chegadas-de-turistas-internacionais-ao-brasil",
