@@ -3,7 +3,6 @@ package tour.wise.etl.fichas.sintese;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Workbook;
 import tour.wise.dto.ficha.sintese.brasil.*;
-import tour.wise.dto.ficha_sintese_brasil.*;
 import tour.wise.service.Service;
 import java.io.IOException;
 import java.util.ArrayList;

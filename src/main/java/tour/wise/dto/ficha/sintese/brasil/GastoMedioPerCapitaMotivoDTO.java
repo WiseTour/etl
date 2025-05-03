@@ -2,11 +2,11 @@ package tour.wise.dto.ficha.sintese.brasil;
 
 public class GastoMedioPerCapitaMotivoDTO {
     private String motivo;
-    private Double porcentagem;
+    private Double gasto;
 
-    public GastoMedioPerCapitaMotivoDTO(String motivo, Double porcentagem) {
+    public GastoMedioPerCapitaMotivoDTO(String motivo, Double gasto) {
         this.motivo = motivo;
-        this.porcentagem = porcentagem;
+        this.gasto = gasto;
     }
 
     public String getMotivo() {
@@ -17,19 +17,19 @@ public class GastoMedioPerCapitaMotivoDTO {
         this.motivo = motivo;
     }
 
-    public Double getPorcentagem() {
-        return porcentagem;
+    public Double getGasto() {
+        return gasto;
     }
 
-    public void setPorcentagem(Double porcentagem) {
-        this.porcentagem = porcentagem;
+    public void setGasto(Double gasto) {
+        this.gasto = gasto;
     }
 
     @Override
     public String toString() {
         return "Gasto_Medio_Per_Capita_Brasil_Motivo{" +
                 "motivo='" + motivo + '\'' +
-                ", porcentagem=" + porcentagem +
+                ", gasto=" + gasto +
                 '}';
     }
 }
