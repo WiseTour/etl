@@ -1,11 +1,8 @@
 package tour.wise.dto.perfil;
 
-import tour.wise.dto.ficha.sintese.brasil.*;
-import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
-
 import java.util.List;
 
-public class PerfilEstadoDTO {
+public class PerfilDTO {
     private Double taxaTuristas;
     private String paisesOrigem;
     private Integer ano;
@@ -15,16 +12,16 @@ public class PerfilEstadoDTO {
     private String fontesInformacao;
     private String utilizacaoAgenciaViagemDTO;
     private String motivo;
-    private String motivacoesViagemLazer;
+    private String motivacaoViagemLazer;
     private Double gastosMedioPerCapitaMotivo;
     private List<DestinoDTO> destinosDTO;
 
 
-    public PerfilEstadoDTO() {
+    public PerfilDTO() {
 
     }
 
-    public PerfilEstadoDTO(Double taxaTuristas, String paisesOrigem, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fontesInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacoesViagemLazer, Double gastosMedioPerCapitaMotivo, List<DestinoDTO> destinosDTO) {
+    public PerfilDTO(Double taxaTuristas, String paisesOrigem, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fontesInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, List<DestinoDTO> destinosDTO) {
         this.taxaTuristas = taxaTuristas;
         this.paisesOrigem = paisesOrigem;
         this.ano = ano;
@@ -34,7 +31,7 @@ public class PerfilEstadoDTO {
         this.fontesInformacao = fontesInformacao;
         this.utilizacaoAgenciaViagemDTO = utilizacaoAgenciaViagemDTO;
         this.motivo = motivo;
-        this.motivacoesViagemLazer = motivacoesViagemLazer;
+        this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
         this.destinosDTO = destinosDTO;
     }
@@ -111,12 +108,12 @@ public class PerfilEstadoDTO {
         this.motivo = motivo;
     }
 
-    public String getMotivacoesViagemLazer() {
-        return motivacoesViagemLazer;
+    public String getMotivacaoViagemLazer() {
+        return motivacaoViagemLazer;
     }
 
-    public void setMotivacoesViagemLazer(String motivacoesViagemLazer) {
-        this.motivacoesViagemLazer = motivacoesViagemLazer;
+    public void setMotivacaoViagemLazer(String motivacaoViagemLazer) {
+        this.motivacaoViagemLazer = motivacaoViagemLazer;
     }
 
     public Double getGastosMedioPerCapitaMotivo() {
@@ -147,7 +144,7 @@ public class PerfilEstadoDTO {
                 ", fontesInformacao='" + fontesInformacao + '\'' +
                 ", utilizacaoAgenciaViagemDTO='" + utilizacaoAgenciaViagemDTO + '\'' +
                 ", motivo='" + motivo + '\'' +
-                ", motivacoesViagemLazer='" + motivacoesViagemLazer + '\'' +
+                ", motivacoesViagemLazer='" + motivacaoViagemLazer + '\'' +
                 ", gastosMedioPerCapitaMotivo=" + gastosMedioPerCapitaMotivo +
                 ", destinosDTO=" + destinosDTO +
                 '}';

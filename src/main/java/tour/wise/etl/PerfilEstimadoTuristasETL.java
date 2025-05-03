@@ -3,7 +3,7 @@ package tour.wise.etl;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.perfil.DestinoDTO;
-import tour.wise.dto.perfil.PerfilEstadoDTO;
+import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.etl.fichas.sintese.FichaSinteseBrasilET;
 import tour.wise.etl.fichas.sintese.Ficha_Sintese_Estado_ET;
@@ -82,169 +82,6 @@ public class PerfilEstimadoTuristasETL {
         // TRANSFORM
 
         List<Perfil_Estimado_Turistas>  perfiesEstimadoTuristas = new ArrayList<>();
-
-        for (FichaSinteseEstadoDTO fichaSinteseEstadoDTO : fichasSinteseEstadoDTO) {
-
-            Double porcentagemTuristas = 0.0;
-
-            for (PaisOrigemDTO paisOrigemDTO : fichaSinteseEstadoDTO.getPaisesOrigem()) {
-
-                porcentagemTuristas += paisOrigemDTO.getPorcentagem()/100;
-
-                for (FonteInformacaoDTO fonteInformacaoDTO : fichaSinteseEstadoDTO.getFontesInformacao()) {
-
-                    porcentagemTuristas *= fonteInformacaoDTO.getPorcentagem()/100;
-
-                    for (ComposicaoGrupoViagemDTO composicaoGrupoViagemDTO : fichaSinteseEstadoDTO.getComposicaoGruposViagem()) {
-
-                        porcentagemTuristas *= composicaoGrupoViagemDTO.getPorcentagem()/100;
-
-                        for (UtilizacaaAgenciaViagemDTO utilizacaaAgenciaViagemDTO : fichaSinteseEstadoDTO.getUtilizacaoAgenciaViagemDTO()) {
-
-                            porcentagemTuristas *= utilizacaaAgenciaViagemDTO.getPorcentagem()/100;
-
-                            for (GeneroDTO generoDTO : fichaSinteseEstadoDTO.getGeneroDTO()) {
-
-                                porcentagemTuristas *= generoDTO.getPorcentagem()/100;
-
-                                for (FaixaEtariaDTO faixaEtariaDTO : fichaSinteseEstadoDTO.getFaixaEtariaDTO()) {
-
-                                    porcentagemTuristas *= faixaEtariaDTO.getPorcentagem()/100;
-
-                                    for (MotivoViagemDTO motivo : fichaSinteseEstadoDTO.getMotivos()) {
-
-                                        porcentagemTuristas *= motivo.getPorcentagem()/100;
-
-                                        for (int i = 0; i < 2; i++) {
-
-                                            List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitados;
-
-                                            if(motivo.getMotivo().equalsIgnoreCase("Lazer")) {
-
-                                                for (MotivacaoViagemLazerDTO motivacaoViagemLazerDTO : fichaSinteseEstadoDTO.getMotivacoesViagemLazer()) {
-
-                                                    porcentagemTuristas *= motivacaoViagemLazerDTO.getPorcentagem() / 100;
-
-                                                    // i = 0 indica que só viajou para o estado principal
-                                                    if(i == 0){
-
-                                                        if(hasPais(fichasSintesePaisDTO, paisOrigemDTO.getPais())){
-
-                                                            for (FichaSintesePaisDTO fichaSintesePaisDTO : fichasSintesePaisDTO) {
-
-                                                                if(fichaSintesePaisDTO.getPais().equalsIgnoreCase(paisOrigemDTO.getPais()) &&
-                                                                    fichaSintesePaisDTO.getAno().equals(fichaSinteseEstadoDTO.getAno())){
-
-                                                                    for (FonteInformacaoDTO fonteInformacaoPaisDTO : fichaSintesePaisDTO.getFontesInformacao()) {
-
-                                                                        if(fonteInformacaoPaisDTO.getFonte().equalsIgnoreCase(fonteInformacaoDTO.getFonte())){
-
-                                                                            porcentagemTuristas *= fonteInformacaoPaisDTO.getPorcentagem();
-
-                                                                        }
-
-                                                                        for (ComposicaoGrupoViagemDTO composicaoGrupoViagemPaisDTO : fichaSintesePaisDTO.getComposicaoGruposViagem()) {
-
-                                                                            if(composicaoGrupoViagemPaisDTO.getComposicao().equalsIgnoreCase(composicaoGrupoViagemDTO.getComposicao())){
-
-                                                                                porcentagemTuristas *= composicaoGrupoViagemPaisDTO.getPorcentagem();
-
-                                                                            }
-
-                                                                            for (UtilizacaaAgenciaViagemDTO utilizacaoAgenciaViagemPaisDTO : fichaSintesePaisDTO.getUtilizacaoAgenciaViagemDTO()) {
-
-                                                                                if(utilizacaoAgenciaViagemPaisDTO.getTipo().equalsIgnoreCase(utilizacaaAgenciaViagemDTO.getTipo())){
-
-                                                                                    porcentagemTuristas *= utilizacaoAgenciaViagemPaisDTO.getPorcentagem();
-
-                                                                                }
-
-                                                                                for (GeneroDTO generoPaisDto : fichaSintesePaisDTO.getGeneroDTO()) {
-
-                                                                                    if(generoPaisDto.getGenero().equalsIgnoreCase(generoDTO.getGenero())){
-
-                                                                                        porcentagemTuristas *= generoPaisDto.getPorcentagem();
-
-                                                                                        for (FaixaEtariaDTO faixaEtariaPaisDTO : fichaSintesePaisDTO.getFaixaEtariaDTO()) {
-
-                                                                                            if(faixaEtariaPaisDTO.getFaixa_etaria().equalsIgnoreCase(faixaEtariaDTO.getFaixa_etaria())){
-
-                                                                                                porcentagemTuristas *= faixaEtariaPaisDTO.getPorcentagem();
-
-                                                                                            }
-
-                                                                                        }
-
-                                                                                    }
-
-                                                                                }
-                                                                                
-                                                                            }
-                                                                            
-                                                                        }
-                                                                        
-                                                                    }
-
-                                                                }
-                                                            }
-                                                        }
-
-                                                        // USAR FICHA SINTESE BRASIL
-
-
-                                                    }
-                                                    // i = 1 indica que viajou para mais estados
-                                                    else if (i == 1){
-
-                                                        destinosMaisVisitados = transformDestinosMaisVisitados(fichaSinteseEstadoDTO.getDestinosMaisVisistadosMotivo(), motivo.getMotivo());
-
-                                                        for (List<DestinoMaisVisitadoDTO> destinos : destinosMaisVisitados) {
-
-                                                            porcentagemTuristas *= destinos.getLast().getPorcentagem()/100;
-
-                                                        }
-
-                                                    }
-
-                                                }
-
-                                            }else{
-                                                // i = 0 indica que só viajou para o estado principal
-                                                if(i == 0){
-
-                                                }
-                                                // i = 1 indica que viajou para mais estados
-                                                else if (i == 1){
-
-                                                    destinosMaisVisitados = transformDestinosMaisVisitados(fichaSinteseEstadoDTO.getDestinosMaisVisistadosMotivo(), motivo.getMotivo());
-
-                                                    for (List<DestinoMaisVisitadoDTO> destinos : destinosMaisVisitados) {
-
-                                                        porcentagemTuristas *= destinos.getLast().getPorcentagem()/100;
-
-                                                    }
-
-                                                }
-
-                                            }
-
-                                        }
-
-                                    }
-
-                                 }
-
-                            }
-
-                        }
-                        
-                    }
-                    
-                }
-
-            }
-
-        }
 
 
 
@@ -530,9 +367,104 @@ public class PerfilEstimadoTuristasETL {
 //
 //    }
 
-    public List<PerfilEstadoDTO> transformFichasSinteseEstadoDTO(List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO){
+    public List<PerfilDTO> transformPerfiesEstadoDTO(List<PerfilDTO> perfiesEstadoDTO, List<FichaSintesePaisDTO> fichasSintesePaisDTO){
 
-        List<PerfilEstadoDTO> PerfiesEstadoDTO = new ArrayList<>();
+        List<PerfilDTO> perfiesDTO = new ArrayList<>();
+
+        for (PerfilDTO perfilEstadoDTO : perfiesEstadoDTO) {
+
+            Double porcentagemTuristas = perfilEstadoDTO.getTaxaTuristas();
+
+            for (FichaSintesePaisDTO fichaSintesePaisDTO : fichasSintesePaisDTO) {
+
+                if(fichaSintesePaisDTO.getPais().equalsIgnoreCase(perfilEstadoDTO.getPaisesOrigem()) &&
+                        fichaSintesePaisDTO.getAno().equals(perfilEstadoDTO.getAno())){
+
+                    for (FonteInformacaoDTO fonteInformacaoPaisDTO : fichaSintesePaisDTO.getFontesInformacao()) {
+
+                        if(fonteInformacaoPaisDTO.getFonte().equalsIgnoreCase(perfilEstadoDTO.getFontesInformacao())){
+
+                            porcentagemTuristas *= fonteInformacaoPaisDTO.getPorcentagem();
+
+                        }
+
+                        for (ComposicaoGrupoViagemDTO composicaoGrupoViagemPaisDTO : fichaSintesePaisDTO.getComposicaoGruposViagem()) {
+
+                            if(composicaoGrupoViagemPaisDTO.getComposicao().equalsIgnoreCase(perfilEstadoDTO.getComposicaoGruposViagem())){
+
+                                porcentagemTuristas *= composicaoGrupoViagemPaisDTO.getPorcentagem();
+
+                            }
+
+                            for (UtilizacaaAgenciaViagemDTO utilizacaoAgenciaViagemPaisDTO : fichaSintesePaisDTO.getUtilizacaoAgenciaViagemDTO()) {
+
+                                if(utilizacaoAgenciaViagemPaisDTO.getTipo().equalsIgnoreCase(perfilEstadoDTO.getUtilizacaoAgenciaViagemDTO())){
+
+                                    porcentagemTuristas *= utilizacaoAgenciaViagemPaisDTO.getPorcentagem();
+
+                                }
+
+                                for (GeneroDTO generoPaisDto : fichaSintesePaisDTO.getGeneroDTO()) {
+
+                                    if(generoPaisDto.getGenero().equalsIgnoreCase(perfilEstadoDTO.getGeneroDTO())){
+
+                                        porcentagemTuristas *= generoPaisDto.getPorcentagem();
+
+                                        for (FaixaEtariaDTO faixaEtariaPaisDTO : fichaSintesePaisDTO.getFaixaEtariaDTO()) {
+
+                                            if(faixaEtariaPaisDTO.getFaixa_etaria().equalsIgnoreCase(perfilEstadoDTO.getFaixaEtariaDTO())){
+
+                                                porcentagemTuristas *= faixaEtariaPaisDTO.getPorcentagem();
+
+                                                for (GastoMedioPerCapitaMotivoDTO gastoMedioPerCapitaMotivoDTO : fichaSintesePaisDTO.getGastosMedioPerCapitaMotivo()) {
+
+                                                    if(gastoMedioPerCapitaMotivoDTO.getMotivo().equalsIgnoreCase())
+
+                                                }
+
+                                                perfiesDTO.add(
+                                                        new PerfilDTO(
+                                                                porcentagemTuristas,
+                                                                perfilEstadoDTO.getPaisesOrigem(),
+                                                                perfilEstadoDTO.getAno(),
+                                                                perfilEstadoDTO.getGeneroDTO(),
+                                                                perfilEstadoDTO.getFaixaEtariaDTO(),
+                                                                perfilEstadoDTO.getComposicaoGruposViagem(),
+                                                                perfilEstadoDTO.getFontesInformacao(),
+                                                                perfilEstadoDTO.getUtilizacaoAgenciaViagemDTO(),
+                                                                perfilEstadoDTO.getMotivo(),
+                                                                perfilEstadoDTO.getMotivacaoViagemLazer(),
+                                                                perfilEstadoDTO.getGastosMedioPerCapitaMotivo(),
+
+
+                                                        )
+                                                );
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+            }
+
+        }
+
+        return perfiesDTO;
+    }
+
+    public List<PerfilDTO> transformFichasSinteseEstadoDTO(List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO){
+
+        List<PerfilDTO> PerfiesEstadoDTO = new ArrayList<>();
 
         for (FichaSinteseEstadoDTO fichaSinteseEstadoDTO : fichasSinteseEstadoDTO) {
 
@@ -580,7 +512,7 @@ public class PerfilEstimadoTuristasETL {
                                                     if(i == 0){
 
                                                         PerfiesEstadoDTO.add(
-                                                                new PerfilEstadoDTO(
+                                                                new PerfilDTO(
                                                                         porcentagemTuristas,
                                                                         paisOrigemDTO.getPais(),
                                                                         fichaSinteseEstadoDTO.getAno(),
@@ -630,7 +562,7 @@ public class PerfilEstimadoTuristasETL {
                                                             }
 
                                                             PerfiesEstadoDTO.add(
-                                                                    new PerfilEstadoDTO(
+                                                                    new PerfilDTO(
                                                                             porcentagemTuristas,
                                                                             paisOrigemDTO.getPais(),
                                                                             fichaSinteseEstadoDTO.getAno(),
@@ -658,7 +590,7 @@ public class PerfilEstimadoTuristasETL {
                                                 if(i == 0){
 
                                                     PerfiesEstadoDTO.add(
-                                                            new PerfilEstadoDTO(
+                                                            new PerfilDTO(
                                                                     porcentagemTuristas,
                                                                     paisOrigemDTO.getPais(),
                                                                     fichaSinteseEstadoDTO.getAno(),
@@ -706,7 +638,7 @@ public class PerfilEstimadoTuristasETL {
                                                         }
 
                                                         PerfiesEstadoDTO.add(
-                                                                new PerfilEstadoDTO(
+                                                                new PerfilDTO(
                                                                         porcentagemTuristas,
                                                                         paisOrigemDTO.getPais(),
                                                                         fichaSinteseEstadoDTO.getAno(),
