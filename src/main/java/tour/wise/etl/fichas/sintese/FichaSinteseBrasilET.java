@@ -220,10 +220,14 @@ public class FichaSinteseBrasilET {
     }
 
 
-    protected List<ComposicaoGrupoViagemDTO> transformComposicoesGrupo(List<List<List<Object>>> data, Integer index) {
-        return data.get(index).stream()
-                .map(this::createComposicaoGrupo)
-                .collect(Collectors.toList());
+    protected List<ComposicaoGrupoViagemDTO> transformComposicoesGrupo(List<List<List<Object>>> composicoesGrupoData, Integer index) {
+        List<ComposicaoGrupoViagemDTO> composicoes = new ArrayList<>();
+
+        for (List<Object> composicaoGrupoData : composicoesGrupoData.get(index)) {
+            composicoes.add(createComposicaoGrupo(composicaoGrupoData));
+        }
+
+        return composicoes;
     }
 
     protected ComposicaoGrupoViagemDTO createComposicaoGrupo(List<Object> values) {
@@ -233,26 +237,28 @@ public class FichaSinteseBrasilET {
         );
     }
 
-    protected List<GastoMedioPerCapitaMotivoDTO> transformGastosMedioMotivo(
-            List<List<List<Object>>> data,
-            Integer index
-    ) {
-        return data.get(index).stream()
-                .map(entry -> new GastoMedioPerCapitaMotivoDTO(
-                        entry.get(0).toString(),
-                        Double.parseDouble(entry.get(1).toString())))
-                .collect(Collectors.toList());
+    protected List<GastoMedioPerCapitaMotivoDTO> transformGastosMedioMotivo(List<List<List<Object>>> gastosMedioMotivoData, Integer index) {
+        List<GastoMedioPerCapitaMotivoDTO> gastos = new ArrayList<>();
+
+        for (List<Object> gastoMedioMotivoData : gastosMedioMotivoData.get(index)) {
+            String motivo = gastoMedioMotivoData.get(0).toString();
+            double valor = Double.parseDouble(gastoMedioMotivoData.get(1).toString());
+            gastos.add(new GastoMedioPerCapitaMotivoDTO(motivo, valor));
+        }
+
+        return gastos;
     }
 
-    protected List<PermanenciaMediaDTO> transformPermanenciaMediaMotivo(
-            List<List<List<Object>>> data,
-            Integer index
-    ) {
-        return data.get(index).stream()
-                .map(entry -> new PermanenciaMediaDTO(
-                        entry.get(0).toString(),
-                        Double.parseDouble(entry.get(1).toString())))
-                .collect(Collectors.toList());
+    protected List<PermanenciaMediaDTO> transformPermanenciaMediaMotivo(List<List<List<Object>>> permanenciasMediaMotivoData, Integer index) {
+        List<PermanenciaMediaDTO> permanencias = new ArrayList<>();
+
+        for (List<Object> permanenciaMediaMotivoData : permanenciasMediaMotivoData.get(index)) {
+            String motivo = permanenciaMediaMotivoData.get(0).toString();
+            double valor = Double.parseDouble(permanenciaMediaMotivoData.get(1).toString());
+            permanencias.add(new PermanenciaMediaDTO(motivo, valor));
+        }
+
+        return permanencias;
     }
 
 
@@ -265,6 +271,8 @@ public class FichaSinteseBrasilET {
 
         List<DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = new ArrayList<>();
 
+
+
         for (int i = 0; i < motivos.length; i++) {
             destinosPorMotivo.add(
                     new DestinosMaisVisitadosPorMotivoDTO(
@@ -274,33 +282,52 @@ public class FichaSinteseBrasilET {
             );
         }
 
+
         return destinosPorMotivo;
     }
 
-    protected List<DestinoMaisVisitadoDTO> createDestinos(List<List<Object>> destinoData) {
-        return destinoData.stream()
-                .map(entry -> new DestinoMaisVisitadoDTO(
-                        entry.get(0).toString().split(" - ")[1],
-                        Double.parseDouble(entry.get(1).toString())
-                ))
-                .collect(Collectors.toList());
+    protected List<DestinoMaisVisitadoDTO> createDestinos(List<List<Object>> destinosData) {
+        List<DestinoMaisVisitadoDTO> destinos = new ArrayList<>();
+
+        for (List<Object> destinoData : destinosData) {
+            String nomeDestino = destinoData.get(0).toString().split(" - ")[1];
+            double valor = Double.parseDouble(destinoData.get(1).toString());
+
+            DestinoMaisVisitadoDTO dto = new DestinoMaisVisitadoDTO(nomeDestino, valor);
+            destinos.add(dto);
+        }
+
+        DestinoMaisVisitadoDTO dto = new DestinoMaisVisitadoDTO("Outros estados", 100.0 - destinos.getFirst().getPorcentagem() - destinos.getLast().getPorcentagem());
+        destinos.add(dto);
+
+        return destinos;
     }
 
 
-    protected List<FonteInformacaoDTO> transformFontesInformacao(List<List<List<Object>>> data, int index) {
-        return data.get(index).stream()
-                .map(entry -> new FonteInformacaoDTO(
-                        entry.get(0).toString(),
-                        Double.parseDouble(entry.get(1).toString())))
-                .collect(Collectors.toList());
+    protected List<FonteInformacaoDTO> transformFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
+        List<FonteInformacaoDTO> fontes = new ArrayList<>();
+
+        for (List<Object> fonteInformacaoData : fontesInformacaoData.get(index)) {
+            String descricao = fonteInformacaoData.get(0).toString();
+            double valor = Double.parseDouble(fonteInformacaoData.get(1).toString());
+
+            fontes.add(new FonteInformacaoDTO(descricao, valor));
+        }
+
+        return fontes;
     }
 
-    protected List<UtilizacaaAgenciaViagemDTO> transformUtilizacaoAgenciaViagem(List<List<List<Object>>> data, int index) {
-        return data.get(index).stream()
-                .map(entry -> new UtilizacaaAgenciaViagemDTO(
-                        entry.get(0).toString(),
-                        Double.parseDouble(entry.get(1).toString())))
-                .collect(Collectors.toList());
+    protected List<UtilizacaaAgenciaViagemDTO> transformUtilizacaoAgenciaViagem(List<List<List<Object>>> utilizacoesAgenciaViagemData, int index) {
+        List<UtilizacaaAgenciaViagemDTO> agencias = new ArrayList<>();
+
+        for (List<Object> utilizacaoAgenciaViagemData : utilizacoesAgenciaViagemData.get(index)) {
+            String descricao = utilizacaoAgenciaViagemData.get(0).toString();
+            double valor = Double.parseDouble(utilizacaoAgenciaViagemData.get(1).toString());
+
+            agencias.add(new UtilizacaaAgenciaViagemDTO(descricao, valor));
+        }
+
+        return agencias;
     }
 
 

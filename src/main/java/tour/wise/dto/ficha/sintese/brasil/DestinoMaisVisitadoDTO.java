@@ -4,6 +4,15 @@ public class DestinoMaisVisitadoDTO {
     private String destino;
     private Double porcentagem;
 
+    public DestinoMaisVisitadoDTO() {
+
+    }
+
+    public DestinoMaisVisitadoDTO(String destino) {
+        this.destino = destino;
+    }
+
+
     public DestinoMaisVisitadoDTO(String destino, Double porcentagem) {
         this.destino = destino;
         this.porcentagem = porcentagem;
