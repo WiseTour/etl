@@ -8,7 +8,7 @@ public class FichaSinteseBrasilDTO {
     private List<FaixaEtariaDTO> faixaEtariaDTO;
     private List<ComposicaoGrupoViagemDTO> composicaoGruposViagem;
     private List<FonteInformacaoDTO> fontesInformacao;
-    private List<UtilizacaaAgenciaViagemDTO> utilizacaoAgenciaViagemDTO;
+    private List<UtilizacaoAgenciaViagemDTO> utilizacaoAgenciaViagemDTO;
     private List<MotivoViagemDTO> motivos;
     private List<MotivacaoViagemLazerDTO> motivacoesViagemLazer;
     private List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo;
@@ -19,7 +19,7 @@ public class FichaSinteseBrasilDTO {
     public FichaSinteseBrasilDTO() {
     }
 
-    public FichaSinteseBrasilDTO(Integer ano, List<GeneroDTO> generoDTO, List<FaixaEtariaDTO> faixaEtariaDTO, List<ComposicaoGrupoViagemDTO> composicaoGruposViagem, List<FonteInformacaoDTO> fontesInformacao, List<UtilizacaaAgenciaViagemDTO> utilizacaoAgenciaViagemDTO, List<MotivoViagemDTO> motivos, List<MotivacaoViagemLazerDTO> motivacoesViagemLazer, List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo, List<PermanenciaMediaDTO> permanenciaMediaDTO, List<DestinosMaisVisitadosPorMotivoDTO> destinosMaisVisistadosMotivo) {
+    public FichaSinteseBrasilDTO(Integer ano, List<GeneroDTO> generoDTO, List<FaixaEtariaDTO> faixaEtariaDTO, List<ComposicaoGrupoViagemDTO> composicaoGruposViagem, List<FonteInformacaoDTO> fontesInformacao, List<UtilizacaoAgenciaViagemDTO> utilizacaoAgenciaViagemDTO, List<MotivoViagemDTO> motivos, List<MotivacaoViagemLazerDTO> motivacoesViagemLazer, List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo, List<PermanenciaMediaDTO> permanenciaMediaDTO, List<DestinosMaisVisitadosPorMotivoDTO> destinosMaisVisistadosMotivo) {
         this.ano = ano;
         this.generoDTO = generoDTO;
         this.faixaEtariaDTO = faixaEtariaDTO;
@@ -73,11 +73,11 @@ public class FichaSinteseBrasilDTO {
         this.fontesInformacao = fontesInformacao;
     }
 
-    public List<UtilizacaaAgenciaViagemDTO> getUtilizacaoAgenciaViagemDTO() {
+    public List<UtilizacaoAgenciaViagemDTO> getUtilizacaoAgenciaViagemDTO() {
         return utilizacaoAgenciaViagemDTO;
     }
 
-    public void setUtilizacaoAgenciaViagemDTO(List<UtilizacaaAgenciaViagemDTO> utilizacaoAgenciaViagemDTO) {
+    public void setUtilizacaoAgenciaViagemDTO(List<UtilizacaoAgenciaViagemDTO> utilizacaoAgenciaViagemDTO) {
         this.utilizacaoAgenciaViagemDTO = utilizacaoAgenciaViagemDTO;
     }
 

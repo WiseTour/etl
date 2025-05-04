@@ -11,7 +11,7 @@ public class FichaSintesePaisDTO extends FichaSinteseBrasilDTO {
         this.pais = pais;
     }
 
-    public FichaSintesePaisDTO(Integer ano, List<GeneroDTO> generoDTO, List<FaixaEtariaDTO> faixaEtariaDTO, List<ComposicaoGrupoViagemDTO> composicaoGruposViagem, List<FonteInformacaoDTO> fontesInformacao, List<UtilizacaaAgenciaViagemDTO> utilizacaoAgenciaViagemDTO, List<MotivoViagemDTO> motivos, List<MotivacaoViagemLazerDTO> motivacoesViagemLazer, List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo, List<PermanenciaMediaDTO> permanenciaMediaDTO, List<DestinosMaisVisitadosPorMotivoDTO> destinosMaisVisistadosMotivo, String pais) {
+    public FichaSintesePaisDTO(Integer ano, List<GeneroDTO> generoDTO, List<FaixaEtariaDTO> faixaEtariaDTO, List<ComposicaoGrupoViagemDTO> composicaoGruposViagem, List<FonteInformacaoDTO> fontesInformacao, List<UtilizacaoAgenciaViagemDTO> utilizacaoAgenciaViagemDTO, List<MotivoViagemDTO> motivos, List<MotivacaoViagemLazerDTO> motivacoesViagemLazer, List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo, List<PermanenciaMediaDTO> permanenciaMediaDTO, List<DestinosMaisVisitadosPorMotivoDTO> destinosMaisVisistadosMotivo, String pais) {
         super(ano, generoDTO, faixaEtariaDTO, composicaoGruposViagem, fontesInformacao, utilizacaoAgenciaViagemDTO, motivos, motivacoesViagemLazer, gastosMedioPerCapitaMotivo, permanenciaMediaDTO, destinosMaisVisistadosMotivo);
         this.pais = pais;
     }

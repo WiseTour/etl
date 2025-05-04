@@ -1,10 +1,10 @@
 package tour.wise.dto.ficha.sintese.brasil;
 
-public class UtilizacaaAgenciaViagemDTO {
+public class UtilizacaoAgenciaViagemDTO {
     private String tipo;
     private Double porcentagem;
 
-    public UtilizacaaAgenciaViagemDTO(String tipo, Double porcentagem) {
+    public UtilizacaoAgenciaViagemDTO(String tipo, Double porcentagem) {
         this.tipo = tipo;
         this.porcentagem = porcentagem;
     }

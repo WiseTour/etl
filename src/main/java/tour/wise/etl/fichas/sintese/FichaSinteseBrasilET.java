@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static tour.wise.service.Service.loadWorkbook;
 
@@ -292,15 +291,33 @@ public class FichaSinteseBrasilET {
             String nomeDestino = destinoData.get(0).toString().split(" - ")[1];
             double valor = Double.parseDouble(destinoData.get(1).toString());
 
-            DestinoMaisVisitadoDTO dto = new DestinoMaisVisitadoDTO(nomeDestino, valor);
-            destinos.add(dto);
+            boolean destinoExist = false;
+            for (DestinoMaisVisitadoDTO dto : destinos) {
+                if (dto.getDestino().equalsIgnoreCase(nomeDestino)) {
+                    dto.setPorcentagem(dto.getPorcentagem() + valor);
+                    destinoExist = true;
+                    break;
+                }
+            }
+
+            if (!destinoExist) {
+                destinos.add(new DestinoMaisVisitadoDTO(nomeDestino, valor));
+            }
         }
 
-        DestinoMaisVisitadoDTO dto = new DestinoMaisVisitadoDTO("Outros estados", 100.0 - destinos.getFirst().getPorcentagem() - destinos.getLast().getPorcentagem());
-        destinos.add(dto);
+        double total = 0.0;
+        for (DestinoMaisVisitadoDTO dto : destinos) {
+            total += dto.getPorcentagem();
+        }
+
+        double outrosValor = 100.0 - total;
+        if (outrosValor > 0) {
+            destinos.add(new DestinoMaisVisitadoDTO("Outros estados", outrosValor));
+        }
 
         return destinos;
     }
+
 
 
     protected List<FonteInformacaoDTO> transformFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
@@ -316,14 +333,14 @@ public class FichaSinteseBrasilET {
         return fontes;
     }
 
-    protected List<UtilizacaaAgenciaViagemDTO> transformUtilizacaoAgenciaViagem(List<List<List<Object>>> utilizacoesAgenciaViagemData, int index) {
-        List<UtilizacaaAgenciaViagemDTO> agencias = new ArrayList<>();
+    protected List<UtilizacaoAgenciaViagemDTO> transformUtilizacaoAgenciaViagem(List<List<List<Object>>> utilizacoesAgenciaViagemData, int index) {
+        List<UtilizacaoAgenciaViagemDTO> agencias = new ArrayList<>();
 
         for (List<Object> utilizacaoAgenciaViagemData : utilizacoesAgenciaViagemData.get(index)) {
             String descricao = utilizacaoAgenciaViagemData.get(0).toString();
             double valor = Double.parseDouble(utilizacaoAgenciaViagemData.get(1).toString());
 
-            agencias.add(new UtilizacaaAgenciaViagemDTO(descricao, valor));
+            agencias.add(new UtilizacaoAgenciaViagemDTO(descricao, valor));
         }
 
         return agencias;
