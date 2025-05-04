@@ -29,13 +29,54 @@ public class ChegadaTuristasInternacionaisBrasilMensalET {
         try {
             data = service.extract(fileName, sheetNumber, header, colluns, types);
 
+
+
             System.out.println("[SUCESSO] ETL finalizado com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
         } catch (Exception e) {
             System.out.println("[ERRO] Falha na extração dos dados: " + e.getMessage());
             e.printStackTrace();
         }
 
+
+
         return data;
+    }
+
+    public List<List<Object>> extractBatch(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Integer batchSize) {
+
+        System.out.println("[INÍCIO] Extração de dados iniciada por lote.");
+        System.out.println("[INFO] Arquivo: " + fileName);
+        System.out.println("[INFO] Planilha (sheet): " + sheetNumber);
+        System.out.println("[INFO] Linha de cabeçalho: " + header);
+        System.out.println("[INFO] Quantidade de colunas esperadas: " + colluns);
+        System.out.println("[INFO] Tipos esperados: " + types);
+        System.out.println("[INFO] Tamanho do lote: " + batchSize);
+
+        List<List<Object>> allData = new ArrayList<>();
+
+        try {
+            int offset = 0;
+            List<List<Object>> batch;
+
+            do {
+                // Aqui você precisa que o método do service aceite offset e batchSize
+                batch = service.extractBatch(fileName, sheetNumber, header, colluns, types, offset, batchSize);
+                if (batch != null && !batch.isEmpty()) {
+                    allData.addAll(batch);
+                    System.out.println("[LOTE] Registros extraídos no lote atual: " + batch.size());
+                    offset += batchSize;
+                } else {
+                    break;
+                }
+            } while (batch.size() == batchSize);
+
+            System.out.println("[SUCESSO] ETL finalizado com sucesso. Total de registros extraídos: " + allData.size());
+        } catch (Exception e) {
+            System.out.println("[ERRO] Falha na extração dos dados: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return allData;
     }
 
 
@@ -58,13 +99,14 @@ public class ChegadaTuristasInternacionaisBrasilMensalET {
                 Integer mes = Double.valueOf(datum.get(10).toString()).intValue();
                 Integer chegada = Double.valueOf(datum.get(11).toString()).intValue();
 
-                ChegadaTuristasInternacionaisBrasilMensalDTO chegada_turistas_internacionais_brasil_mensal_dto = new ChegadaTuristasInternacionaisBrasilMensalDTO(
-                        mes, ano, chegada, via_acesso, uf_destino, pais_origem
-                );
+                if(chegada > 0){
+                    ChegadaTuristasInternacionaisBrasilMensalDTO chegada_turistas_internacionais_brasil_mensal_dto = new ChegadaTuristasInternacionaisBrasilMensalDTO(
+                            mes, ano, chegada, via_acesso, uf_destino, pais_origem
+                    );
 
-                chegadas_turistas_internacionais_brasil_mensal_dto.add(chegada_turistas_internacionais_brasil_mensal_dto);
+                    chegadas_turistas_internacionais_brasil_mensal_dto.add(chegada_turistas_internacionais_brasil_mensal_dto);
+                }
 
-                System.out.println("[TRANSFORMADO] Linha " + linha + " -> " + chegada);
             } catch (Exception e) {
                 System.out.println("[ERRO] Falha ao transformar a linha " + linha + ": " + datum);
                 e.printStackTrace();
@@ -77,116 +119,7 @@ public class ChegadaTuristasInternacionaisBrasilMensalET {
     }
 
 
-    public void load(JdbcTemplate connection, String orgao_emissor, String edicao, String titulo_edicao, String url_fonte, List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadas) {
 
-        System.out.println("Iniciando carregamento de chegadas para a fonte: '" + titulo_edicao + "'...");
-
-        PaisDAO pais_dao = new PaisDAO(connection);
-        FonteDAO fonte_dao = new FonteDAO(connection);
-        UnidadeFederativaBrasilDAO unidade_federativa_brasil_dao = new UnidadeFederativaBrasilDAO(connection);
-        ChegadaTuristasInternacionaisBrasilMensalDAO chegada_turistas_internacionais_brasil_Mensal_dao = new ChegadaTuristasInternacionaisBrasilMensalDAO(connection);
-
-        fonte_dao.insertIgnoreFonte(
-                titulo_edicao,
-                edicao,
-                orgao_emissor,
-                url_fonte
-        );
-
-        Integer fonteId = fonte_dao.getFonteId(titulo_edicao);
-
-        if (fonteId == null) {
-            System.out.println("Fonte não encontrada no banco. Interrompendo operação.");
-            return;
-        }
-
-        System.out.println("Fonte encontrada. ID: " + fonteId);
-        System.out.println("Iniciando processamento de " + chegadas.size() + " registros...");
-
-        Integer inseridos = 0;
-        Integer ignorados = 0;
-
-        for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadas) {
-            String pais_origem = chegada.getPais_origem();
-            String uf_destino = chegada.getUf_destino();
-            Integer mes = chegada.getMes();
-            Integer ano = chegada.getAno();
-            Integer qtdChegadas = chegada.getQtdChegadas();
-            String via_acesso = chegada.getVia_acesso();
-
-            boolean dadosIncompletos = false;
-
-            if (pais_origem == null || pais_origem.isBlank()) {
-                System.out.println("[AVISO] Dados incompletos: país nulo ou em branco para a chegada: " + chegada);
-                dadosIncompletos = true;
-            }
-            if (uf_destino == null || uf_destino.isBlank()) {
-                System.out.println("[AVISO] Dados incompletos: destino nulo ou em branco para a chegada: " + chegada);
-                dadosIncompletos = true;
-            }
-            if (mes == null || mes < 1 || mes > 12) {
-                System.out.println("[AVISO] Dados incompletos: mês inválido para a chegada: " + chegada);
-                dadosIncompletos = true;
-            }
-            if (ano == null || ano < 1900 || ano > 2100) {
-                System.out.println("[AVISO] Dados incompletos: ano inválido para a chegada: " + chegada);
-                dadosIncompletos = true;
-            }
-            if (qtdChegadas == null || qtdChegadas < 0) {
-                System.out.println("[AVISO] Dados incompletos: número de chegadas inválido para a chegada: " + chegada);
-                dadosIncompletos = true;
-            }
-            if (via_acesso == null || via_acesso.isBlank()) {
-                System.out.println("[AVISO] Dados incompletos: via de acesso nula ou em branco para a chegada: " + chegada);
-                dadosIncompletos = true;
-            }
-
-            if (dadosIncompletos) {
-                ignorados++;
-                continue;
-            }
-
-
-            Integer id_pais = pais_dao.getPaisId(pais_origem);
-
-            if(id_pais == null){
-                pais_dao.insertPais(pais_origem);
-                id_pais = pais_dao.getPaisId(pais_origem);
-            }
-
-            String uf_sigla = unidade_federativa_brasil_dao.getSiglaPorNome(uf_destino);
-
-            if (uf_sigla == null) {
-                System.out.println("Unidade Federativa não encontrada no banco. Interrompendo operação.");
-                return;
-            }
-
-            System.out.println("Unidade Federativa encontrada. SIGLA: " + uf_sigla);
-
-
-            if (chegada_turistas_internacionais_brasil_Mensal_dao.isChegadaExistente(mes, ano, uf_sigla, id_pais)) {
-                System.out.println("[INFO] Chegada já cadastrada: " +
-                        ano + "/" + mes +
-                        " - UF: " + uf_destino +
-                        " - País: " + pais_origem);
-                ignorados++;
-                continue;
-            }
-
-            try {
-                chegada_turistas_internacionais_brasil_Mensal_dao.insertChegada(mes, ano, qtdChegadas, via_acesso, fonteId, id_pais, uf_sigla);
-                inseridos++;
-            } catch (Exception e) {
-                System.out.println("[ERRO] Falha ao inserir registro: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        System.out.println("Processamento concluído.");
-        System.out.println("Total de registros processados: " + chegadas.size());
-        System.out.println("Inseridos: " + inseridos);
-        System.out.println("Ignorados (já existentes ou inválidos): " + ignorados);
-    }
 
 
 

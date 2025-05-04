@@ -6,7 +6,9 @@ import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.service.Service;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static tour.wise.service.Service.loadWorkbook;
@@ -114,6 +116,8 @@ public class FichaSinteseBrasilET {
             System.out.println(datum);
         }
 
+        workbook.close();
+
         System.out.println("\nETL finalizado com sucesso.");
 
         return data;
@@ -138,89 +142,83 @@ public class FichaSinteseBrasilET {
     }
 
     protected Integer transformAno(List<List<List<Object>>> data, Integer index) {
-        return service.parseToInteger(data.get(index).getFirst().get(1).toString());
+        // Apenas acessa e converte o valor necessário
+        return service.parseToInteger(data.get(index).get(0).get(1).toString());
     }
 
     protected List<GeneroDTO> transformGenero(List<List<List<Object>>> data, Integer index) {
-        List<GeneroDTO> generoDTO = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+        List<GeneroDTO> generoDTO = new ArrayList<>(2);
 
-
+        // Itera diretamente sobre os índices conhecidos (0 e 1)
         for (int i = 0; i < 2; i++) {
             generoDTO.add(
                     new GeneroDTO(
                             data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString()
-                            )
+                            Double.parseDouble(data.get(index).get(i).get(1).toString())
                     )
             );
-
         }
-
 
         return generoDTO;
     }
 
     protected List<FaixaEtariaDTO> transformFaixaEtaria(List<List<List<Object>>> data, Integer index) {
-        List<FaixaEtariaDTO> faixa_etariaDTO = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+        List<FaixaEtariaDTO> faixa_etariaDTO = new ArrayList<>(6);
 
-
+        // Itera sobre os 6 primeiros elementos conhecidos
         for (int i = 0; i < 6; i++) {
             faixa_etariaDTO.add(
                     new FaixaEtariaDTO(
                             data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString()
-                            )
+                            Double.parseDouble(data.get(index).get(i).get(1).toString())
                     )
             );
-
         }
-
 
         return faixa_etariaDTO;
     }
 
-
     protected List<MotivoViagemDTO> transformMotivosViagem(List<List<List<Object>>> data, Integer index) {
-        List<MotivoViagemDTO> motivos = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+        List<MotivoViagemDTO> motivos = new ArrayList<>(3);
 
-
+        // Itera sobre os 3 primeiros elementos conhecidos
         for (int i = 0; i < 3; i++) {
             motivos.add(
                     new MotivoViagemDTO(
                             data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString()
-                            )
+                            Double.parseDouble(data.get(index).get(i).get(1).toString())
                     )
             );
-
         }
-
 
         return motivos;
     }
 
-
-
     protected List<MotivacaoViagemLazerDTO> transformMotivacaoViagemLazer(List<List<List<Object>>> data, Integer index) {
-        List<MotivacaoViagemLazerDTO> motivacoes_viagem_lazer = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+        List<MotivacaoViagemLazerDTO> motivacoes_viagem_lazer = new ArrayList<>(6);
 
+        // Itera sobre os 6 primeiros elementos conhecidos
         for (int i = 0; i <= 5; i++) {
             motivacoes_viagem_lazer.add(
                     new MotivacaoViagemLazerDTO(
                             data.get(index).get(i).get(0).toString(),
                             Double.parseDouble(data.get(index).get(i).get(1).toString())
                     )
-
             );
         }
 
         return motivacoes_viagem_lazer;
     }
 
-
     protected List<ComposicaoGrupoViagemDTO> transformComposicoesGrupo(List<List<List<Object>>> composicoesGrupoData, Integer index) {
-        List<ComposicaoGrupoViagemDTO> composicoes = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+        List<ComposicaoGrupoViagemDTO> composicoes = new ArrayList<>(composicoesGrupoData.get(index).size());
 
+        // Itera diretamente sobre os dados
         for (List<Object> composicaoGrupoData : composicoesGrupoData.get(index)) {
             composicoes.add(createComposicaoGrupo(composicaoGrupoData));
         }
@@ -229,14 +227,17 @@ public class FichaSinteseBrasilET {
     }
 
     protected ComposicaoGrupoViagemDTO createComposicaoGrupo(List<Object> values) {
+        // Cria o DTO diretamente a partir dos valores fornecidos
         return new ComposicaoGrupoViagemDTO(
                 values.get(0).toString(),
                 Double.parseDouble(values.get(1).toString())
         );
     }
 
+
     protected List<GastoMedioPerCapitaMotivoDTO> transformGastosMedioMotivo(List<List<List<Object>>> gastosMedioMotivoData, Integer index) {
-        List<GastoMedioPerCapitaMotivoDTO> gastos = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato necessário para evitar alocações excessivas
+        List<GastoMedioPerCapitaMotivoDTO> gastos = new ArrayList<>(gastosMedioMotivoData.get(index).size());
 
         for (List<Object> gastoMedioMotivoData : gastosMedioMotivoData.get(index)) {
             String motivo = gastoMedioMotivoData.get(0).toString();
@@ -248,7 +249,8 @@ public class FichaSinteseBrasilET {
     }
 
     protected List<PermanenciaMediaDTO> transformPermanenciaMediaMotivo(List<List<List<Object>>> permanenciasMediaMotivoData, Integer index) {
-        List<PermanenciaMediaDTO> permanencias = new ArrayList<>();
+        // Inicializa a lista com o tamanho exato necessário para evitar alocações excessivas
+        List<PermanenciaMediaDTO> permanencias = new ArrayList<>(permanenciasMediaMotivoData.get(index).size());
 
         for (List<Object> permanenciaMediaMotivoData : permanenciasMediaMotivoData.get(index)) {
             String motivo = permanenciaMediaMotivoData.get(0).toString();
@@ -259,57 +261,48 @@ public class FichaSinteseBrasilET {
         return permanencias;
     }
 
-
     protected List<DestinosMaisVisitadosPorMotivoDTO> transformDestinosMaisVisitadosPorMotivo(List<List<List<Object>>> data, Integer index) {
-        String[] motivos = {
-                "Lazer",
-                "Negócios, eventos e convenções",
-                "Outros motivos"
-        };
+        // Definir os motivos diretamente
+        String[] motivos = { "Lazer", "Negócios, eventos e convenções", "Outros motivos" };
 
-        List<DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = new ArrayList<>();
+        // Inicializa a lista de DestinosMaisVisitadosPorMotivoDTO
+        List<DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = new ArrayList<>(motivos.length);
 
-
-
+        // Processa cada motivo e cria o DTO correspondente
         for (int i = 0; i < motivos.length; i++) {
             destinosPorMotivo.add(
                     new DestinosMaisVisitadosPorMotivoDTO(
                             motivos[i],
-                            createDestinos(data.get(index + i))
+                            createDestinos(data.get(index + i)) // Chama createDestinos para gerar os destinos
                     )
             );
         }
 
-
         return destinosPorMotivo;
     }
 
-    protected List<DestinoMaisVisitadoDTO> createDestinos(List<List<Object>> destinosData) {
-        List<DestinoMaisVisitadoDTO> destinos = new ArrayList<>();
 
+    protected List<DestinoMaisVisitadoDTO> createDestinos(List<List<Object>> destinosData) {
+        // Usamos um mapa para armazenar destinos e suas porcentagens, evitando a duplicação
+        Map<String, Double> destinosMap = new HashMap<>();
+
+        // Processa cada destino e adiciona/atualiza o valor no mapa
         for (List<Object> destinoData : destinosData) {
             String nomeDestino = destinoData.get(0).toString().split(" - ")[1];
             double valor = Double.parseDouble(destinoData.get(1).toString());
 
-            boolean destinoExist = false;
-            for (DestinoMaisVisitadoDTO dto : destinos) {
-                if (dto.getDestino().equalsIgnoreCase(nomeDestino)) {
-                    dto.setPorcentagem(dto.getPorcentagem() + valor);
-                    destinoExist = true;
-                    break;
-                }
-            }
-
-            if (!destinoExist) {
-                destinos.add(new DestinoMaisVisitadoDTO(nomeDestino, valor));
-            }
+            // Se o destino já existe, incrementa o valor, caso contrário, adiciona
+            destinosMap.merge(nomeDestino, valor, Double::sum);
         }
 
-        double total = 0.0;
-        for (DestinoMaisVisitadoDTO dto : destinos) {
-            total += dto.getPorcentagem();
+        // Cria a lista de DTOs a partir do mapa
+        List<DestinoMaisVisitadoDTO> destinos = new ArrayList<>(destinosMap.size());
+        for (Map.Entry<String, Double> entry : destinosMap.entrySet()) {
+            destinos.add(new DestinoMaisVisitadoDTO(entry.getKey(), entry.getValue()));
         }
 
+        // Calcula o total e adiciona "Outros estados" se necessário
+        double total = destinos.stream().mapToDouble(DestinoMaisVisitadoDTO::getPorcentagem).sum();
         double outrosValor = 100.0 - total;
         if (outrosValor > 0) {
             destinos.add(new DestinoMaisVisitadoDTO("Outros estados", outrosValor));
@@ -318,10 +311,8 @@ public class FichaSinteseBrasilET {
         return destinos;
     }
 
-
-
     protected List<FonteInformacaoDTO> transformFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
-        List<FonteInformacaoDTO> fontes = new ArrayList<>();
+        List<FonteInformacaoDTO> fontes = new ArrayList<>(fontesInformacaoData.get(index).size());
 
         for (List<Object> fonteInformacaoData : fontesInformacaoData.get(index)) {
             String descricao = fonteInformacaoData.get(0).toString();
@@ -334,7 +325,7 @@ public class FichaSinteseBrasilET {
     }
 
     protected List<UtilizacaoAgenciaViagemDTO> transformUtilizacaoAgenciaViagem(List<List<List<Object>>> utilizacoesAgenciaViagemData, int index) {
-        List<UtilizacaoAgenciaViagemDTO> agencias = new ArrayList<>();
+        List<UtilizacaoAgenciaViagemDTO> agencias = new ArrayList<>(utilizacoesAgenciaViagemData.get(index).size());
 
         for (List<Object> utilizacaoAgenciaViagemData : utilizacoesAgenciaViagemData.get(index)) {
             String descricao = utilizacaoAgenciaViagemData.get(0).toString();
@@ -345,6 +336,7 @@ public class FichaSinteseBrasilET {
 
         return agencias;
     }
+
 
 
 

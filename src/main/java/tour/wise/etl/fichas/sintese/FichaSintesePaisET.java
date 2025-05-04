@@ -126,6 +126,8 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
             System.out.println(datum);
         }
 
+        workbook.close();
+
         System.out.println("\nETL finalizado com sucesso.");
 
         return data;

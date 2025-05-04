@@ -21,9 +21,6 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
 
     Workbook workbook;
 
-
-
-
     public List<FichaSinteseEstadoDTO> extractTransformFicha_Sintese_Estado(String fileName, Integer startCollun, Integer endCollun) throws IOException {
 
         // EXTRACT
@@ -130,6 +127,8 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
         for (List<List<Object>> datum : data) {
             System.out.println(datum);
         }
+
+        workbook.close();
 
         System.out.println("\nETL finalizado com sucesso.");
 

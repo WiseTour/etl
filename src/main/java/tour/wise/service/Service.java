@@ -73,55 +73,43 @@ public class Service {
         }
     }
 
+    public List<List<Object>> extractBatch(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, int offset, int batchSize) {
+        try {
+            System.out.printf("\n[LOTE] Iniciando leitura por lote do arquivo %s\n", fileName);
 
-    public <T> List<T> extractRangeFromAllSheets(
-            String fileName,
-            int startRow,
-            int endRow,
-            List<Integer> columns,
-            List<String> types,
-            Function<List<Object>, T> mapper
-    ) {
-        List<T> data = new ArrayList<>();
+            Workbook workbook = loadWorkbook(fileName);
+            Sheet sheet = workbook.getSheetAt(sheetNumber);
+            List<List<Object>> data = new ArrayList<>();
 
-        try (Workbook workbook = loadWorkbook(fileName)) {
+            int startRow = header + 1 + offset; // pula o cabeçalho + offset
+            int endRow = startRow + batchSize;
 
-            int totalSheets = workbook.getNumberOfSheets();
-            System.out.println("\nIniciando leitura de " + totalSheets + " planilhas...\n");
+            int totalRows = sheet.getLastRowNum();
 
-            for (int sheetIndex = 0; sheetIndex < totalSheets; sheetIndex++) {
-                Sheet sheet = workbook.getSheetAt(sheetIndex);
-                String sheetName = workbook.getSheetName(sheetIndex);
-                System.out.println("Lendo planilha: " + sheetName);
+            System.out.println("[LOTE] Lendo linhas de " + startRow + " até " + (Math.min(endRow - 1, totalRows)));
 
-                for (Row row : sheet) {
-                    int rowNum = row.getRowNum();
+            for (int rowIndex = startRow; rowIndex < endRow && rowIndex <= totalRows; rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) continue;
 
-                    if (rowNum < startRow || rowNum > endRow) {
-                        continue;
-                    }
-
-                    List<Object> linha = new ArrayList<>();
-
-                    for (int i = 0; i < columns.size(); i++) {
-                        int colIndex = columns.get(i);
-                        String type = types.get(i);
-
-                        linha.add(transformTypeCell(row.getCell(colIndex), type));
-                    }
-
-                    data.add(mapper.apply(linha));
+                List<Object> linha = new ArrayList<>();
+                for (int i = 0; i < colluns; i++) {
+                    linha.add(transformTypeCell(row.getCell(i), types.get(i)));
                 }
+
+                data.add(linha);
             }
 
-            System.out.println("\nLeitura de todas as planilhas finalizada\n");
+            workbook.close();
+
+            System.out.printf("[LOTE] Finalizado lote com %d registros extraídos.\n", data.size());
+
             return data;
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("[ERRO] Falha na leitura por lote: " + e.getMessage(), e);
         }
     }
-
 
     public  <T> List<T> extractRange(
             Workbook workbook,
