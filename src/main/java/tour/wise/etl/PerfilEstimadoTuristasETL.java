@@ -56,9 +56,46 @@ public class PerfilEstimadoTuristasETL {
 
         Integer i = 1;
 
-        for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilMensalDTO) {
+        List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilAnualDTO =
+                chegadasTuristasInternacionaisBrasilMensalDTO.stream()
+                        .collect(Collectors.groupingBy(m -> m.getAno() + "|" + m.getPaisOrigem() + "|" + m.getUfDestino() + "|" + m.getViaAcesso()))
+                        .entrySet().stream()
+                        .map(entry -> {
+                            String[] chavePartes = entry.getKey().split("\\|");
+                            Integer ano = Integer.parseInt(chavePartes[0]);
+                            String paisOrigem = chavePartes[1];
+                            String ufDestino = chavePartes[2];
+                            String viaAcesso = chavePartes[3];
 
-            System.out.println(i);
+                            List<ChegadaTuristasInternacionaisBrasilMensalDTO> grupo = entry.getValue();
+
+                            int totalChegadas = grupo.stream()
+                                    .mapToInt(ChegadaTuristasInternacionaisBrasilMensalDTO::getQtdChegadas)
+                                    .sum();
+
+                            return new ChegadaTuristasInternacionaisBrasilMensalDTO(
+                                    null,
+                                    ano,
+                                    totalChegadas,
+                                    viaAcesso,
+                                    ufDestino,
+                                    paisOrigem
+                            );
+                        })
+                        .collect(Collectors.toList());
+
+
+
+        for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilAnualDTO) {
+
+            System.out.println("chegadas restantes: " + (chegadasTuristasInternacionaisBrasilAnualDTO.size() - i));
+            System.out.println("chegada - linha: " + i);
+            System.out.println("quantidade de perfies: " + perfiesEstimadoTuristas.size());
+
+            for (PerfilDTO perfiesEstimadoTurista : perfiesEstimadoTuristas) {
+                System.out.println(perfiesEstimadoTurista);
+            }
+
             i++;
 
             String paisOrigem = chegada.getPaisOrigem();
@@ -90,6 +127,7 @@ public class PerfilEstimadoTuristasETL {
                     perfilDTOEstado.setEstadoEntrada(ufDestino);
                     perfilDTOEstado.setAno(chegada.getAno());
                     perfilDTOEstado.setMes(chegada.getMes());
+                    perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
                     perfilDTOEstado.setTaxaTuristas(
                             perfilDTOEstado.getTaxaTuristas() *
                                     taxaTuristas/100
@@ -105,6 +143,8 @@ public class PerfilEstimadoTuristasETL {
                 perfiesDTOEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
 
                 perfiesEstimadoTuristas.addAll(perfiesDTOEstado);
+
+                perfiesDTOEstado.clear();
 
                 continue;
             }
@@ -126,6 +166,7 @@ public class PerfilEstimadoTuristasETL {
                     perfilDTOEstado.setEstadoEntrada(ufDestino);
                     perfilDTOEstado.setAno(chegada.getAno());
                     perfilDTOEstado.setMes(chegada.getMes());
+                    perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
                     Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas()/100)).intValue();
                     perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
                 }
@@ -134,6 +175,8 @@ public class PerfilEstimadoTuristasETL {
                 perfiesDTOPais.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
 
                 perfiesEstimadoTuristas.addAll(perfiesDTOPais);
+
+                perfiesDTOPais.clear();
 
                 continue;
             }
@@ -149,6 +192,7 @@ public class PerfilEstimadoTuristasETL {
                 perfilDTOEstado.setEstadoEntrada(ufDestino);
                 perfilDTOEstado.setAno(chegada.getAno());
                 perfilDTOEstado.setMes(chegada.getMes());
+                perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
                 Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas()/100)).intValue();
                 perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
             }
@@ -156,10 +200,11 @@ public class PerfilEstimadoTuristasETL {
             // Remove todos os perfis com quantidadeTuristas < 1
             perfiesDTOBrasil.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
             perfiesEstimadoTuristas.addAll(perfiesDTOBrasil);
+            perfiesDTOBrasil.clear();
 
         }
 
-        System.out.println(perfiesEstimadoTuristas.size());
+
     }
 
 
@@ -205,7 +250,7 @@ public class PerfilEstimadoTuristasETL {
 
                                     ListaDestinosDTO listaDestinosDTO = createListaDestinosDTO(destinosMaisVisitadosDTOCombination, permanenciaMediaMotivoDTO.getDias());
 
-                                    System.out.println(destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem());
+
                                     Double taxaTuristasDestino = (destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem() > 0) ? destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem() : 100;
 
                                     String genero = (generoDTO.getPorcentagem() > 0) ? generoDTO.getGenero() : null;
