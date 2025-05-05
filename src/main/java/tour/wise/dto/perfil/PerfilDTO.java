@@ -59,7 +59,6 @@ public class PerfilDTO {
     }
 
 
-
     public Double getTaxaTuristas() {
         return taxaTuristas;
     }

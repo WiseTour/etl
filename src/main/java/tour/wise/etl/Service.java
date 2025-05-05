@@ -1,4 +1,4 @@
-package tour.wise.service;
+package tour.wise.etl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,7 +122,7 @@ public class Service {
     }
 
 
-    public static Workbook loadWorkbook(String fileName) {
+    public  Workbook loadWorkbook(String fileName) {
         try {
             Path path = Path.of(fileName);
             InputStream excelFile = Files.newInputStream(path);
@@ -175,7 +175,7 @@ public class Service {
         return null;
     }
 
-    private static Object transformTypeCell(Cell cell, String tipo) {
+    private Object transformTypeCell(Cell cell, String tipo) {
         if (cell == null) {
             return ""; // ou algum valor padrão, ou até lançar uma exceção personalizada
         }
