@@ -3,14 +3,14 @@ package tour.wise.dto.ficha.sintese.brasil;
 public class PermanenciaMediaDTO {
 
     private String motivo;
-    private Double procentagem;
+    private Double dias;
 
     public PermanenciaMediaDTO() {
     }
 
-    public PermanenciaMediaDTO(String motivo, Double procentagem) {
+    public PermanenciaMediaDTO(String motivo, Double dias) {
         this.motivo = motivo;
-        this.procentagem = procentagem;
+        this.dias = dias;
     }
 
     public String getMotivo() {
@@ -21,19 +21,19 @@ public class PermanenciaMediaDTO {
         this.motivo = motivo;
     }
 
-    public Double getProcentagem() {
-        return procentagem;
+    public Double getDias() {
+        return dias;
     }
 
-    public void setProcentagem(Double procentagem) {
-        this.procentagem = procentagem;
+    public void setDias(Double dias) {
+        this.dias = dias;
     }
 
     @Override
     public String toString() {
         return "Permanencia_Media{" +
                 "motivo='" + motivo + '\'' +
-                ", procentagem=" + procentagem +
+                ", procentagem=" + dias +
                 '}';
     }
 }

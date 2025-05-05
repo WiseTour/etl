@@ -53,10 +53,13 @@ public class PerfilEstimadoTuristasETL {
 
         // PERFIES
         List<PerfilDTO> perfiesEstimadoTuristas = new ArrayList<>();
-        List<PerfilDTO> perfiesEstimadoTuristasBrasil = new ArrayList<>(); // = transformFichaSinteseCombinationsCreatePerfilDTO(fichasSinteseBrasilDTO);
-        List<PerfilDTO> perfiesEstimadoTuristasPais = new ArrayList<>();
+
+        Integer i = 1;
 
         for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilMensalDTO) {
+
+            System.out.println(i);
+            i++;
 
             String paisOrigem = chegada.getPaisOrigem();
             String ufDestino = chegada.getUfDestino();
@@ -72,9 +75,36 @@ public class PerfilEstimadoTuristasETL {
 
             if (fichaEstadoOptional.isPresent()) {
                 FichaSinteseEstadoDTO fichaEstado = fichaEstadoOptional.get();
-                // usar fichaEstado aqui...
 
-                System.out.println(fichaEstado);
+                Double taxaTuristas = fichaEstado.getPaisesOrigem().stream()
+                        .filter(p -> p.getPais().equalsIgnoreCase(paisOrigem))
+                        .map(PaisOrigemDTO::getPorcentagem)
+                        .findFirst()
+                        .orElse(null);
+
+                List<PerfilDTO> perfiesDTOEstado = transformFichaSinteseCombinationsCreatePerfilDTO(fichaEstado);
+
+                for (PerfilDTO perfilDTOEstado : perfiesDTOEstado) {
+
+                    perfilDTOEstado.setPaisesOrigem(paisOrigem);
+                    perfilDTOEstado.setEstadoEntrada(ufDestino);
+                    perfilDTOEstado.setAno(chegada.getAno());
+                    perfilDTOEstado.setMes(chegada.getMes());
+                    perfilDTOEstado.setTaxaTuristas(
+                            perfilDTOEstado.getTaxaTuristas() *
+                                    taxaTuristas/100
+                            );
+                    Double taxaAtualizada = perfilDTOEstado.getTaxaTuristas()/100;
+                    Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * taxaAtualizada)).intValue();
+                    perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
+
+                }
+
+
+                // Remove todos os perfis com quantidadeTuristas < 1
+                perfiesDTOEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+
+                perfiesEstimadoTuristas.addAll(perfiesDTOEstado);
 
                 continue;
             }
@@ -87,30 +117,51 @@ public class PerfilEstimadoTuristasETL {
 
             if (fichaPaisOptional.isPresent()) {
                 FichaSintesePaisDTO fichaPais = fichaPaisOptional.get();
-                // usar fichaPais aqui...
 
-                System.out.println(fichaPais);
+                List<PerfilDTO> perfiesDTOPais = transformFichaSinteseCombinationsCreatePerfilDTO(fichaPais);
+
+                for (PerfilDTO perfilDTOEstado : perfiesDTOPais) {
+
+                    perfilDTOEstado.setPaisesOrigem(paisOrigem);
+                    perfilDTOEstado.setEstadoEntrada(ufDestino);
+                    perfilDTOEstado.setAno(chegada.getAno());
+                    perfilDTOEstado.setMes(chegada.getMes());
+                    Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas()/100)).intValue();
+                    perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
+                }
+
+                // Remove todos os perfis com quantidadeTuristas < 1
+                perfiesDTOPais.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+
+                perfiesEstimadoTuristas.addAll(perfiesDTOPais);
 
                 continue;
             }
 
             // Senão, usa a ficha do Brasil
             FichaSinteseBrasilDTO fichaBrasil = fichasSinteseBrasilDTO;
-            // usar fichaBrasil aqui...
 
-            System.out.println(fichaBrasil);
+            List<PerfilDTO> perfiesDTOBrasil = transformFichaSinteseCombinationsCreatePerfilDTO(fichaBrasil);
 
-            break;
+            for (PerfilDTO perfilDTOEstado : perfiesDTOBrasil) {
+
+                perfilDTOEstado.setPaisesOrigem(paisOrigem);
+                perfilDTOEstado.setEstadoEntrada(ufDestino);
+                perfilDTOEstado.setAno(chegada.getAno());
+                perfilDTOEstado.setMes(chegada.getMes());
+                Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas()/100)).intValue();
+                perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
+            }
+
+            // Remove todos os perfis com quantidadeTuristas < 1
+            perfiesDTOBrasil.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+            perfiesEstimadoTuristas.addAll(perfiesDTOBrasil);
+
         }
+
+        System.out.println(perfiesEstimadoTuristas.size());
     }
 
-    public List<PerfilDTO> createPerfiesChegadaDTO(){
-        List<PerfilDTO> perfiesEstado = new ArrayList<>();
-
-
-
-        return perfiesEstado;
-    }
 
     protected List<PerfilDTO>transformFichaSinteseCombinationsCreatePerfilDTO(FichaSinteseBrasilDTO fichaSinteseBrasilDTO){
         List<PerfilDTO> perfiesFichaSinteseBrasilDTO = new ArrayList<>();
@@ -125,10 +176,10 @@ public class PerfilEstimadoTuristasETL {
 
                         for (FonteInformacaoDTO fonteInformacaoDTO : fichaSinteseBrasilDTO.getFontesInformacao()) {
 
-                            for (MotivoViagemDTO motivo : fichaSinteseBrasilDTO.getMotivos()) {
+                            for (MotivoViagemDTO motivoDTO : fichaSinteseBrasilDTO.getMotivos()) {
 
                                 DestinosMaisVisitadosPorMotivoDTO destinosMaisVisitadosPorMotivoDTO = fichaSinteseBrasilDTO.getDestinosMaisVisistadosMotivo().stream()
-                                        .filter(d -> d.getMotivo().equalsIgnoreCase(motivo.getMotivo()))
+                                        .filter(d -> d.getMotivo().equalsIgnoreCase(motivoDTO.getMotivo()))
                                         .findFirst()
                                         .orElse(null);
 
@@ -137,48 +188,67 @@ public class PerfilEstimadoTuristasETL {
                                 for (List<DestinoMaisVisitadoDTO> destinosMaisVisitadosDTOCombination : destinosMaisVisitadosDTOCombinations) {
 
                                     GastoMedioPerCapitaMotivoDTO gastoMedioPerCapitaMotivoDTO = fichaSinteseBrasilDTO.getGastosMedioPerCapitaMotivo().stream()
-                                            .filter(g -> g.getMotivo().equalsIgnoreCase(motivo.getMotivo()))
+                                            .filter(g -> g.getMotivo().equalsIgnoreCase(motivoDTO.getMotivo()))
                                             .findFirst()
                                             .orElse(null);
 
                                     PermanenciaMediaDTO permanenciaMediaMotivoDTO = fichaSinteseBrasilDTO.getPermanenciaMediaDTO().stream()
-                                            .filter(p -> p.getMotivo().equalsIgnoreCase(motivo.getMotivo()))
+                                            .filter(p -> p.getMotivo().equalsIgnoreCase(motivoDTO.getMotivo()))
                                             .findFirst()
                                             .orElse(null);
 
 
-                                    List<MotivacaoViagemLazerDTO> motivacoesLazer = "Lazer".equalsIgnoreCase(motivo.getMotivo())
+                                    List<MotivacaoViagemLazerDTO> motivacoesLazer = "Lazer".equalsIgnoreCase(motivoDTO.getMotivo())
                                             ? fichaSinteseBrasilDTO.getMotivacoesViagemLazer()
                                             : Collections.emptyList();
 
 
-                                    ListaDestinosDTO listaDestinosDTO = createListaDestinosDTO(destinosMaisVisitadosDTOCombination, permanenciaMediaMotivoDTO.getProcentagem());
+                                    ListaDestinosDTO listaDestinosDTO = createListaDestinosDTO(destinosMaisVisitadosDTOCombination, permanenciaMediaMotivoDTO.getDias());
+
+                                    System.out.println(destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem());
+                                    Double taxaTuristasDestino = (destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem() > 0) ? destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem() : 100;
+
+                                    String genero = (generoDTO.getPorcentagem() > 0) ? generoDTO.getGenero() : null;
+                                    Double gerenoPorcentagem = (generoDTO.getPorcentagem() > 0) ? generoDTO.getPorcentagem() : 100;
+                                    String faixaEtaria = (faixaEtariaDTO.getPorcentagem() > 0) ? faixaEtariaDTO.getFaixa_etaria() : null;
+                                    Double faixaEtariaPorcentagem = (faixaEtariaDTO.getPorcentagem() > 0) ? faixaEtariaDTO.getPorcentagem() : 100;
+                                    String utilizacaoAgenciaViagem = (utilizacaoAgenciaViagemDTO.getPorcentagem() > 0) ? utilizacaoAgenciaViagemDTO.getTipo() : null;
+                                    Double utilizacaoAgenciaViagemPorcentagem = (utilizacaoAgenciaViagemDTO.getPorcentagem() > 0) ? utilizacaoAgenciaViagemDTO.getPorcentagem() : 100;
+                                    String composicaogrupoViagem =  (composicaoGrupoViagemDTO.getPorcentagem() > 0) ? composicaoGrupoViagemDTO.getComposicao() : null;
+                                    Double composicaogrupoViagemPorcentagem = (composicaoGrupoViagemDTO.getPorcentagem() > 0) ? composicaoGrupoViagemDTO.getPorcentagem() : 100;
+                                    String fonteInformacao = (fonteInformacaoDTO.getPorcentagem() > 0) ? fonteInformacaoDTO.getFonte() : null;
+                                    Double fonteInformacaoPorcentagem = (fonteInformacaoDTO.getPorcentagem() > 0) ? fonteInformacaoDTO.getPorcentagem() : 100;
+                                    String motivo = (motivoDTO.getPorcentagem() > 0) ? motivoDTO.getMotivo() : null;
+                                    Double motivoPorcentagem = (motivoDTO.getPorcentagem() > 0) ? motivoDTO.getPorcentagem() : 100;
 
 
                                     if(!motivacoesLazer.isEmpty()){
 
                                         for (MotivacaoViagemLazerDTO motivacaoViagemLazerDTO : fichaSinteseBrasilDTO.getMotivacoesViagemLazer()) {
 
-                                            Double taxaTuristas = generoDTO.getPorcentagem()/100 *
-                                                    faixaEtariaDTO.getPorcentagem()/100 *
-                                                    utilizacaoAgenciaViagemDTO.getPorcentagem()/100 *
-                                                    fonteInformacaoDTO.getPorcentagem()/100 *
-                                                    composicaoGrupoViagemDTO.getPorcentagem()/100 *
-                                                    motivo.getPorcentagem()/100 *
-                                                    destinosMaisVisitadosDTOCombination.getLast().getPorcentagem() *
-                                                    motivacaoViagemLazerDTO.getPorcentagem()/100;
+                                            String motivacaoViagemLazer = (motivacaoViagemLazerDTO.getPorcentagem() > 0) ? motivacaoViagemLazerDTO.getMotivacao() : null;
+                                            Double motivacaoViagemLazerPorcentagem = (motivacaoViagemLazerDTO.getPorcentagem() > 0) ? motivacaoViagemLazerDTO.getPorcentagem() : 100;
+
+                                            Double taxaTuristas = gerenoPorcentagem/100 *
+                                                    faixaEtariaPorcentagem/100 *
+                                                    utilizacaoAgenciaViagemPorcentagem/100 *
+                                                    fonteInformacaoPorcentagem/100 *
+                                                    composicaogrupoViagemPorcentagem/100 *
+                                                    motivoPorcentagem/100 *
+                                                    taxaTuristasDestino/100 *
+                                                    motivacaoViagemLazerPorcentagem/100;
 
                                             perfiesFichaSinteseBrasilDTO.add(
                                                     new PerfilDTO(
                                                             taxaTuristas,
                                                             fichaSinteseBrasilDTO.getAno(),
-                                                            generoDTO.getGenero(),
-                                                            faixaEtariaDTO.getFaixa_etaria(),
-                                                            composicaoGrupoViagemDTO.getComposicao(),
-                                                            fonteInformacaoDTO.getFonte(),
-                                                            utilizacaoAgenciaViagemDTO.getTipo(),
-                                                            motivo.getMotivo(),
-                                                            motivacaoViagemLazerDTO.getMotivacao(),
+                                                            genero,
+                                                            faixaEtaria,
+                                                            composicaogrupoViagem,
+                                                            fonteInformacao,
+                                                            utilizacaoAgenciaViagem,
+                                                            motivo,
+                                                            motivacaoViagemLazer,
                                                             gastoMedioPerCapitaMotivoDTO.getGasto(),
                                                             listaDestinosDTO
 
@@ -189,24 +259,24 @@ public class PerfilEstimadoTuristasETL {
 
                                     }else{
 
-                                        Double taxaTuristas = generoDTO.getPorcentagem()/100 *
-                                                faixaEtariaDTO.getPorcentagem()/100 *
-                                                utilizacaoAgenciaViagemDTO.getPorcentagem()/100 *
-                                                fonteInformacaoDTO.getPorcentagem()/100 *
-                                                composicaoGrupoViagemDTO.getPorcentagem()/100 *
-                                                motivo.getPorcentagem()/100 *
-                                                destinosMaisVisitadosDTOCombination.getLast().getPorcentagem();
+                                        Double taxaTuristas = gerenoPorcentagem/100 *
+                                                faixaEtariaPorcentagem/100 *
+                                                utilizacaoAgenciaViagemPorcentagem/100 *
+                                                fonteInformacaoPorcentagem/100 *
+                                                composicaogrupoViagemPorcentagem/100 *
+                                                motivoPorcentagem/100 *
+                                                taxaTuristasDestino/100;
 
                                         perfiesFichaSinteseBrasilDTO.add(
                                                 new PerfilDTO(
                                                         taxaTuristas,
                                                         fichaSinteseBrasilDTO.getAno(),
-                                                        generoDTO.getGenero(),
-                                                        faixaEtariaDTO.getFaixa_etaria(),
-                                                        composicaoGrupoViagemDTO.getComposicao(),
-                                                        fonteInformacaoDTO.getFonte(),
-                                                        utilizacaoAgenciaViagemDTO.getTipo(),
-                                                        motivo.getMotivo(),
+                                                        genero,
+                                                        faixaEtaria,
+                                                        composicaogrupoViagem,
+                                                        fonteInformacao,
+                                                        utilizacaoAgenciaViagem,
+                                                        motivo,
                                                         null,
                                                         gastoMedioPerCapitaMotivoDTO.getGasto(),
                                                         listaDestinosDTO
@@ -292,10 +362,10 @@ public class PerfilEstimadoTuristasETL {
             List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitadosCombinations) {
 
         List<DestinoMaisVisitadoDTO> combinacaoComPorcentagem = new ArrayList<>();
-        double porcentagemAcumulada = 1.0;
+        double porcentagemAcumulada = 100.0;
 
         for (DestinoMaisVisitadoDTO d : combinacaoAtual) {
-            porcentagemAcumulada *= d.getPorcentagem();
+            porcentagemAcumulada *= d.getPorcentagem()/100;
             combinacaoComPorcentagem.add(new DestinoMaisVisitadoDTO(d.getDestino(), porcentagemAcumulada));
         }
 
