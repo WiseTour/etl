@@ -2,10 +2,10 @@ package tour.wise.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
-public class PerfilEstimadoTuristasDAO {
+public class Perfil_Estimado_TuristasDAO {
     private JdbcTemplate connection; // Conexão com o banco
 
-    public PerfilEstimadoTuristasDAO(JdbcTemplate connection) {
+    public Perfil_Estimado_TuristasDAO(JdbcTemplate connection) {
         this.connection = connection;
     }
 

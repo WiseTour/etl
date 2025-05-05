@@ -11,32 +11,56 @@ public class PaisDAO {
         this.connection = connection;
     }
 
-    public Integer getPaisId(String nomePais) {
-        String sqlIdPais = "SELECT idPais FROM Pais WHERE pais = ?";
-        Integer idPais = null;
+    public void insertIgnore(String pais) {
+        System.out.println("Tentando inserir o país: " + pais);
+
+        String sql = "INSERT IGNORE INTO Pais (pais) VALUES (?)";
 
         try {
-            idPais = connection.queryForObject(sqlIdPais, Integer.class, nomePais);
-            System.out.println("[INFO] ID encontrado para o país '" + nomePais + "': " + idPais);
-        } catch (EmptyResultDataAccessException e) {
-            System.out.println("[AVISO] País '" + nomePais + "' não encontrado no banco de dados.");
-        } catch (Exception e) {
-            System.out.println("[ERRO] Erro ao buscar ID do país '" + nomePais + "': " + e.getMessage());
-        }
+            int rowsAffected = connection.update(sql, pais);
 
-        return idPais;
+            if (rowsAffected > 0) {
+                System.out.println("País inserido com sucesso: " + pais);
+            } else {
+                System.out.println("País já existente, nenhuma inserção feita: " + pais);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao inserir país no banco: " + pais);
+
+            // Verifica se a causa da exceção é uma SQLException
+            Throwable cause = e.getCause();
+            if (cause instanceof java.sql.SQLException sqlEx) {
+                System.err.println("Erro SQL: " + sqlEx.getMessage());
+                System.err.println("Código de erro SQL: " + sqlEx.getErrorCode());
+                System.err.println("SQLState: " + sqlEx.getSQLState());
+            }
+
+            e.printStackTrace(); // imprime o stack trace completo para depuração
+
+            throw e; // lança a exceção para que a aplicação saiba que houve erro
+        }
     }
 
-    // Método para inserir um novo país no banco
-    public void insertPais(String nomePais) {
-        String sqlInsertPais = "INSERT INTO Pais (pais) VALUES (?)";
+    public Integer getId(String nomePais) {
+        String sql = "SELECT id_pais FROM Pais WHERE pais = ?";
 
         try {
-            connection.update(sqlInsertPais, nomePais);
-            System.out.println("[INSERÇÃO] Novo país inserido com sucesso: '" + nomePais + "'");
+            Integer idPais = connection.queryForObject(sql, Integer.class, nomePais);
 
+            if (idPais != null) {
+                System.out.println("País encontrado: " + nomePais + " (ID: " + idPais + ")");
+                return idPais;
+            } else {
+                System.out.println("País não encontrado: " + nomePais);
+                return null;
+            }
         } catch (Exception e) {
-            System.out.println("[ERRO] Erro ao inserir novo país '" + nomePais + "': " + e.getMessage());
+            System.err.println("Erro ao buscar ID do país: " + nomePais);
+            e.printStackTrace();
+            return null;
         }
     }
+
+
 }
