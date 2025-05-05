@@ -20,7 +20,7 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
     Workbook workbook;
 
 
-    public List<FichaSintesePaisDTO> extractTransformFicha_Sintese_Pais(String fileName, Integer startCollun, Integer endCollun) throws IOException {
+    public List<FichaSintesePaisDTO> extractTransformFichasSintesePais(String fileName, Integer collun) throws IOException {
 
         // EXTRACT
 
@@ -28,16 +28,14 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
 
         List<List<List<List<Object>>>> data = new ArrayList<>();
         for(Integer i = 1; i < service.getSheetNumber(fileName); i++ ){
-            for(Integer j = startCollun; j <= endCollun; j++){
-                data.add(extract(
-                        workbook,
-                        fileName,
-                        i,
-                        List.of(1, 3+j),
-                        List.of(10, 12+j),
-                        List.of("string", "numeric")));
+            data.add(extractData(
+                    workbook,
+                    fileName,
+                    i,
+                    List.of(1, 3+collun),
+                    List.of(10, 12+collun),
+                    List.of("string", "numeric")));
 
-            }
 
         }
 
@@ -48,16 +46,15 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
         List<FichaSintesePaisDTO> fichas_sintese_por_pais = new ArrayList<>();
 
         for (List<List<List<Object>>> datum : data) {
-            fichas_sintese_por_pais.add(transform(datum));
+            fichas_sintese_por_pais.add(transformData(datum));
         }
 
 
-    return fichas_sintese_por_pais;
+        return fichas_sintese_por_pais;
 
     }
 
-
-    public List<List<List<Object>>> extract(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException  {
+    public List<List<List<Object>>> extractData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException  {
 
         String sheetName = service.getSheetName(fileName, sheetNumber);
         String pais = sheetName.split("\\s+", 2)[1]; // pais de origem
@@ -85,6 +82,7 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
 
             data.add(
                     service.extractRange(
+                            fileName,
                             workbook,
                             sheetNumber,
                             range[0],
@@ -109,6 +107,7 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
 
             data.add(
                     service.extractRange(
+                            fileName,
                             workbook,
                             sheetNumber,
                             range[0],
@@ -135,20 +134,19 @@ public class FichaSintesePaisET extends FichaSinteseBrasilET {
 
 
     @Override
-    public FichaSintesePaisDTO transform(List<List<List<Object>>> data) {
+    public FichaSintesePaisDTO transformData(List<List<List<Object>>> data) {
         return new FichaSintesePaisDTO(
-
                 transformAno(data, 1),
-                transformGenero(data, 12),
-                transformFaixaEtaria(data, 13),
-                transformComposicoesGrupo(data, 4),
-                transformFontesInformacao(data, 10),
-                transformUtilizacaoAgenciaViagem(data, 11),
-                transformMotivosViagem(data, 2),
-                transformMotivacaoViagemLazer(data, 3),
-                transformGastosMedioMotivo(data, 5),
-                transformPermanenciaMediaMotivo(data, 6),
-                transformDestinosMaisVisitadosPorMotivo(data, 7),
+                transformListGenero(data, 12),
+                transformListFaixaEtaria(data, 13),
+                transformListComposicoesGrupo(data, 4),
+                transformListFontesInformacao(data, 10),
+                transformListUtilizacaoAgenciaViagem(data, 11),
+                transformListMotivosViagem(data, 2),
+                transformListMotivacaoViagemLazer(data, 3),
+                transformListGastosMedioMotivo(data, 5),
+                transformListPermanenciaMediaMotivo(data, 6),
+                transformListDestinosMaisVisitadosPorMotivo(data, 7),
                 extractNomePais(data, 0)
         );
     }

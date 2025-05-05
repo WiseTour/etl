@@ -18,16 +18,14 @@ public class PerfilDTO {
     private String motivo;
     private String motivacaoViagemLazer;
     private Double gastosMedioPerCapitaMotivo;
-    private List<DestinoDTO> destinosDTO;
+    private ListaDestinosDTO listaDestinosDTO;
 
 
     public PerfilDTO() {
 
     }
-
-    public PerfilDTO(Double taxaTuristas, String paisesOrigem, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, List<DestinoDTO> destinosDTO) {
+    public PerfilDTO(Double taxaTuristas, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, ListaDestinosDTO listaDestinosDTO) {
         this.taxaTuristas = taxaTuristas;
-        this.paisesOrigem = paisesOrigem;
         this.ano = ano;
         this.generoDTO = generoDTO;
         this.faixaEtariaDTO = faixaEtariaDTO;
@@ -37,10 +35,11 @@ public class PerfilDTO {
         this.motivo = motivo;
         this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
-        this.destinosDTO = destinosDTO;
+        this.listaDestinosDTO = listaDestinosDTO;
     }
 
-    public PerfilDTO(Double taxaTuristas, Integer quantidadeTuristas, String paisesOrigem, Integer ano, Integer mes, String viaAcesso, String estadoEntrada, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, List<DestinoDTO> destinosDTO) {
+
+    public PerfilDTO(Double taxaTuristas, Integer quantidadeTuristas, String paisesOrigem, Integer ano, Integer mes, String viaAcesso, String estadoEntrada, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, ListaDestinosDTO listaDestinosDTO) {
         this.taxaTuristas = taxaTuristas;
         this.quantidadeTuristas = quantidadeTuristas;
         this.paisesOrigem = paisesOrigem;
@@ -56,8 +55,10 @@ public class PerfilDTO {
         this.motivo = motivo;
         this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
-        this.destinosDTO = destinosDTO;
+        this.listaDestinosDTO = listaDestinosDTO;
     }
+
+
 
     public Double getTaxaTuristas() {
         return taxaTuristas;
@@ -65,6 +66,14 @@ public class PerfilDTO {
 
     public void setTaxaTuristas(Double taxaTuristas) {
         this.taxaTuristas = taxaTuristas;
+    }
+
+    public Integer getQuantidadeTuristas() {
+        return quantidadeTuristas;
+    }
+
+    public void setQuantidadeTuristas(Integer quantidadeTuristas) {
+        this.quantidadeTuristas = quantidadeTuristas;
     }
 
     public String getPaisesOrigem() {
@@ -81,6 +90,30 @@ public class PerfilDTO {
 
     public void setAno(Integer ano) {
         this.ano = ano;
+    }
+
+    public Integer getMes() {
+        return mes;
+    }
+
+    public void setMes(Integer mes) {
+        this.mes = mes;
+    }
+
+    public String getViaAcesso() {
+        return viaAcesso;
+    }
+
+    public void setViaAcesso(String viaAcesso) {
+        this.viaAcesso = viaAcesso;
+    }
+
+    public String getEstadoEntrada() {
+        return estadoEntrada;
+    }
+
+    public void setEstadoEntrada(String estadoEntrada) {
+        this.estadoEntrada = estadoEntrada;
     }
 
     public String getGeneroDTO() {
@@ -147,44 +180,12 @@ public class PerfilDTO {
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
     }
 
-    public List<DestinoDTO> getDestinosDTO() {
-        return destinosDTO;
+    public ListaDestinosDTO getListaDestinosDTO() {
+        return listaDestinosDTO;
     }
 
-    public void setDestinosDTO(List<DestinoDTO> destinosDTO) {
-        this.destinosDTO = destinosDTO;
-    }
-
-    public Integer getQuantidadeTuristas() {
-        return quantidadeTuristas;
-    }
-
-    public void setQuantidadeTuristas(Integer quantidadeTuristas) {
-        this.quantidadeTuristas = quantidadeTuristas;
-    }
-
-    public Integer getMes() {
-        return mes;
-    }
-
-    public void setMes(Integer mes) {
-        this.mes = mes;
-    }
-
-    public String getViaAcesso() {
-        return viaAcesso;
-    }
-
-    public void setViaAcesso(String viaAcesso) {
-        this.viaAcesso = viaAcesso;
-    }
-
-    public String getEstadoEntrada() {
-        return estadoEntrada;
-    }
-
-    public void setEstadoEntrada(String estadoEntrada) {
-        this.estadoEntrada = estadoEntrada;
+    public void setListaDestinosDTO(ListaDestinosDTO listaDestinosDTO) {
+        this.listaDestinosDTO = listaDestinosDTO;
     }
 
     @Override
@@ -205,7 +206,7 @@ public class PerfilDTO {
                 ", motivo='" + motivo + '\'' +
                 ", motivacaoViagemLazer='" + motivacaoViagemLazer + '\'' +
                 ", gastosMedioPerCapitaMotivo=" + gastosMedioPerCapitaMotivo +
-                ", destinosDTO=" + destinosDTO +
+                ", listaDestinosDTO=" + listaDestinosDTO +
                 '}';
     }
 }

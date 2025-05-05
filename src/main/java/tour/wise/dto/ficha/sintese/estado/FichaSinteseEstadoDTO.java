@@ -54,8 +54,10 @@ public class FichaSinteseEstadoDTO extends FichaSinteseBrasilDTO {
     public String toString() {
         return "FichaSinteseEstadoDTO{" +
                 "paisesOrigem=" + paisesOrigem +
-                ", destinoPrincipal='" + destinoPrincipal + '\'' +
+                ", destinoPrincipal='" + destinoPrincipal +
                 ", permanenciaMediaDTODestinoPrincipal=" + permanenciaMediaDTODestinoPrincipal +
+                '\'' +
+                super.toString() +
                 '}';
     }
 }

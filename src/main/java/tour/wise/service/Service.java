@@ -46,7 +46,6 @@ public class Service {
                 }
 
                 // Extraindo valor das células e criando objeto Linha
-                System.out.println("Lendo linha " + row.getRowNum());
 
                 List<Object> linha = new ArrayList<>();
 
@@ -73,45 +72,9 @@ public class Service {
         }
     }
 
-    public List<List<Object>> extractBatch(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, int offset, int batchSize) {
-        try {
-            System.out.printf("\n[LOTE] Iniciando leitura por lote do arquivo %s\n", fileName);
-
-            Workbook workbook = loadWorkbook(fileName);
-            Sheet sheet = workbook.getSheetAt(sheetNumber);
-            List<List<Object>> data = new ArrayList<>();
-
-            int startRow = header + 1 + offset; // pula o cabeçalho + offset
-            int endRow = startRow + batchSize;
-
-            int totalRows = sheet.getLastRowNum();
-
-            System.out.println("[LOTE] Lendo linhas de " + startRow + " até " + (Math.min(endRow - 1, totalRows)));
-
-            for (int rowIndex = startRow; rowIndex < endRow && rowIndex <= totalRows; rowIndex++) {
-                Row row = sheet.getRow(rowIndex);
-                if (row == null) continue;
-
-                List<Object> linha = new ArrayList<>();
-                for (int i = 0; i < colluns; i++) {
-                    linha.add(transformTypeCell(row.getCell(i), types.get(i)));
-                }
-
-                data.add(linha);
-            }
-
-            workbook.close();
-
-            System.out.printf("[LOTE] Finalizado lote com %d registros extraídos.\n", data.size());
-
-            return data;
-
-        } catch (IOException e) {
-            throw new RuntimeException("[ERRO] Falha na leitura por lote: " + e.getMessage(), e);
-        }
-    }
 
     public  <T> List<T> extractRange(
+            String fileName,
             Workbook workbook,
             Integer sheetNumber,
             int startRow,
@@ -121,6 +84,9 @@ public class Service {
             Function<List<Object>, T> mapper
     ) {
         try (workbook){
+
+            System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
+
 
             Sheet sheet = workbook.getSheetAt(sheetNumber);
             List<T> data = new ArrayList<>();
@@ -132,7 +98,6 @@ public class Service {
                     continue;
                 }
 
-                System.out.println("Lendo linha " + rowNum);
                 List<Object> linha = new ArrayList<>();
 
                 for (int i = 0; i < columns.size(); i++) {

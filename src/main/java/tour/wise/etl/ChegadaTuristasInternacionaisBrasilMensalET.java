@@ -31,7 +31,9 @@ public class ChegadaTuristasInternacionaisBrasilMensalET {
 
 
 
-            System.out.println("[SUCESSO] ETL finalizado com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
+            System.out.println("[SUCESSO] Extração finalizada com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
+            System.out.println();
+
         } catch (Exception e) {
             System.out.println("[ERRO] Falha na extração dos dados: " + e.getMessage());
             e.printStackTrace();
@@ -41,44 +43,6 @@ public class ChegadaTuristasInternacionaisBrasilMensalET {
 
         return data;
     }
-
-    public List<List<Object>> extractBatch(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Integer batchSize) {
-
-        System.out.println("[INÍCIO] Extração de dados iniciada por lote.");
-        System.out.println("[INFO] Arquivo: " + fileName);
-        System.out.println("[INFO] Planilha (sheet): " + sheetNumber);
-        System.out.println("[INFO] Linha de cabeçalho: " + header);
-        System.out.println("[INFO] Quantidade de colunas esperadas: " + colluns);
-        System.out.println("[INFO] Tipos esperados: " + types);
-        System.out.println("[INFO] Tamanho do lote: " + batchSize);
-
-        List<List<Object>> allData = new ArrayList<>();
-
-        try {
-            int offset = 0;
-            List<List<Object>> batch;
-
-            do {
-                // Aqui você precisa que o método do service aceite offset e batchSize
-                batch = service.extractBatch(fileName, sheetNumber, header, colluns, types, offset, batchSize);
-                if (batch != null && !batch.isEmpty()) {
-                    allData.addAll(batch);
-                    System.out.println("[LOTE] Registros extraídos no lote atual: " + batch.size());
-                    offset += batchSize;
-                } else {
-                    break;
-                }
-            } while (batch.size() == batchSize);
-
-            System.out.println("[SUCESSO] ETL finalizado com sucesso. Total de registros extraídos: " + allData.size());
-        } catch (Exception e) {
-            System.out.println("[ERRO] Falha na extração dos dados: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return allData;
-    }
-
 
     public List<ChegadaTuristasInternacionaisBrasilMensalDTO> transform(List<List<Object>> data, String fonte, String edicao) {
 

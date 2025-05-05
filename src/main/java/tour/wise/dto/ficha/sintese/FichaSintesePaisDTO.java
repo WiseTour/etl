@@ -28,6 +28,7 @@ public class FichaSintesePaisDTO extends FichaSinteseBrasilDTO {
     public String toString() {
         return "FichaSintesePaisDTO{" +
                 "pais='" + pais + '\'' +
+                super.toString() +
                 '}';
     }
 }

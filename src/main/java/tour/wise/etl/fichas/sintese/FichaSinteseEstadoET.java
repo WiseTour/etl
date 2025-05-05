@@ -1,6 +1,7 @@
 package tour.wise.etl.fichas.sintese;
 
 import org.apache.poi.ss.usermodel.Workbook;
+import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.service.Service;
@@ -14,14 +15,13 @@ import java.util.stream.Collectors;
 
 import static tour.wise.service.Service.loadWorkbook;
 
-public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
+public class FichaSinteseEstadoET extends FichaSinteseBrasilET {
 
-    Util util = new Util();
     Service service = new Service();
 
     Workbook workbook;
 
-    public List<FichaSinteseEstadoDTO> extractTransformFicha_Sintese_Estado(String fileName, Integer startCollun, Integer endCollun) throws IOException {
+    public List<FichaSinteseEstadoDTO> extractTransformFichasSinteseEstado(String fileName, Integer collun) throws IOException {
 
         // EXTRACT
 
@@ -29,16 +29,13 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
 
         List<List<List<List<Object>>>> data = new ArrayList<>();
         for(Integer i = 1; i < service.getSheetNumber(fileName); i++ ){
-            for(Integer j = startCollun; j <= endCollun; j++){
-                data.add(extract(
-                        workbook,
-                        fileName,
-                        i,
-                        List.of(1, 3+j),
-                        List.of(10, 12+j),
-                        List.of("string", "numeric")));
-
-            }
+            data.add(extractData(
+                    workbook,
+                    fileName,
+                    i,
+                    List.of(1, 3+collun),
+                    List.of(10, 12+collun),
+                    List.of("string", "numeric")));
 
         }
 
@@ -46,18 +43,18 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
 
         // TRANSFORM
 
-        List<FichaSinteseEstadoDTO> fichas_sintese_por_estado = new ArrayList<>();
+        List<FichaSinteseEstadoDTO> fichasSinteseEstadoMacroDTO = new ArrayList<>();
 
         for (List<List<List<Object>>> datum : data) {
-            fichas_sintese_por_estado.add(transform(datum));
+            fichasSinteseEstadoMacroDTO.add(transformData(datum));
         }
 
-
-    return fichas_sintese_por_estado;
+        return fichasSinteseEstadoMacroDTO;
 
     }
 
-    public List<List<List<Object>>> extract(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException  {
+
+    public List<List<List<Object>>> extractData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException  {
 
         String sheetName = service.getSheetName(fileName, sheetNumber);
         String estado = sheetName.split("\\s+", 2)[1]; // UF de entrada
@@ -87,6 +84,7 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
 
             data.add(
                     service.extractRange(
+                            fileName,
                             workbook,
                             sheetNumber,
                             range[0],
@@ -111,6 +109,7 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
 
             data.add(
                     service.extractRange(
+                            fileName,
                             workbook,
                             sheetNumber,
                             range[0],
@@ -130,40 +129,39 @@ public class Ficha_Sintese_Estado_ET extends FichaSinteseBrasilET {
 
         workbook.close();
 
-        System.out.println("\nETL finalizado com sucesso.");
-
         return data;
     }
 
 
     @Override
-    public FichaSinteseEstadoDTO transform(List<List<List<Object>>> data) {
+    public FichaSinteseEstadoDTO transformData(List<List<List<Object>>> data) {
         return new FichaSinteseEstadoDTO(
                 transformAno(data, 1),
-                transformGenero(data, 14),
-                transformFaixaEtaria(data, 15),
-                transformComposicoesGrupo(data, 5),
-                transformFontesInformacao(data, 13),
-                transformUtilizacaoAgenciaViagem(data, 12),
-                transformMotivosViagem(data, 3),
-                transformMotivacaoViagemLazer(data, 4),
-                transformGastosMedioMotivo(data, 6),
-                transformPermanenciaMediaMotivo(data, 7),
-                transformDestinosMaisVisitadosPorMotivo(data, 9),
-                trasnformPaisesOrigem(data, 2),
+                transformListGenero(data, 14),
+                transformListFaixaEtaria(data, 15),
+                transformListComposicoesGrupo(data, 5),
+                transformListFontesInformacao(data, 13),
+                transformListUtilizacaoAgenciaViagem(data, 12),
+                transformListMotivosViagem(data, 3),
+                transformListMotivacaoViagemLazer(data, 4),
+                transformListGastosMedioMotivo(data, 6),
+                transformListPermanenciaMediaMotivo(data, 7),
+                transformListDestinosMaisVisitadosPorMotivo(data, 9),
+                trasnformListPaisesOrigem(data, 2),
                 trasnformEstado(data, 0),
-                transformPermanenciaMediaMotivo(data, 8)
+                transformListPermanenciaMediaMotivo(data, 8)
 
 
         );
     }
+
 
     protected String trasnformEstado(List<List<List<Object>>> data, Integer index) {
         return data.get(index).get(0).get(0).toString();
     }
 
 
-    protected List<PaisOrigemDTO> trasnformPaisesOrigem(List<List<List<Object>>> data, int index) {
+    protected List<PaisOrigemDTO> trasnformListPaisesOrigem(List<List<List<Object>>> data, int index) {
         return data.get(index).stream()
                 .map(this::createPaisOrigem)
                 .collect(Collectors.toList());
