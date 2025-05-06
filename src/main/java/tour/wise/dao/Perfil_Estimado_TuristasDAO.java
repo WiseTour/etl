@@ -277,9 +277,9 @@ public class Perfil_Estimado_TuristasDAO {
             fk_pais_origem, fk_uf_entrada, ano, mes, quantidade_turistas,
             genero, faixa_etaria, via_acesso, composicao_grupo_familiar,
             fonte_informacao_viagem, servico_agencia_turismo,
-            motivo_viagem, gasto_media_percapita_em_reais
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """;
+            motivo_viagem, motivacao_viagem_lazer, gasto_media_percapita_em_reais
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
 
         List<Integer> idsGerados = new ArrayList<>();
 

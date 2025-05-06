@@ -42,8 +42,16 @@ public class ETL extends Util {
 
         Fonte_DadosDAO fonteDadosDAO = new Fonte_DadosDAO(connection);
 
-        // EXTRACT AND TRANSFORM
+        fonteDadosDAO.insertIgnore(
+                tituloArquivoFonteFichasSinteses,
+                edicaoFichasSinteses,
+                orgaoEmissorFichasSinteses,
+                urlFichasSinteses,
+                null
 
+        );
+
+        // EXTRACT AND TRANSFORM
 
         // CHEGADAS
 
@@ -284,14 +292,7 @@ public class ETL extends Util {
                 }
             }
 
-            fonteDadosDAO.insertIgnore(
-                    tituloArquivoFonteFichasSinteses,
-                    edicaoFichasSinteses,
-                    orgaoEmissorFichasSinteses,
-                    urlFichasSinteses,
-                    null
 
-            );
 
             Perfil_Estimado_TuristasDAO perfilEstimadoTuristasDAO = new Perfil_Estimado_TuristasDAO(connection);
             Perfil_Estimado_Turista_FonteDAO perfilEstimadoTuristaFonteDAO = new Perfil_Estimado_Turista_FonteDAO(connection);
@@ -361,7 +362,26 @@ public class ETL extends Util {
 
 
         } catch (Exception e) {
-            System.err.println("Erro ao processar os dados: " + e.getMessage());
+            System.err.println("Erro ao processar os dados:");
+            System.err.println("Mensagem: " + e.getMessage());
+            System.err.println("Tipo de exceção: " + e.getClass().getName());
+
+            // Verifica se há causa
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                System.err.println("Causa raiz: " + cause.getMessage());
+                System.err.println("Tipo da causa: " + cause.getClass().getName());
+
+                // Se for SQLException, mostra detalhes adicionais
+                if (cause instanceof java.sql.SQLException sqlEx) {
+                    System.err.println("Erro SQL: " + sqlEx.getMessage());
+                    System.err.println("Código de erro SQL: " + sqlEx.getErrorCode());
+                    System.err.println("SQLState: " + sqlEx.getSQLState());
+                }
+            }
+
+            // Stack trace completo
+            e.printStackTrace();
         }
 
 
