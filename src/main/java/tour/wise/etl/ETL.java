@@ -209,12 +209,12 @@ public class ETL extends Util {
                                     perfilDTOEstado.getTaxaTuristas() *
                                             taxaTuristas / 100
                             );
-                            Double taxaAtualizada = perfilDTOEstado.getTaxaTuristas() / 100;
+                            Double taxaAtualizada = perfilDTOEstado.getTaxaTuristas();
                             Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * taxaAtualizada)).intValue();
                             perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
                         }
 
-                        perfiesDTOEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+                        perfiesDTOEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || Math.round(perfil.getQuantidadeTuristas()) < 1);
 
                         perfiesEstimadoTuristas.addAll(perfiesDTOEstado);
 
@@ -245,7 +245,7 @@ public class ETL extends Util {
                         }
 
                         // Remove todos os perfis com quantidadeTuristas < 1
-                        perfiesDTOPais.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+                        perfiesDTOPais.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || Math.round(perfil.getQuantidadeTuristas()) < 1);
 
                         perfiesEstimadoTuristas.addAll(perfiesDTOPais);
 
@@ -270,7 +270,7 @@ public class ETL extends Util {
                     }
 
                     // Remove todos os perfis com quantidadeTuristas < 1
-                    perfiesDTOBrasil.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+                    perfiesDTOBrasil.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || (int) Math.round(perfil.getQuantidadeTuristas()) < 1);
                     perfiesEstimadoTuristas.addAll(perfiesDTOBrasil);
                     perfiesDTOBrasil.clear();
 
