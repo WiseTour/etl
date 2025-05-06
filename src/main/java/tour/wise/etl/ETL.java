@@ -196,9 +196,10 @@ public class ETL extends Util {
 
                         Double taxaTuristas = 100.0;
 
+
+
                         if(fichaEstadoPaisOptional.isPresent()){
                             fichaEstado = fichaEstadoPaisOptional.get();
-
                             taxaTuristas = fichaEstado.getPaisesOrigem().stream()
                                     .filter(p -> p.getPais().equalsIgnoreCase(paisOrigem))
                                     .map(PaisOrigemDTO::getPorcentagem)
@@ -206,18 +207,29 @@ public class ETL extends Util {
                                     .orElse(null);
                         }else{
 
-                            for (PaisOrigemDTO paisOrigemDTO : fichaEstado.getPaisesOrigem()) {
+                            fichaEstadoPaisOptional = fichasSinteseEstadoDTO.stream()
+                                    .filter(f -> f.getPaisesOrigem().stream()
+                                            .anyMatch(p -> p.getPais().equalsIgnoreCase(paisOrigem))).findFirst();
 
-                                taxaTuristas -= paisOrigemDTO.getPorcentagem();
-
-                            }
-
+                            int quantidadePaisesFichas = 0;
                             long quantidadeChegadas = chegadasTuristasInternacionaisBrasilAnualDTO.stream()
                                     .filter(f -> f.getUfDestino().equalsIgnoreCase(ufDestino)
                                             && f.getAno().equals(ano))
                                     .count();
 
-                            int quantidadePaisesFichas = fichaEstadoPaisOptional.get().getPaisesOrigem().size();
+                            if(fichaEstadoPaisOptional.isPresent()){
+
+                                FichaSinteseEstadoDTO fichaEstadoPais = fichaEstadoPaisOptional.get();
+
+                                for (PaisOrigemDTO paisOrigemDTO : fichaEstadoPais.getPaisesOrigem()) {
+
+                                    taxaTuristas -= paisOrigemDTO.getPorcentagem();
+
+                                }
+
+                                quantidadePaisesFichas = fichaEstadoPaisOptional.get().getPaisesOrigem().size();
+                            }
+
 
                             taxaTuristas = taxaTuristas/(quantidadeChegadas-quantidadePaisesFichas);
 
