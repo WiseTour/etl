@@ -54,7 +54,6 @@ public class ETL extends Util {
         // EXTRACT AND TRANSFORM
 
         // CHEGADAS
-
         try {
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilMensalDTO =
                     extractTransformChegadasTuristasInternacionaisBrasilMensal(
@@ -181,21 +180,49 @@ public class ETL extends Util {
                     Integer ano = chegada.getAno();
 
                     // Primeiro tenta encontrar na ficha estadual
+
                     Optional<FichaSinteseEstadoDTO> fichaEstadoOptional = fichasSinteseEstadoDTO.stream()
-                            .filter(f -> f.getPaisesOrigem().stream()
-                                    .anyMatch(p -> p.getPais().equalsIgnoreCase(paisOrigem)) // verifica se a lista contém o país
-                                    && f.getDestinoPrincipal().equalsIgnoreCase(ufDestino)
+                            .filter(f -> f.getDestinoPrincipal().equalsIgnoreCase(ufDestino)
                                     && f.getAno().equals(ano))
                             .findFirst();
 
                     if (fichaEstadoOptional.isPresent()) {
-                        FichaSinteseEstadoDTO fichaEstado = fichaEstadoOptional.get();
 
-                        Double taxaTuristas = fichaEstado.getPaisesOrigem().stream()
-                                .filter(p -> p.getPais().equalsIgnoreCase(paisOrigem))
-                                .map(PaisOrigemDTO::getPorcentagem)
-                                .findFirst()
-                                .orElse(null);
+                        Optional<FichaSinteseEstadoDTO> fichaEstadoPaisOptional = fichasSinteseEstadoDTO.stream()
+                                .filter(f -> f.getPaisesOrigem().stream()
+                                        .anyMatch(p -> p.getPais().equalsIgnoreCase(paisOrigem))).findFirst();
+
+                        FichaSinteseEstadoDTO  fichaEstado = fichaEstadoOptional.get();
+
+                        Double taxaTuristas = 100.0;
+
+                        if(fichaEstadoPaisOptional.isPresent()){
+                            fichaEstado = fichaEstadoPaisOptional.get();
+
+                            taxaTuristas = fichaEstado.getPaisesOrigem().stream()
+                                    .filter(p -> p.getPais().equalsIgnoreCase(paisOrigem))
+                                    .map(PaisOrigemDTO::getPorcentagem)
+                                    .findFirst()
+                                    .orElse(null);
+                        }else{
+
+                            for (PaisOrigemDTO paisOrigemDTO : fichaEstado.getPaisesOrigem()) {
+
+                                taxaTuristas -= paisOrigemDTO.getPorcentagem();
+
+                            }
+
+                            long quantidadeChegadas = chegadasTuristasInternacionaisBrasilAnualDTO.stream()
+                                    .filter(f -> f.getUfDestino().equalsIgnoreCase(ufDestino)
+                                            && f.getAno().equals(ano))
+                                    .count();
+
+                            int quantidadePaisesFichas = fichaEstadoPaisOptional.get().getPaisesOrigem().size();
+
+                            taxaTuristas = taxaTuristas/(quantidadeChegadas-quantidadePaisesFichas);
+
+                        }
+
 
                         List<PerfilDTO> perfiesDTOEstado = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaEstado);
 
@@ -357,8 +384,6 @@ public class ETL extends Util {
 
                 perfilEstimadoTuristaFonteDAO.insertLote(batchFonteArgs);
             }
-
-
 
 
         } catch (Exception e) {
