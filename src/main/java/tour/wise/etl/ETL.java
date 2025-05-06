@@ -3,10 +3,7 @@ package tour.wise.etl;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.dao.Chegada_Turistas_Internacionais_Brasil_MensalDAO;
-import tour.wise.dao.Fonte_DadosDAO;
-import tour.wise.dao.PaisDAO;
-import tour.wise.dao.Unidade_Federativa_BrasilDAO;
+import tour.wise.dao.*;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.FichaSintesePaisDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
@@ -27,7 +24,7 @@ public class ETL extends Util {
     Workbook workbook;
     tour.wise.util.Util util = new tour.wise.util.Util();
 
-    public void createPerfies(
+    public void createLoadPerfies(
             JdbcTemplate connection,
             String fileNameChegadas,
             String tituloArquivoFonteChegadas,
@@ -46,6 +43,7 @@ public class ETL extends Util {
         Fonte_DadosDAO fonteDadosDAO = new Fonte_DadosDAO(connection);
 
         // EXTRACT AND TRANSFORM
+
 
         // CHEGADAS
 
@@ -85,180 +83,282 @@ public class ETL extends Util {
 
             Unidade_Federativa_BrasilDAO unidadeFederativaBrasilDAO = new Unidade_Federativa_BrasilDAO(connection);
 
+            int BATCH_SIZE = 1000;
 
-            chegadasTuristasInternacionaisBrasilMensalDTO.forEach(chegada -> {
-                chegadaTuristasInternacionaisBrasilMensalDAO.insert(
-                        chegada.getMes(),
-                        chegada.getAno(),
-                        chegada.getQtdChegadas(),
-                        chegada.getViaAcesso(),
-                        unidadeFederativaBrasilDAO.getId(chegada.getUfDestino()),
-                        fonteDadosDAO.getId(tituloArquivoFonteChegadas),
-                        paisDAO.getId(chegada.getPaisOrigem())
+            List<Object[]> batchArgs = new ArrayList<>();
 
-                );
+            for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilMensalDTO) {
+                int mes = chegada.getMes();
+                int ano = chegada.getAno();
+                int qtd = chegada.getQtdChegadas();
+                String via = chegada.getViaAcesso();
+                String uf = chegada.getUfDestino();
+                String pais = chegada.getPaisOrigem();
+
+                int idFonte = fonteDadosDAO.getId(tituloArquivoFonteChegadas);
+                int idPais = paisDAO.getId(pais);
+                String siglaUf = unidadeFederativaBrasilDAO.getId(uf);
+
+                // Valida se a chegada existe ou é inválida
+                if (qtd <= 0 || chegadaTuristasInternacionaisBrasilMensalDAO.hasChegadaMensal(mes, ano, siglaUf, idFonte, idPais)) {
+                    continue;
+                }
+
+                batchArgs.add(new Object[]{mes, ano, qtd, via, siglaUf, idFonte, idPais});
+
+                // Executa o batch a cada 1000 registros
+                if (batchArgs.size() == BATCH_SIZE) {
+                    chegadaTuristasInternacionaisBrasilMensalDAO.insertLote(batchArgs);
+                    batchArgs.clear();
+                }
+            }
+
+            // Insere os que sobraram (menos de 1000)
+            if (!batchArgs.isEmpty()) {
+                chegadaTuristasInternacionaisBrasilMensalDAO.insertLote(batchArgs);
+            }
+
+            // FICHAS SÍNTESE
+            FichaSinteseBrasilDTO fichasSinteseBrasilDTO = extractTransformFichaSinteseBrasil(fileNameFichaSinteseBrasil, 4);
+            List<FichaSintesePaisDTO> fichasSintesePaisDTO = extractTransformFichasSintesePais(fileNameFichaSintesePais, 4);
+            List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = extractTransformFichasSinteseEstado(fileNameFichaSinteseEstado, 4);
+
+            // CRIAÇÃO DOS PERFIES
+            List<PerfilDTO> perfiesEstimadoTuristas = new ArrayList<>();
+
+            Integer i = 1;
+
+            List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilAnualDTO =
+                    chegadasTuristasInternacionaisBrasilMensalDTO.stream()
+                            .collect(Collectors.groupingBy(m -> m.getAno() + "|" + m.getPaisOrigem() + "|" + m.getUfDestino() + "|" + m.getViaAcesso()))
+                            .entrySet().stream()
+                            .map(entry -> {
+                                String[] chavePartes = entry.getKey().split("\\|");
+                                Integer ano = Integer.parseInt(chavePartes[0]);
+                                String paisOrigem = chavePartes[1];
+                                String ufDestino = chavePartes[2];
+                                String viaAcesso = chavePartes[3];
+
+                                List<ChegadaTuristasInternacionaisBrasilMensalDTO> grupo = entry.getValue();
+
+                                int totalChegadas = grupo.stream()
+                                        .mapToInt(ChegadaTuristasInternacionaisBrasilMensalDTO::getQtdChegadas)
+                                        .sum();
+
+                                return new ChegadaTuristasInternacionaisBrasilMensalDTO(
+                                        null,
+                                        ano,
+                                        totalChegadas,
+                                        viaAcesso,
+                                        ufDestino,
+                                        paisOrigem
+                                );
+                            })
+                            .collect(Collectors.toList());
+
+
+
+            for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilAnualDTO) {
+
+                try {
+                    System.out.println("chegada - linha: " + i);
+                    System.out.println("quantidade de perfies: " + perfiesEstimadoTuristas.size());
+                    System.out.println("quantidade de chegadas: " + perfiesEstimadoTuristas.size());
+                    System.out.println("chegadas restantes: " + (chegadasTuristasInternacionaisBrasilAnualDTO.size() - i));
+                    System.out.println();
+                    i++;
+
+                    String paisOrigem = chegada.getPaisOrigem();
+                    String ufDestino = chegada.getUfDestino();
+                    Integer ano = chegada.getAno();
+
+                    // Primeiro tenta encontrar na ficha estadual
+                    Optional<FichaSinteseEstadoDTO> fichaEstadoOptional = fichasSinteseEstadoDTO.stream()
+                            .filter(f -> f.getPaisesOrigem().stream()
+                                    .anyMatch(p -> p.getPais().equalsIgnoreCase(paisOrigem)) // verifica se a lista contém o país
+                                    && f.getDestinoPrincipal().equalsIgnoreCase(ufDestino)
+                                    && f.getAno().equals(ano))
+                            .findFirst();
+
+                    if (fichaEstadoOptional.isPresent()) {
+                        FichaSinteseEstadoDTO fichaEstado = fichaEstadoOptional.get();
+
+                        Double taxaTuristas = fichaEstado.getPaisesOrigem().stream()
+                                .filter(p -> p.getPais().equalsIgnoreCase(paisOrigem))
+                                .map(PaisOrigemDTO::getPorcentagem)
+                                .findFirst()
+                                .orElse(null);
+
+                        List<PerfilDTO> perfiesDTOEstado = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaEstado);
+
+                        for (PerfilDTO perfilDTOEstado : perfiesDTOEstado) {
+                            perfilDTOEstado.setPaisesOrigem(paisOrigem);
+                            perfilDTOEstado.setEstadoEntrada(ufDestino);
+                            perfilDTOEstado.setAno(chegada.getAno());
+                            perfilDTOEstado.setMes(chegada.getMes());
+                            perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
+                            perfilDTOEstado.setTaxaTuristas(
+                                    perfilDTOEstado.getTaxaTuristas() *
+                                            taxaTuristas / 100
+                            );
+                            Double taxaAtualizada = perfilDTOEstado.getTaxaTuristas() / 100;
+                            Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * taxaAtualizada)).intValue();
+                            perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
+                        }
+
+                        perfiesDTOEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+
+                        perfiesEstimadoTuristas.addAll(perfiesDTOEstado);
+
+                        perfiesDTOEstado.clear();
+
+                        continue;
                     }
+
+                    // Senão, tenta encontrar na ficha do país
+                    Optional<FichaSintesePaisDTO> fichaPaisOptional = fichasSintesePaisDTO.stream()
+                            .filter(f -> f.getPais().equalsIgnoreCase(paisOrigem)
+                                    && f.getAno().equals(ano))
+                            .findFirst();
+
+                    if (fichaPaisOptional.isPresent()) {
+                        FichaSintesePaisDTO fichaPais = fichaPaisOptional.get();
+
+                        List<PerfilDTO> perfiesDTOPais = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaPais);
+
+                        for (PerfilDTO perfilDTOEstado : perfiesDTOPais) {
+                            perfilDTOEstado.setPaisesOrigem(paisOrigem);
+                            perfilDTOEstado.setEstadoEntrada(ufDestino);
+                            perfilDTOEstado.setAno(chegada.getAno());
+                            perfilDTOEstado.setMes(chegada.getMes());
+                            perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
+                            Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas() / 100)).intValue();
+                            perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
+                        }
+
+                        // Remove todos os perfis com quantidadeTuristas < 1
+                        perfiesDTOPais.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+
+                        perfiesEstimadoTuristas.addAll(perfiesDTOPais);
+
+                        perfiesDTOPais.clear();
+
+                        continue;
+                    }
+
+                    // Senão, usa a ficha do Brasil
+                    FichaSinteseBrasilDTO fichaBrasil = fichasSinteseBrasilDTO;
+
+                    List<PerfilDTO> perfiesDTOBrasil = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaBrasil);
+
+                    for (PerfilDTO perfilDTOEstado : perfiesDTOBrasil) {
+                        perfilDTOEstado.setPaisesOrigem(paisOrigem);
+                        perfilDTOEstado.setEstadoEntrada(ufDestino);
+                        perfilDTOEstado.setAno(chegada.getAno());
+                        perfilDTOEstado.setMes(chegada.getMes());
+                        perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
+                        Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas() / 100)).intValue();
+                        perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
+                    }
+
+                    // Remove todos os perfis com quantidadeTuristas < 1
+                    perfiesDTOBrasil.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
+                    perfiesEstimadoTuristas.addAll(perfiesDTOBrasil);
+                    perfiesDTOBrasil.clear();
+
+                } catch (Exception e) {
+                    System.err.println("Erro ao processar a chegada de turistas:");
+                    System.err.printf("Dados da chegada: País de Origem: %s, UF de Destino: %s, Ano: %d, Mês: %d%n",
+                            chegada.getPaisOrigem(), chegada.getUfDestino(), chegada.getAno(), chegada.getMes());
+
+                    Throwable cause = e.getCause();
+                    if (cause instanceof java.sql.SQLException sqlEx) {
+                        System.err.println("Erro SQL: " + sqlEx.getMessage());
+                        System.err.println("Código de erro SQL: " + sqlEx.getErrorCode());
+                        System.err.println("SQLState: " + sqlEx.getSQLState());
+                    }
+
+                    e.printStackTrace();
+
+                    throw e;
+                }
+            }
+
+            fonteDadosDAO.insertIgnore(
+                    tituloArquivoFonteFichasSinteses,
+                    edicaoFichasSinteses,
+                    orgaoEmissorFichasSinteses,
+                    urlFichasSinteses,
+                    null
+
             );
 
+            Perfil_Estimado_TuristasDAO perfilEstimadoTuristasDAO = new Perfil_Estimado_TuristasDAO(connection);
+            Perfil_Estimado_Turista_FonteDAO perfilEstimadoTuristaFonteDAO = new Perfil_Estimado_Turista_FonteDAO(connection);
+
+            batchArgs = new ArrayList<>();
+            List<Integer> fkPaisesDoLote = new ArrayList<>();
+            List<Object[]> batchFonteArgs = new ArrayList<>();
+            int loteMaximo = 1000;
+
+            for (PerfilDTO perfil : perfiesEstimadoTuristas) {
+                int fkPais = paisDAO.getId(perfil.getPaisesOrigem());
+                String fkUf = unidadeFederativaBrasilDAO.getId(perfil.getEstadoEntrada());
+
+                Object[] params = new Object[]{
+                        fkPais,
+                        fkUf,
+                        perfil.getAno(),
+                        perfil.getMes(),
+                        perfil.getQuantidadeTuristas(),
+                        perfil.getGeneroDTO(),
+                        perfil.getFaixaEtariaDTO(),
+                        perfil.getViaAcesso(),
+                        perfil.getComposicaoGruposViagem(),
+                        perfil.getFonteInformacao(),
+                        perfil.getUtilizacaoAgenciaViagemDTO(),
+                        perfil.getMotivo(),
+                        perfil.getMotivacaoViagemLazer(),
+                        perfil.getGastosMedioPerCapitaMotivo()
+                };
+
+                batchArgs.add(params);
+                fkPaisesDoLote.add(fkPais);
+
+                if (batchArgs.size() == loteMaximo) {
+                    List<Integer> idsInseridos = perfilEstimadoTuristasDAO.insertLoteRetornandoIds(batchArgs);
+                    int fkFonte = fonteDadosDAO.getId(tituloArquivoFonteFichasSinteses);
+
+                    for (int j = 0; j < idsInseridos.size(); j++) {
+                        int fkPerfilEstimado = idsInseridos.get(j);
+                        int fkPaisInserido = fkPaisesDoLote.get(j);
+                        batchFonteArgs.add(new Object[]{fkFonte, fkPerfilEstimado, fkPaisInserido});
+                    }
+
+                    perfilEstimadoTuristaFonteDAO.insertLote(batchFonteArgs);
+
+                    batchArgs.clear();
+                    fkPaisesDoLote.clear();
+                    batchFonteArgs.clear();
+                }
+            }
+
+// Inserir o restante fora do loop
+            if (!batchArgs.isEmpty()) {
+                List<Integer> idsInseridos = perfilEstimadoTuristasDAO.insertLoteRetornandoIds(batchArgs);
+                int fkFonte = fonteDadosDAO.getId(tituloArquivoFonteFichasSinteses);
+
+                for (int j = 0; j < idsInseridos.size(); j++) {
+                    int fkPerfilEstimado = idsInseridos.get(j);
+                    int fkPaisInserido = fkPaisesDoLote.get(j);
+                    batchFonteArgs.add(new Object[]{fkFonte, fkPerfilEstimado, fkPaisInserido});
+                }
+
+                perfilEstimadoTuristaFonteDAO.insertLote(batchFonteArgs);
+            }
 
 
 
-//            // FICHAS SÍNTESE
-//            FichaSinteseBrasilDTO fichasSinteseBrasilDTO = extractTransformFichaSinteseBrasil(fileNameFichaSinteseBrasil, 4);
-//            List<FichaSintesePaisDTO> fichasSintesePaisDTO = extractTransformFichasSintesePais(fileNameFichaSintesePais, 4);
-//            List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = extractTransformFichasSinteseEstado(fileNameFichaSinteseEstado, 4);
-//
-//            // CRIAÇÃO DOS PERFIES
-//            List<PerfilDTO> perfiesEstimadoTuristas = new ArrayList<>();
-//
-//            Integer i = 1;
-//
-//            List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilAnualDTO =
-//                    chegadasTuristasInternacionaisBrasilMensalDTO.stream()
-//                            .collect(Collectors.groupingBy(m -> m.getAno() + "|" + m.getPaisOrigem() + "|" + m.getUfDestino() + "|" + m.getViaAcesso()))
-//                            .entrySet().stream()
-//                            .map(entry -> {
-//                                String[] chavePartes = entry.getKey().split("\\|");
-//                                Integer ano = Integer.parseInt(chavePartes[0]);
-//                                String paisOrigem = chavePartes[1];
-//                                String ufDestino = chavePartes[2];
-//                                String viaAcesso = chavePartes[3];
-//
-//                                List<ChegadaTuristasInternacionaisBrasilMensalDTO> grupo = entry.getValue();
-//
-//                                int totalChegadas = grupo.stream()
-//                                        .mapToInt(ChegadaTuristasInternacionaisBrasilMensalDTO::getQtdChegadas)
-//                                        .sum();
-//
-//                                return new ChegadaTuristasInternacionaisBrasilMensalDTO(
-//                                        null,
-//                                        ano,
-//                                        totalChegadas,
-//                                        viaAcesso,
-//                                        ufDestino,
-//                                        paisOrigem
-//                                );
-//                            })
-//                            .collect(Collectors.toList());
-//
-//
-//            Integer ChegadasTotal = 0;
-//
-//
-//            for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilAnualDTO) {
-//
-//                System.out.println("chegadas restantes: " + (chegadasTuristasInternacionaisBrasilAnualDTO.size() - i));
-//                System.out.println("chegada - linha: " + i);
-//                System.out.println("quantidade de perfies: " + perfiesEstimadoTuristas.size());
-//
-//                ChegadasTotal += chegada.getQtdChegadas();
-//                System.out.println("quantidade de chegadas: " + perfiesEstimadoTuristas.size());
-//                i++;
-//
-//                String paisOrigem = chegada.getPaisOrigem();
-//                String ufDestino = chegada.getUfDestino();
-//                Integer ano = chegada.getAno();
-//
-//                // Primeiro tenta encontrar na ficha estadual
-//                Optional<FichaSinteseEstadoDTO> fichaEstadoOptional = fichasSinteseEstadoDTO.stream()
-//                        .filter(f -> f.getPaisesOrigem().stream()
-//                                .anyMatch(p -> p.getPais().equalsIgnoreCase(paisOrigem)) // verifica se a lista contém o país
-//                                && f.getDestinoPrincipal().equalsIgnoreCase(ufDestino)
-//                                && f.getAno().equals(ano))
-//                        .findFirst();
-//
-//                if (fichaEstadoOptional.isPresent()) {
-//                    FichaSinteseEstadoDTO fichaEstado = fichaEstadoOptional.get();
-//
-//                    Double taxaTuristas = fichaEstado.getPaisesOrigem().stream()
-//                            .filter(p -> p.getPais().equalsIgnoreCase(paisOrigem))
-//                            .map(PaisOrigemDTO::getPorcentagem)
-//                            .findFirst()
-//                            .orElse(null);
-//
-//                    List<PerfilDTO> perfiesDTOEstado = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaEstado);
-//
-//                    for (PerfilDTO perfilDTOEstado : perfiesDTOEstado) {
-//
-//                        perfilDTOEstado.setPaisesOrigem(paisOrigem);
-//                        perfilDTOEstado.setEstadoEntrada(ufDestino);
-//                        perfilDTOEstado.setAno(chegada.getAno());
-//                        perfilDTOEstado.setMes(chegada.getMes());
-//                        perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
-//                        perfilDTOEstado.setTaxaTuristas(
-//                                perfilDTOEstado.getTaxaTuristas() *
-//                                        taxaTuristas/100
-//                        );
-//                        Double taxaAtualizada = perfilDTOEstado.getTaxaTuristas()/100;
-//                        Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * taxaAtualizada)).intValue();
-//                        perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
-//
-//                    }
-//
-//                    perfiesDTOEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
-//
-//                    perfiesEstimadoTuristas.addAll(perfiesDTOEstado);
-//
-//                    perfiesDTOEstado.clear();
-//
-//                    continue;
-//                }
-//
-//                // Senão, tenta encontrar na ficha do país
-//                Optional<FichaSintesePaisDTO> fichaPaisOptional = fichasSintesePaisDTO.stream()
-//                        .filter(f -> f.getPais().equalsIgnoreCase(paisOrigem)
-//                                && f.getAno().equals(ano))
-//                        .findFirst();
-//
-//                if (fichaPaisOptional.isPresent()) {
-//                    FichaSintesePaisDTO fichaPais = fichaPaisOptional.get();
-//
-//                    List<PerfilDTO> perfiesDTOPais = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaPais);
-//
-//                    for (PerfilDTO perfilDTOEstado : perfiesDTOPais) {
-//
-//                        perfilDTOEstado.setPaisesOrigem(paisOrigem);
-//                        perfilDTOEstado.setEstadoEntrada(ufDestino);
-//                        perfilDTOEstado.setAno(chegada.getAno());
-//                        perfilDTOEstado.setMes(chegada.getMes());
-//                        perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
-//                        Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas()/100)).intValue();
-//                        perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
-//                    }
-//
-//                    // Remove todos os perfis com quantidadeTuristas < 1
-//                    perfiesDTOPais.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
-//
-//                    perfiesEstimadoTuristas.addAll(perfiesDTOPais);
-//
-//                    perfiesDTOPais.clear();
-//
-//                    continue;
-//                }
-//
-//                // Senão, usa a ficha do Brasil
-//                FichaSinteseBrasilDTO fichaBrasil = fichasSinteseBrasilDTO;
-//
-//                List<PerfilDTO> perfiesDTOBrasil = util.transformFichaSinteseCombinationsCreatePerfilDTO(fichaBrasil);
-//
-//                for (PerfilDTO perfilDTOEstado : perfiesDTOBrasil) {
-//
-//                    perfilDTOEstado.setPaisesOrigem(paisOrigem);
-//                    perfilDTOEstado.setEstadoEntrada(ufDestino);
-//                    perfilDTOEstado.setAno(chegada.getAno());
-//                    perfilDTOEstado.setMes(chegada.getMes());
-//                    perfilDTOEstado.setViaAcesso(chegada.getViaAcesso());
-//                    Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas()/100)).intValue();
-//                    perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
-//                }
-//
-//                // Remove todos os perfis com quantidadeTuristas < 1
-//                perfiesDTOBrasil.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
-//                perfiesEstimadoTuristas.addAll(perfiesDTOBrasil);
-//                perfiesDTOBrasil.clear();
-//
-//            }
-//
 
         } catch (Exception e) {
             System.err.println("Erro ao processar os dados: " + e.getMessage());

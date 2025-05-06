@@ -1,6 +1,10 @@
 package tour.wise.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Chegada_Turistas_Internacionais_Brasil_MensalDAO {
     private JdbcTemplate connection; // Conexão com o banco
@@ -147,6 +151,24 @@ public class Chegada_Turistas_Internacionais_Brasil_MensalDAO {
             e.printStackTrace();
 
             throw e; // se quiser que a aplicação pare ou retorne erro ao chamador
+        }
+    }
+
+
+    public void insertLote(List<Object[]> batchArgs) {
+        String sql = """
+        INSERT INTO Chegada_Turistas_Internacionais_Brasil_Mensal
+        (mes, ano, chegadas, via_acesso, fk_uf_destino, fk_fonte_dados, fk_pais_origem)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """;
+
+        try {
+            int[] rows = connection.batchUpdate(sql, batchArgs);
+            System.out.println("Lote inserido: " + rows.length + " registros.");
+        } catch (Exception e) {
+            System.err.println("Erro ao inserir lote de chegadas:");
+            e.printStackTrace();
+            throw e;
         }
     }
 

@@ -16,7 +16,7 @@ public class Main {
 
         ETL etl = new ETL();
 
-        etl.createPerfies(
+        etl.createLoadPerfies(
                 connection,
                 "../database/data/chegada_turistas_ministerio_turismo/chegadas_2019.xlsx",
                 "Chegadas 2019",
