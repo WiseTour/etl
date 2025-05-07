@@ -90,7 +90,7 @@ public class ETL extends Util {
 
             Unidade_Federativa_BrasilDAO unidadeFederativaBrasilDAO = new Unidade_Federativa_BrasilDAO(connection);
 
-            int BATCH_SIZE = 1000;
+            int BATCH_SIZE = 10000;
 
             List<Object[]> batchArgs = new ArrayList<>();
 
@@ -351,7 +351,7 @@ public class ETL extends Util {
             batchArgs = new ArrayList<>();
             List<Integer> fkPaisesDoLote = new ArrayList<>();
             List<Object[]> batchFonteArgs = new ArrayList<>();
-            int loteMaximo = 1000;
+            int loteMaximo = 10000;
 
             for (PerfilDTO perfil : perfiesEstimadoTuristas) {
                 int fkPais = paisDAO.getId(perfil.getPaisesOrigem());
