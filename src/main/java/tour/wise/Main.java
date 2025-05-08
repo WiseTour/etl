@@ -3,18 +3,23 @@ package tour.wise;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dao.DataBase;
 import tour.wise.etl.ETL;
+import tour.wise.logs.Log;
+
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         DataBase data_base = new DataBase();
 
         JdbcTemplate connection = data_base.getConnection();
 
         ETL etl = new ETL();
+
 
         etl.createLoadPerfies(
                 connection,
@@ -33,7 +38,10 @@ public class Main {
 
         );
 
+        executarLogs();
     }
+
+
 
 
 }
