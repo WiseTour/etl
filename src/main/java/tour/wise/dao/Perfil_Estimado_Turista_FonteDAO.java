@@ -2,6 +2,7 @@ package tour.wise.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class Perfil_Estimado_Turista_FonteDAO {
@@ -32,7 +33,7 @@ public class Perfil_Estimado_Turista_FonteDAO {
     ) {
         // Verifica se o registro já existe na tabela Perfil_Estimado_Turista_Fonte
         if (exist(fkFonte, fkPerfilEstimadoTuristas, fkPaisOrigem)) {
-            System.out.println("Registro de Perfil_Estimado_Turista_Fonte já existe para os dados fornecidos, nenhuma inserção feita.");
+            System.out.println(LocalDateTime.now() +  "Registro de Perfil_Estimado_Turista_Fonte já existe para os dados fornecidos, nenhuma inserção feita.");
             return; // Se existir, não faz a inserção
         }
 
@@ -52,9 +53,9 @@ public class Perfil_Estimado_Turista_FonteDAO {
             );
 
             if (rows > 0) {
-                System.out.println("Inserção bem-sucedida para o Perfil_Estimado_Turista_Fonte.");
+                System.out.println(LocalDateTime.now() + "Inserção bem-sucedida para o Perfil_Estimado_Turista_Fonte.");
             } else {
-                System.out.println("Nenhuma linha inserida.");
+                System.out.println(LocalDateTime.now() + "Nenhuma linha inserida.");
             }
 
         } catch (Exception e) {
@@ -84,9 +85,9 @@ public class Perfil_Estimado_Turista_FonteDAO {
 
         try {
             int[] resultados = connection.batchUpdate(sql, batchArgs);
-            System.out.println("Lote de associação fonte-perfil inserido: " + resultados.length);
+            System.out.println(LocalDateTime.now() + "Lote de associação fonte-perfil inserido: " + resultados.length);
         } catch (Exception e) {
-            System.err.println("Erro ao inserir lote em Perfil_Estimado_Turista_Fonte:");
+            System.err.println(LocalDateTime.now() + "Erro ao inserir lote em Perfil_Estimado_Turista_Fonte:");
             e.printStackTrace();
             throw e;
         }

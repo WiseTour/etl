@@ -3,6 +3,7 @@ package tour.wise.dao;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,14 +67,14 @@ public class Chegada_Turistas_Internacionais_Brasil_MensalDAO {
             );
 
             if (rows > 0) {
-                System.out.println("Inserção bem-sucedida para " + siglaUfDestino + " (" + mes + "/" + ano + ")");
+                System.out.println(LocalDateTime.now() + "Inserção bem-sucedida para " + siglaUfDestino + " (" + mes + "/" + ano + ")");
             } else {
-                System.out.println("Nenhuma linha inserida.");
+                System.out.println(LocalDateTime.now() + "Nenhuma linha inserida.");
             }
 
         } catch (Exception e) {
-            System.err.println("Erro ao inserir chegada mensal:");
-            System.err.printf("Dados: %d/%d, %d chegadas, via %s, UF %s, Fonte %d, País %d%n",
+            System.err.println(LocalDateTime.now() + "Erro ao inserir chegada mensal:");
+            System.err.printf(LocalDateTime.now() + "Dados: %d/%d, %d chegadas, via %s, UF %s, Fonte %d, País %d%n",
                     mes, ano, chegadas, viaAcesso, siglaUfDestino, idFonteDados, idPaisOrigem
             );
 

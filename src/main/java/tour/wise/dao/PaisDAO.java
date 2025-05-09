@@ -3,6 +3,8 @@ package tour.wise.dao;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.time.LocalDateTime;
+
 public class PaisDAO {
 
     private JdbcTemplate connection; // Conexão com o banco
@@ -49,14 +51,14 @@ public class PaisDAO {
             Integer idPais = connection.queryForObject(sql, Integer.class, nomePais);
 
             if (idPais != null) {
-                System.out.println("País encontrado: " + nomePais + " (ID: " + idPais + ")");
+//                System.out.println("País encontrado: " + nomePais + " (ID: " + idPais + ")");
                 return idPais;
             } else {
-                System.out.println("País não encontrado: " + nomePais);
+//                System.out.println("País não encontrado: " + nomePais);
                 return null;
             }
         } catch (Exception e) {
-            System.err.println("Erro ao buscar ID do país: " + nomePais);
+            System.err.println(LocalDateTime.now() + "Erro ao buscar ID do país: " + nomePais);
             e.printStackTrace();
             return null;
         }

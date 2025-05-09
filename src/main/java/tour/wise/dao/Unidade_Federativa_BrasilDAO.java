@@ -18,10 +18,10 @@ public class Unidade_Federativa_BrasilDAO {
             String siglaResult = connection.queryForObject(sql, String.class, unidadeFederativa);
 
             if (siglaResult != null) {
-                System.out.println("Unidade Federativa encontrada: " + siglaResult);
+//                System.out.println("Unidade Federativa encontrada: " + siglaResult);
                 return siglaResult;
             } else {
-                System.out.println("Erro: Unidade Federativa não encontrada.");
+//                System.out.println("Erro: Unidade Federativa não encontrada.");
                 return null;
             }
         } catch (Exception e) {

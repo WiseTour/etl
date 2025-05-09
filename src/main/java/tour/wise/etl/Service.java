@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -13,13 +14,30 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import tour.wise.dao.LogDAO;
+import tour.wise.model.Log;
 
 
 public class Service {
 
-    public List<List<Object>> extract(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+
+
+    public List<List<Object>> extract(LogDAO logDAO, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+
         try {
             System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
+
+            logDAO.insertLog(
+                    6,  // fk_fonte
+                    3,  // Sucesso (categoria "Sucesso")
+                    1,  // Etapa "Extração"
+                    "Início da leitura do arquivo: " + fileName,
+                    LocalDateTime.now(),
+                    0,  // Quantidade lida (ainda não lida)
+                    0,  // Quantidade inserida (ainda não inserida)
+                    "Fonte_Dados"
+            );
+
 
             // Criando um objeto Workbook a partir do arquivo recebido,
             Workbook workbook = loadWorkbook(fileName);
@@ -34,11 +52,11 @@ public class Service {
             for (Row row : sheet) {
 
                 if (row.getRowNum() == header) {
-                    System.out.println("\nLendo cabeçalho");
+                    System.out.println(LocalDateTime.now() + "\nLendo cabeçalho");
 
                     for (int i = 0; i < colluns; i++) {
                         String coluna = row.getCell(i).getStringCellValue();
-                        System.out.println("Coluna " + i + ": " + coluna);
+                        System.out.println(LocalDateTime.now() + "Coluna " + i + ": " + coluna);
                     }
 
                     System.out.println("--------------------");
@@ -61,7 +79,19 @@ public class Service {
             // Fechando o workbook após a leitura
             workbook.close();
 
-            System.out.println("\nLeitura do arquivo finalizada\n");
+            System.out.println(LocalDateTime.now() + "\nLeitura do arquivo finalizada\n");
+
+            // Inserindo log de fim da extração
+            logDAO.insertLog(
+                    fkFonte,
+                    3,  // Sucesso (categoria "Sucesso")
+                    1,  // Etapa "Extração"
+                    "Leitura do arquivo finalizada com sucesso: " + fileName,
+                    LocalDateTime.now(),
+                    data.size(), // Quantidade lida: número de linhas lidas
+                    0,  // Quantidade inserida: ainda não inseridas
+                    tabela
+            );
 
             return data;
 
@@ -85,7 +115,7 @@ public class Service {
     ) {
         try (workbook){
 
-            System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
+            System.out.printf(LocalDateTime.now() +  "\nIniciando leitura do arquivo %s\n%n", fileName);
 
 
             Sheet sheet = workbook.getSheetAt(sheetNumber);
@@ -112,7 +142,7 @@ public class Service {
 
             workbook.close();
 
-            System.out.println("\nLeitura finalizada\n");
+            System.out.println(LocalDateTime.now() + "\nLeitura finalizada\n");
 
             return data;
 
@@ -126,8 +156,6 @@ public class Service {
         try {
             Path path = Path.of(fileName);
             InputStream excelFile = Files.newInputStream(path);
-
-            System.out.println("\nIniciando leitura do arquivo %s\n".formatted(fileName));
 
             return fileName.endsWith(".xlsx") ?
                     new XSSFWorkbook(excelFile) :

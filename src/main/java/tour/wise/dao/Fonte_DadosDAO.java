@@ -12,11 +12,11 @@ public class Fonte_DadosDAO {
         this.connection = connection;
     }
 
-    public void insertIgnore(String titulo_arquivo_fonte, String edicao, String orgao_emissor, String url_origem, String observacoes) {
+    public boolean insertIgnore(String titulo_arquivo_fonte, String edicao, String orgao_emissor, String url_origem, String observacoes) {
         System.out.println("Tentando inserir a fonte: " + titulo_arquivo_fonte);
 
         try {
-            int rows_affected = connection.update(
+            int rowsAffected = connection.update(
                     "INSERT IGNORE INTO Fonte_Dados (titulo_arquivo_fonte, edicao, orgao_emissor, url_origem, data_coleta, observacoes) VALUES (?, ?, ?, ?, NOW(), ?)",
                     titulo_arquivo_fonte,
                     edicao,
@@ -25,28 +25,26 @@ public class Fonte_DadosDAO {
                     observacoes
             );
 
-            if (rows_affected > 0) {
+            if (rowsAffected > 0) {
                 System.out.println("Fonte inserida com sucesso: " + titulo_arquivo_fonte);
+                return true;
             } else {
                 System.out.println("Fonte já existente, nenhuma inserção feita: " + titulo_arquivo_fonte);
+                return false;
             }
         } catch (Exception e) {
             System.err.println("Erro ao inserir fonte no banco: " + titulo_arquivo_fonte);
-
-            // Verifica se a causa da exceção é uma SQLException
             Throwable cause = e.getCause();
             if (cause instanceof java.sql.SQLException sqlEx) {
                 System.err.println("Erro SQL: " + sqlEx.getMessage());
                 System.err.println("Código de erro SQL: " + sqlEx.getErrorCode());
                 System.err.println("SQLState: " + sqlEx.getSQLState());
             }
-
-            e.printStackTrace(); // imprime o stack trace completo para depuração
-
+            e.printStackTrace();
             throw e;
-
         }
     }
+
 
 
     public Integer getId(String titulo_arquivo_fonte) {

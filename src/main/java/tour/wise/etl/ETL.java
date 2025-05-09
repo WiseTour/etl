@@ -11,6 +11,7 @@ import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +41,8 @@ public class ETL extends Util {
             String edicaoFichasSinteses
     ) throws IOException {
 
+        LogDAO logDAO = new LogDAO(connection);
+
         Fonte_DadosDAO fonteDadosDAO = new Fonte_DadosDAO(connection);
 
         fonteDadosDAO.insertIgnore(
@@ -57,6 +60,7 @@ public class ETL extends Util {
         try {
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilMensalDTO =
                     extractTransformChegadasTuristasInternacionaisBrasilMensal(
+                            logDAO, 6, "Chegada_Turistas_Internacionais_Brasil_Mensal",
                             fileNameChegadas,
                             0,
                             0,
@@ -67,14 +71,69 @@ public class ETL extends Util {
 
                     );
 
-            fonteDadosDAO.insertIgnore(
-                    tituloArquivoFonteChegadas,
-                    edicaoChegadas,
-                    orgaoEmissorChegadas,
-                    urlChegadas,
-                    null
+            try {
+                boolean inserido = fonteDadosDAO.insertIgnore(
+                        tituloArquivoFonteChegadas,
+                        edicaoChegadas,
+                        orgaoEmissorChegadas,
+                        urlChegadas,
+                        null
+                );
 
-            );
+                if (inserido) {
+                    // Log no banco
+                    logDAO.insertLog(
+                            6, // fk_fonte (ajuste conforme necessário)
+                            3, // Sucesso
+                            1, // Carregamento
+                            "Carregamento realizado com sucesso.",
+                            LocalDateTime.now(),
+                            1,
+                            1,
+                            "Fonte_Dados"
+                    );
+
+                    // Log no console
+                    System.out.println(LocalDateTime.now() + "Fonte inserida com sucesso: " + tituloArquivoFonteChegadas);
+                    System.out.println(LocalDateTime.now() + "Log de Sucesso: Carregamento realizado com sucesso.");
+                } else {
+                    // Log no banco
+                    logDAO.insertLog(
+                            6,
+                            2, // Aviso
+                            1,
+                            "Fonte já existente. Nenhuma inserção foi feita.",
+                            LocalDateTime.now(),
+                            0,
+                            0,
+                            "Fonte_Dados"
+                    );
+
+                    // Log no console
+                    System.out.println(LocalDateTime.now() + "Fonte já existente. Nenhuma inserção feita: " + tituloArquivoFonteChegadas);
+                    System.out.println(LocalDateTime.now() + "Log de Aviso: Fonte já existente. Nenhuma inserção foi feita.");
+                }
+            } catch (Exception e) {
+                // Log no banco
+                logDAO.insertLog(
+                        6,
+                        1, // Erro
+                        1,
+                        "Erro ao tentar inserir fonte: " + e.getMessage(),
+                        LocalDateTime.now(),
+                        0,
+                        0,
+                        "Fonte_Dados"
+                );
+
+                // Log no console
+                System.err.println("Erro ao tentar inserir a fonte: " + tituloArquivoFonteChegadas);
+                System.err.println("Mensagem de erro: " + e.getMessage());
+                System.err.println("Stack trace do erro:");
+                e.printStackTrace(); // Exibe o stack trace no console para depuração
+            }
+
+
 
             Set<String> paisesUnicos = chegadasTuristasInternacionaisBrasilMensalDTO.stream()
                     .map(ChegadaTuristasInternacionaisBrasilMensalDTO::getPaisOrigem)  // Mapeia os países
@@ -106,24 +165,85 @@ public class ETL extends Util {
                 int idPais = paisDAO.getId(pais);
                 String siglaUf = unidadeFederativaBrasilDAO.getId(uf);
 
+                // Log de validação (antes de verificar)
+                logDAO.insertLog(
+                        idFonte,  // fk_fonte
+                        3,  // Categoria: Sucesso (indica que a validação está sendo processada)
+                        1,  // Etapa: Extração (está processando os dados)
+                        String.format("Validando chegada: mês=%d, ano=%d, uf=%s, pais=%s, qtd=%d", mes, ano, uf, pais, qtd),
+                        LocalDateTime.now(),
+                        0,  // Quantidade lida ainda não inserida
+                        0,  // Quantidade inserida
+                        "Chegada_Turistas"
+                );
+
                 // Valida se a chegada existe ou é inválida
                 if (qtd <= 0 || chegadaTuristasInternacionaisBrasilMensalDAO.hasChegadaMensal(mes, ano, siglaUf, idFonte, idPais)) {
+                    // Log de chegada inválida ou já existente
+                    logDAO.insertLog(
+                            idFonte,  // fk_fonte
+                            2,  // Categoria: Aviso (indica que a chegada já foi processada ou é inválida)
+                            1,  // Etapa: Extração
+                            String.format("Chegada inválida ou já existente: mês=%d, ano=%d, uf=%s, pais=%s", mes, ano, uf, pais),
+                            LocalDateTime.now(),
+                            0,  // Quantidade lida
+                            0,  // Quantidade inserida
+                            "Chegada_Turistas"
+                    );
+                    System.out.printf("Chegada inválida ou já existente: mês=%d, ano=%d, uf=%s, pais=%s%n", mes, ano, uf, pais);
                     continue;
                 }
 
+                // Adiciona ao batch
                 batchArgs.add(new Object[]{mes, ano, qtd, via, siglaUf, idFonte, idPais});
 
-                // Executa o batch a cada 1000 registros
+                // Log de inserção em lote
                 if (batchArgs.size() == BATCH_SIZE) {
+                    logDAO.insertLog(
+                            idFonte,  // fk_fonte
+                            3,  // Categoria: Sucesso
+                            2,  // Etapa: Carregamento
+                            String.format("Inserindo lote de %d registros no banco de dados...", batchArgs.size()),
+                            LocalDateTime.now(),
+                            batchArgs.size(),  // Quantidade lida
+                            batchArgs.size(),  // Quantidade inserida
+                            "Chegada_Turistas"
+                    );
+                    System.out.printf("Inserindo lote de %d registros no banco de dados...%n", batchArgs.size());
                     chegadaTuristasInternacionaisBrasilMensalDAO.insertLote(batchArgs);
                     batchArgs.clear();
                 }
             }
 
-            // Insere os que sobraram (menos de 1000)
+// Log de inserção do restante dos registros
             if (!batchArgs.isEmpty()) {
+                logDAO.insertLog(
+                        6,  // fk_fonte
+                        3,  // Categoria: Sucesso
+                        2,  // Etapa: Carregamento
+                        String.format("Inserindo o restante dos %d registros no banco de dados...", batchArgs.size()),
+                        LocalDateTime.now(),
+                        batchArgs.size(),  // Quantidade lida
+                        batchArgs.size(),  // Quantidade inserida
+                        "Chegada_Turistas"
+                );
+                System.out.printf("Inserindo o restante dos %d registros no banco de dados...%n", batchArgs.size());
                 chegadaTuristasInternacionaisBrasilMensalDAO.insertLote(batchArgs);
             }
+
+// Log de término da inserção
+            logDAO.insertLog(
+                    6,  // fk_fonte
+                    3,  // Categoria: Sucesso
+                    2,  // Etapa: Carregamento
+                    "Inserção dos dados de chegadas de turistas finalizada.",
+                    LocalDateTime.now(),
+                    0,  // Quantidade lida (todos já foram lidos)
+                    0,  // Quantidade inserida (total foi inserido)
+                    "Chegada_Turistas"
+            );
+            System.out.println(LocalDateTime.now() + "Inserção dos dados de chegadas de turistas finalizada.");
+
 
             // FICHAS SÍNTESE
             FichaSinteseBrasilDTO fichasSinteseBrasilDTO = extractTransformFichaSinteseBrasil(fileNameFichaSinteseBrasil, 4);
@@ -131,6 +251,20 @@ public class ETL extends Util {
             List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = extractTransformFichasSinteseEstado(fileNameFichaSinteseEstado, 4);
 
             // CRIAÇÃO DOS PERFIES
+
+            System.out.println(LocalDateTime.now() + "[INÍCIO] Criando perfis...");
+
+// Registra no log
+            logDAO.insertLog(
+                    6,  // fk_fonte (ajuste conforme necessário)
+                    3,  // Categoria: Sucesso (indica que o processo está começando)
+                    1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
+                    "Criando perfis...",
+                    LocalDateTime.now(),
+                    0,  // Quantidade lida ainda não processada
+                    0,  // Quantidade inserida
+                    "Perfil_Estimado"
+            );
             List<PerfilDTO> perfiesEstimadoTuristas = new ArrayList<>();
 
             Integer i = 1;
@@ -168,12 +302,7 @@ public class ETL extends Util {
             for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadasTuristasInternacionaisBrasilAnualDTO) {
 
                 try {
-                    System.out.println("chegada - linha: " + i);
-                    System.out.println("quantidade de perfies: " + perfiesEstimadoTuristas.size());
-                    System.out.println("quantidade de chegadas: " + perfiesEstimadoTuristas.size());
-                    System.out.println("chegadas restantes: " + (chegadasTuristasInternacionaisBrasilAnualDTO.size() - i));
-                    System.out.println();
-                    i++;
+
 
                     String paisOrigem = chegada.getPaisOrigem();
                     String ufDestino = chegada.getUfDestino();
@@ -344,7 +473,6 @@ public class ETL extends Util {
             }
 
 
-
             Perfil_Estimado_TuristasDAO perfilEstimadoTuristasDAO = new Perfil_Estimado_TuristasDAO(connection);
             Perfil_Estimado_Turista_FonteDAO perfilEstimadoTuristaFonteDAO = new Perfil_Estimado_Turista_FonteDAO(connection);
 
@@ -409,6 +537,21 @@ public class ETL extends Util {
                 perfilEstimadoTuristaFonteDAO.insertLote(batchFonteArgs);
             }
 
+            // Imprime no console
+            System.out.println(LocalDateTime.now() + "[FIM] Criação e inserção dos perfis finalizada.");
+
+// Registra no log
+            logDAO.insertLog(
+                    6,  // fk_fonte (ajuste conforme necessário)
+                    3,  // Categoria: Sucesso
+                    1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
+                    "Criação dos perfis finalizada.",
+                    LocalDateTime.now(),
+                    0,  // Quantidade lida (ou ajuste conforme necessário)
+                    0,  // Quantidade inserida (ou ajuste conforme necessário)
+                    "Perfil_Estimado"
+            );
+
 
         } catch (Exception e) {
             System.err.println("Erro ao processar os dados:");
@@ -439,32 +582,25 @@ public class ETL extends Util {
     }
 
 
-    public List<ChegadaTuristasInternacionaisBrasilMensalDTO> extractTransformChegadasTuristasInternacionaisBrasilMensal(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, String fonte, String edicao) throws IOException {
+    public List<ChegadaTuristasInternacionaisBrasilMensalDTO> extractTransformChegadasTuristasInternacionaisBrasilMensal(LogDAO logDAO, Integer fkFonte, String tabela,String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, String fonte, String edicao) throws IOException {
 
         // EXTRACT
 
-        List<List<Object>> chegadasTuristasInternacionaisBrasilMensalData = extractChegadasTuristasInternacionaisBrasilMensalData(fileName, sheetNumber, header, colluns, types);
+        List<List<Object>> chegadasTuristasInternacionaisBrasilMensalData = extractChegadasTuristasInternacionaisBrasilMensalData(logDAO, fkFonte, tabela, fileName, sheetNumber, header, colluns, types);
 
         // TRANSFORM
 
-        return transformChegadasTuristasInternacionaisBrasilMensal(chegadasTuristasInternacionaisBrasilMensalData, fonte, edicao);
+        return transformChegadasTuristasInternacionaisBrasilMensal(logDAO,chegadasTuristasInternacionaisBrasilMensalData, fonte, edicao);
 
 
     }
 
-    public List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
-
-        System.out.println("[INÍCIO] Extração de dados iniciada.");
-        System.out.println("[INFO] Arquivo: " + fileName);
-        System.out.println("[INFO] Planilha (sheet): " + sheetNumber);
-        System.out.println("[INFO] Linha de cabeçalho: " + header);
-        System.out.println("[INFO] Quantidade de colunas esperadas: " + colluns);
-        System.out.println("[INFO] Tipos esperados: " + types);
+    public List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(LogDAO logDAO, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
 
         List<List<Object>> data = null;
 
         try {
-            data = service.extract(fileName, sheetNumber, header, colluns, types);
+            data = service.extract(logDAO, fkFonte, tabela, fileName, sheetNumber, header, colluns, types);
 
             System.out.println("[SUCESSO] Extração finalizada com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
             System.out.println();
@@ -474,16 +610,35 @@ public class ETL extends Util {
             e.printStackTrace();
         }
 
-
-
         return data;
     }
 
-    public  List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(List<List<Object>> data, String fonte, String edicao) {
+    public  List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(LogDAO logDAO, List<List<Object>> data, String fonte, String edicao) {
 
         System.out.println("[INÍCIO] Transformação dos dados iniciada.");
+        logDAO.insertLog(
+                6,  // fk_fonte (ajuste conforme necessário)
+                3,  // Categoria: Sucesso (indica que a transformação está sendo iniciada)
+                1,  // Etapa: Extração
+                String.format("Transformação dos dados iniciada. Fonte: %s, Edição: %s", fonte, edicao),
+                LocalDateTime.now(),
+                0,  // Quantidade lida ainda não processada
+                0,  // Quantidade inserida
+                "Chegada_Turistas"
+        );
+
         System.out.println("[INFO] Fonte: " + fonte + ", Edição: " + edicao);
         System.out.println("[INFO] Total de registros brutos recebidos: " + (data != null ? data.size() : 0));
+        logDAO.insertLog(
+                6,  // fk_fonte
+                3,  // Categoria: Sucesso
+                1,  // Etapa: Extração
+                String.format("Fonte: %s, Edição: %s. Total de registros brutos recebidos: %d", fonte, edicao, data != null ? data.size() : 0),
+                LocalDateTime.now(),
+                data != null ? data.size() : 0,  // Quantidade lida
+                0,  // Quantidade inserida (ainda não foi convertida)
+                "Chegada_Turistas"
+        );
 
         List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadas_turistas_internacionais_brasil_mensal_dto = new ArrayList<>();
 
@@ -508,13 +663,34 @@ public class ETL extends Util {
 
             } catch (Exception e) {
                 System.out.println("[ERRO] Falha ao transformar a linha " + linha + ": " + datum);
+                logDAO.insertLog(
+                        6,  // fk_fonte
+                        1,  // Categoria: Erro
+                        1,  // Etapa: Extração
+                        String.format("Falha ao transformar a linha %d: %s. Erro: %s", linha, datum, e.getMessage()),
+                        LocalDateTime.now(),
+                        1,  // Quantidade lida
+                        0,  // Nenhuma quantidade inserida
+                        "Chegada_Turistas"
+                );
                 e.printStackTrace();
             }
         }
 
-        System.out.println("[FIM] Transformação concluída. Total de registros convertidos: " + chegadas_turistas_internacionais_brasil_mensal_dto.size());
+        System.out.println(LocalDateTime.now() + "[FIM] Transformação concluída. Total de registros convertidos: " + chegadas_turistas_internacionais_brasil_mensal_dto.size());
+        logDAO.insertLog(
+                6,  // fk_fonte
+                3,  // Categoria: Sucesso
+                1,  // Etapa: Extração
+                String.format("Transformação concluída. Total de registros convertidos: %d", chegadas_turistas_internacionais_brasil_mensal_dto.size()),
+                LocalDateTime.now(),
+                0,  // Quantidade lida (já processada)
+                chegadas_turistas_internacionais_brasil_mensal_dto.size(),  // Quantidade inserida
+                "Chegada_Turistas"
+        );
 
         return chegadas_turistas_internacionais_brasil_mensal_dto;
+
     }
 
     public  FichaSinteseBrasilDTO extractTransformFichaSinteseBrasil(String fileName, Integer collun) throws IOException {
@@ -607,10 +783,6 @@ public class ETL extends Util {
 
         }
 
-
-        for (List<List<Object>> datum : data) {
-            System.out.println(datum);
-        }
 
         workbook.close();
 
@@ -735,10 +907,6 @@ public class ETL extends Util {
 
         }
 
-
-        for (List<List<Object>> datum : data) {
-            System.out.println(datum);
-        }
 
         workbook.close();
 
@@ -866,9 +1034,7 @@ public class ETL extends Util {
         }
 
 
-        for (List<List<Object>> datum : data) {
-            System.out.println(datum);
-        }
+
 
         workbook.close();
 
