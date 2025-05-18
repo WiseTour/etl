@@ -76,6 +76,12 @@
       <artifactId>s3</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.slack.api</groupId>
+      <artifactId>slack-api-client</artifactId>
+      <version>1.36.1</version>
+    </dependency>
+
   </dependencies>
 
   <build>

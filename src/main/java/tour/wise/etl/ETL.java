@@ -10,6 +10,8 @@ import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.PerfilDTO;
+import tour.wise.slack.SlackWiseTour;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,9 +23,17 @@ import java.util.stream.Collectors;
 
 public class ETL extends Util {
 
+    private final SlackWiseTour notificacaoSlack;
+
     Service service = new Service();
+
     Workbook workbook;
+
     tour.wise.util.Util util = new tour.wise.util.Util();
+
+    public ETL() {
+        this.notificacaoSlack = new SlackWiseTour("https://hooks.slack.com/services/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");
+    }
 
     public void createLoadPerfies(
             JdbcTemplate connection,
@@ -44,6 +54,8 @@ public class ETL extends Util {
         LogDAO logDAO = new LogDAO(connection);
 
         Fonte_DadosDAO fonteDadosDAO = new Fonte_DadosDAO(connection);
+
+        notificacaoSlack.mandarMensagemSimples(":rocket: Iniciando processamento ETL - " + LocalDateTime.now());
 
         fonteDadosDAO.insertIgnore(
                 tituloArquivoFonteFichasSinteses,
@@ -114,7 +126,7 @@ public class ETL extends Util {
                     System.out.println(LocalDateTime.now() + "Log de Aviso: Fonte já existente. Nenhuma inserção foi feita.");
                 }
             } catch (Exception e) {
-                // Log no banco
+                // 1. Log no banco (sistema crítico)
                 logDAO.insertLog(
                         6,
                         1, // Erro
@@ -126,11 +138,23 @@ public class ETL extends Util {
                         "Fonte_Dados"
                 );
 
-                // Log no console
+                // 2. Esse log é no console (p/ a depuração imediata)
                 System.err.println("Erro ao tentar inserir a fonte: " + tituloArquivoFonteChegadas);
                 System.err.println("Mensagem de erro: " + e.getMessage());
                 System.err.println("Stack trace do erro:");
-                e.printStackTrace(); // Exibe o stack trace no console para depuração
+                e.printStackTrace();
+
+                // 3. Essa notificação é no Slack (alerta todos)
+                String errorMessage = String.format(
+                        ":rotating_light: *ERRO na inserção de fonte* \n" +
+                                "Arquivo: %s \n" +
+                                "Tipo: %s \n" +
+                                "Erro: %s",
+                        tituloArquivoFonteChegadas,
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
+                );
+                notificacaoSlack.mandarMensagemSimples(errorMessage);
             }
 
 
@@ -468,6 +492,22 @@ public class ETL extends Util {
 
                     e.printStackTrace();
 
+                    String errorMessage = String.format(
+                            ":x: *Erro no processamento de perfil estimado* \n" +
+                                    "País de Origem: %s \n" +
+                                    "UF de Destino: %s \n" +
+                                    "Ano: %d \n" +
+                                    "Mês: %d \n" +
+                                    "Erro: %s - %s",
+                            chegada.getPaisOrigem(),
+                            chegada.getUfDestino(),
+                            chegada.getAno(),
+                            chegada.getMes(),
+                            e.getClass().getSimpleName(),
+                            e.getMessage()
+                    );
+                    notificacaoSlack.mandarMensagemSimples(errorMessage);
+
                     throw e;
                 }
             }
@@ -572,6 +612,11 @@ public class ETL extends Util {
                 }
             }
 
+            String erroSlack = ":x: Erro no processamento ETL\n" +
+                    "Arquivo: " + fileNameChegadas + "\n" +
+                    "Erro: " + e.getClass().getSimpleName() + " - " + e.getMessage();
+            notificacaoSlack.mandarMensagemSimples(erroSlack);
+
             // Stack trace completo
             e.printStackTrace();
         }
@@ -585,6 +630,8 @@ public class ETL extends Util {
     public List<ChegadaTuristasInternacionaisBrasilMensalDTO> extractTransformChegadasTuristasInternacionaisBrasilMensal(LogDAO logDAO, Integer fkFonte, String tabela,String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, String fonte, String edicao) throws IOException {
 
         // EXTRACT
+
+        notificacaoSlack.mandarMensagemSimples(":mag: Iniciando extração de dados...");
 
         List<List<Object>> chegadasTuristasInternacionaisBrasilMensalData = extractChegadasTuristasInternacionaisBrasilMensalData(logDAO, fkFonte, tabela, fileName, sheetNumber, header, colluns, types);
 
@@ -614,6 +661,8 @@ public class ETL extends Util {
     }
 
     public  List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(LogDAO logDAO, List<List<Object>> data, String fonte, String edicao) {
+
+
 
         System.out.println("[INÍCIO] Transformação dos dados iniciada.");
         logDAO.insertLog(
@@ -673,11 +722,29 @@ public class ETL extends Util {
                         0,  // Nenhuma quantidade inserida
                         "Chegada_Turistas"
                 );
+
+                String errorMessage = String.format(
+                        ":warning: *Erro na transformação de dados* \n" +
+                                "Linha: %d \n" +
+                                "Dados: %s \n" +
+                                "Erro: %s - %s",
+                        linha,
+                        datum.toString(),
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
+                );
+                notificacaoSlack.mandarMensagemSimples(errorMessage);
+
                 e.printStackTrace();
             }
         }
 
         System.out.println(LocalDateTime.now() + "[FIM] Transformação concluída. Total de registros convertidos: " + chegadas_turistas_internacionais_brasil_mensal_dto.size());
+
+        notificacaoSlack.mandarMensagemSimples("Dados processados com sucesso! Total: " + data.size());
+
+        chegadas_turistas_internacionais_brasil_mensal_dto.size();
+
         logDAO.insertLog(
                 6,  // fk_fonte
                 3,  // Categoria: Sucesso
