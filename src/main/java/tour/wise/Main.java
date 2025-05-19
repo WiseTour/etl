@@ -1,28 +1,15 @@
 package tour.wise;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.dao.DataBase;
 import tour.wise.etl.ETL;
-
-
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
-import java.util.Random;
-
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-
-        DataBase data_base = new DataBase();
-
-        JdbcTemplate connection = data_base.getConnection();
+    public static void main(String[] args) throws IOException {
 
         ETL etl = new ETL();
 
-
-        etl.createLoadPerfies(
-                connection,
+        etl.exe(
                 "C:/Users/leosa/OneDrive/Área de Trabalho/WiseTour/database/data/chegada_turistas_ministerio_turismo/chegadas_2019.xlsx",
                 "Chegadas 2019",
                 "https://www.gov.br/turismo/pt-br/acesso-a-informacao/acoes-e-programas/observatorio/demanda-turistica/demanda-turistica-internacional-1)",
@@ -35,12 +22,9 @@ public class Main {
                 "https://dados.gov.br/dados/conjuntos-dados/estimativas-de-chegadas-de-turistas-internacionais-ao-brasil",
                 "Ministério do Turismo",
                 "2019"
-
         );
 
     }
-
-
 
 
 }
