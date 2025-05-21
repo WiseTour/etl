@@ -25,17 +25,25 @@ public class ETL {
     tour.wise.etl.transform.Transform transform;
     Load load;
     Service service;
+    String caminho;
+    String caminhoPaises;
+    String caminhoEstado;
+    String caminhoBrasil;
 
-
-    public ETL() {
+    public ETL(String bucketname, String caminho) {
         this.dataBase = new DataBase();
         this.connection = dataBase.getConnection();;
         this.logDAO = new LogDAO(connection);
-        this.extract = new Extract(connection);
+        this.extract = new Extract(connection, bucketname, caminho);
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
         this.service = new Service();
+        this.caminho = caminho;
+        this.caminhoBrasil = caminhoBrasil;
+        this.caminhoEstado = caminhoEstado;
+        this.caminhoPaises = caminhoPaises;
     }
+
 
     public void exe(
             String fileNameChegadas,
@@ -268,8 +276,7 @@ public class ETL {
             );
             throw e;
         }
-
-
+ 
     }
 
 

@@ -17,17 +17,30 @@ public class Extract {
     Service service;
     JdbcTemplate connection;
     LogDAO logDAO;
+    S3ExcelReader leitor;
+    String caminho;
+    String caminhoPaises;
+    String caminhoEstado;
+    String caminhoBrasil;
 
-    public Extract(JdbcTemplate connection) {
+    public Extract(JdbcTemplate connection, String bucketname, String caminho) {
         this.service = new Service();
         this.connection = connection;
         this.logDAO = new LogDAO(connection);
+        this.leitor = new S3ExcelReader(bucketname);
+        this.caminho = caminho;
+        /*this.caminhoBrasil = caminhoBrasil;
+        this.caminhoEstado = caminhoEstado;
+        this.caminhoPaises = caminhoPaises;*/
+
     }
 
     public List<List<List<Object>>> extractFichasSinteseEstadoData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
 
         try {
+            // Workbook workbook = leitor.lerExcelDireto(caminhoEstado);
             Workbook workbook = service.loadWorkbook(fileName);
+
             String sheetName = service.getSheetName(fileName, sheetNumber);
             String estado = sheetName.split("\\s+", 2)[1]; // UF de entrada
 
@@ -116,6 +129,8 @@ public class Extract {
     public List<List<List<Object>>> extractFichasSintesePaisData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
         try{
             Workbook workbook = service.loadWorkbook(fileName);
+            // Workbook workbook = leitor.lerExcelDireto(caminhoPaises);
+
             String sheetName = service.getSheetName(fileName, sheetNumber);
             String pais = sheetName.split("\\s+", 2)[1]; // pais de origem
 
@@ -207,6 +222,8 @@ public class Extract {
             ZipSecureFile.setMinInflateRatio(0.0001);
             Workbook workbook = service.loadWorkbook(fileName);
 
+            // Workbook workbook = leitor.lerExcelDireto(caminhoBrasil);
+
             // Parâmetros das seções a serem lidas
             List<int[]> ranges = List.of(
                     new int[]{5, 5}, // ano
@@ -288,12 +305,12 @@ public class Extract {
         }
     }
 
-    public List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+    public List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) throws IOException {
 
         List<List<Object>> data = null;
 
         try {
-            data = service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types);
+            data = service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, leitor.lerExcelDireto(caminho));
 
             System.out.println("[SUCESSO] Extração finalizada com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
             System.out.println();

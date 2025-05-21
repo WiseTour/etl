@@ -18,13 +18,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class Service {
 
-    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
 
         try {
             System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
-
-            // Criando um objeto Workbook a partir do arquivo recebido,
-            Workbook workbook = loadWorkbook(fileName);
 
             // Pegando a planilha referenciada em "sheetNumber" do arquivo
             Sheet sheet = workbook.getSheetAt(sheetNumber);
