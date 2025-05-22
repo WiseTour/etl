@@ -168,7 +168,9 @@ public class ETL {
             List<Object[]> batchArgs = new ArrayList<>();
             List<Integer> fkPaisesDoLote = new ArrayList<>();
             List<Object[]> batchFonteArgs = new ArrayList<>();
-            int batchMax = 50000;
+            int batchMax = 10000;
+
+
 
 
             for (ChegadaTuristasInternacionaisBrasilMensalDTO chegadaTuristasInternacionaisBrasilMensalDTO : chegadasTuristasInternacionaisBrasilMensalDTO) {
@@ -274,3 +276,4 @@ public class ETL {
 
 
 }
+
