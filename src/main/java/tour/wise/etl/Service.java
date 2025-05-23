@@ -14,30 +14,14 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import tour.wise.dao.LogDAO;
-import tour.wise.model.Log;
 
 
 public class Service {
 
-
-
-    public List<List<Object>> extract(LogDAO logDAO, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
 
         try {
             System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
-
-            logDAO.insertLog(
-                    6,  // fk_fonte
-                    3,  // Sucesso (categoria "Sucesso")
-                    1,  // Etapa "Extração"
-                    "Início da leitura do arquivo: " + fileName,
-                    LocalDateTime.now(),
-                    0,  // Quantidade lida (ainda não lida)
-                    0,  // Quantidade inserida (ainda não inserida)
-                    "Fonte_Dados"
-            );
-
 
             // Criando um objeto Workbook a partir do arquivo recebido,
             Workbook workbook = loadWorkbook(fileName);
@@ -81,18 +65,6 @@ public class Service {
 
             System.out.println(LocalDateTime.now() + "\nLeitura do arquivo finalizada\n");
 
-            // Inserindo log de fim da extração
-            logDAO.insertLog(
-                    fkFonte,
-                    3,  // Sucesso (categoria "Sucesso")
-                    1,  // Etapa "Extração"
-                    "Leitura do arquivo finalizada com sucesso: " + fileName,
-                    LocalDateTime.now(),
-                    data.size(), // Quantidade lida: número de linhas lidas
-                    0,  // Quantidade inserida: ainda não inseridas
-                    tabela
-            );
-
             return data;
 
 
@@ -102,8 +74,7 @@ public class Service {
         }
     }
 
-
-    public  <T> List<T> extractRange(
+    public <T> List<T> extractRange(
             String fileName,
             Workbook workbook,
             Integer sheetNumber,
@@ -116,7 +87,6 @@ public class Service {
         try (workbook){
 
             System.out.printf(LocalDateTime.now() +  "\nIniciando leitura do arquivo %s\n%n", fileName);
-
 
             Sheet sheet = workbook.getSheetAt(sheetNumber);
             List<T> data = new ArrayList<>();
@@ -151,10 +121,10 @@ public class Service {
         }
     }
 
-
     public  Workbook loadWorkbook(String fileName) {
         try {
             Path path = Path.of(fileName);
+
             InputStream excelFile = Files.newInputStream(path);
 
             return fileName.endsWith(".xlsx") ?
@@ -242,8 +212,6 @@ public class Service {
         }
     }
 
-
-
     public Integer parseToInteger(Object obj) {
         if (obj == null) return 0;
         try {
@@ -252,6 +220,5 @@ public class Service {
             return 0; // ou lance uma exceção se quiser validar
         }
     }
-
 
 }
