@@ -18,21 +18,16 @@ public class Extract {
     JdbcTemplate connection;
     LogDAO logDAO;
     S3ExcelReader leitor;
-    String caminho;
-    String caminhoPaises;
-    String caminhoEstado;
-    String caminhoBrasil;
+    String caminhoChegadaTurista;
+    String caminhoFichaSinteseBrasil;
 
-    public Extract(JdbcTemplate connection, String bucketname, String caminho) {
+    public Extract(JdbcTemplate connection, String bucketname, String caminhoChegadaTurista, String caminhoFichaSinteseBrasil) {
         this.service = new Service();
         this.connection = connection;
         this.logDAO = new LogDAO(connection);
         this.leitor = new S3ExcelReader(bucketname);
-        this.caminho = caminho;
-        /*this.caminhoBrasil = caminhoBrasil;
-        this.caminhoEstado = caminhoEstado;
-        this.caminhoPaises = caminhoPaises;*/
-
+        this.caminhoChegadaTurista = caminhoChegadaTurista;
+        this.caminhoFichaSinteseBrasil = caminhoFichaSinteseBrasil;
     }
 
     public List<List<List<Object>>> extractFichasSinteseEstadoData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
@@ -219,10 +214,10 @@ public class Extract {
     public List<List<List<Object>>> extractFichaSinteseBrasilData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
 
         try{
-            ZipSecureFile.setMinInflateRatio(0.0001);
-            Workbook workbook = service.loadWorkbook(fileName);
+            // ZipSecureFile.setMinInflateRatio(0.0);
+            // Workbook workbook = service.loadWorkbook(fileName);
 
-            // Workbook workbook = leitor.lerExcelDireto(caminhoBrasil);
+            Workbook workbook = leitor.lerExcelDireto(caminhoFichaSinteseBrasil);
 
             // Parâmetros das seções a serem lidas
             List<int[]> ranges = List.of(
@@ -310,7 +305,7 @@ public class Extract {
         List<List<Object>> data = null;
 
         try {
-            data = service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, leitor.lerExcelDireto(caminho));
+            data = service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, leitor.lerExcelDireto(caminhoChegadaTurista));
 
             System.out.println("[SUCESSO] Extração finalizada com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
             System.out.println();
@@ -331,7 +326,6 @@ public class Extract {
             );
             throw e;
         }
-
     }
 
 }

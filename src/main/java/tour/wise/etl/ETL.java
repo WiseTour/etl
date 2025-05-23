@@ -25,23 +25,19 @@ public class ETL {
     tour.wise.etl.transform.Transform transform;
     Load load;
     Service service;
-    String caminho;
-    String caminhoPaises;
-    String caminhoEstado;
-    String caminhoBrasil;
+    String caminhoChegadaTurista;
+    String caminhoFichaSinteseBrasil;
 
-    public ETL(String bucketname, String caminho) {
+    public ETL(String bucketname, String caminhoChegadaTurista, String caminhoFichaSinteseBrasil) {
         this.dataBase = new DataBase();
         this.connection = dataBase.getConnection();;
         this.logDAO = new LogDAO(connection);
-        this.extract = new Extract(connection, bucketname, caminho);
+        this.extract = new Extract(connection, bucketname, caminhoChegadaTurista, caminhoFichaSinteseBrasil);
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
         this.service = new Service();
-        this.caminho = caminho;
-        this.caminhoBrasil = caminhoBrasil;
-        this.caminhoEstado = caminhoEstado;
-        this.caminhoPaises = caminhoPaises;
+        this.caminhoChegadaTurista = caminhoChegadaTurista;
+        this.caminhoFichaSinteseBrasil = caminhoFichaSinteseBrasil;
     }
 
 

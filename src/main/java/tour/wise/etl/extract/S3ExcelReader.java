@@ -1,5 +1,6 @@
 package tour.wise.etl.extract;
 
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.regions.Region;
@@ -30,6 +31,7 @@ public class S3ExcelReader {
                 .key(key)
                 .build();
 
+        ZipSecureFile.setMinInflateRatio(0.0);
         InputStream inputStream = s3.getObject(request);
         return new XSSFWorkbook(inputStream);
     }
