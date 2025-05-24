@@ -1,36 +1,36 @@
-//package tour.wise.slack;
-//
-//import com.slack.api.Slack;
-//import com.slack.api.webhook.Payload;
-//import com.slack.api.webhook.WebhookResponse;
-//
-//// classe principal responsável por enviar as notificações pro slack via webhook
-//// utilizando a API oficial do slack p/ java
-//public class SlackWiseTour {
-//
-//    private final String webhookUrl;
-//
-//    // instancia do cliente slack
-//    private final Slack slack;
-//
-//    public SlackWiseTour(String webhookUrl) {
-//        this.webhookUrl = webhookUrl;
-//        this.slack = Slack.getInstance();
-//    }
-//
-//    public void mandarMensagemSimples(String message) {
-//        try {
-//            Payload payload = Payload.builder()
-//                    .text(message)
-//                    .build();
-//
-//            WebhookResponse response = slack.send(webhookUrl, payload);
-//
-//            if (response.getCode() != 200) {
-//                System.err.println("Falha ao enviar mensagem para o Slack. Código: " + response.getCode());
-//            }
-//        } catch (Exception e) {
-//            System.err.println("Erro ao enviar mensagem para o Slack: " + e.getMessage());
-//        }
-//    }
-//}
+package tour.wise.slack;
+
+import com.slack.api.Slack;
+import com.slack.api.webhook.Payload;
+import com.slack.api.webhook.WebhookResponse;
+
+import java.util.Objects;
+
+public class SlackWiseTour {
+    private final String webhookUrl;
+    private final Slack slack;
+
+    public SlackWiseTour(String webhookUrl) {
+        if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("A URL do Webhook não pode ser nula/vazia");
+        }
+        this.webhookUrl = webhookUrl;
+        this.slack = Slack.getInstance();
+    }
+
+    public boolean sendNotification(String message) {
+        Objects.requireNonNull(message, "A mensagem não pode ser nula");
+
+        try {
+            Payload payload = Payload.builder()
+                    .text(message)
+                    .build();
+
+            WebhookResponse response = slack.send(webhookUrl, payload);
+            return response.getCode() == 200;
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}

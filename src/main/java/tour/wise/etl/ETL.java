@@ -9,7 +9,7 @@ import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.Extract;
 import tour.wise.etl.load.Load;
-
+import tour.wise.slack.SlackWiseTour;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -25,7 +25,7 @@ public class ETL {
     tour.wise.etl.transform.Transform transform;
     Load load;
     Service service;
-
+    private final SlackWiseTour slackNotifier = new SlackWiseTour("https://hooks.slack.com/services/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");
 
     public ETL() {
         this.dataBase = new DataBase();
@@ -53,9 +53,11 @@ public class ETL {
     ) throws IOException {
 
         try {
+            // 1. INÍCIO DO PROCESSO
+            slackNotifier.sendNotification(":gear: *PROCESSAMENTO INICIADO COM SUCESSO!* ");
 
-            // CARREGAMENTO DA FONTE DAS CHEGADAS NA TABELA FONTE_DADOS
-
+            // 2. EXTRAÇÃO DOS DADOS DE CHEGADA
+            slackNotifier.sendNotification("[WiseTour] :mag: Extração de dados iniciada");
             load.loadFonte(tituloArquivoFonteChegadas,
                     edicaoChegadas,
                     orgaoEmissorChegadas,
@@ -63,10 +65,7 @@ public class ETL {
                     null);
 
             Fonte_DadosDAO fonteDadosDAO = new Fonte_DadosDAO(connection);
-
             Integer fkFonteChegadas = fonteDadosDAO.getId(tituloArquivoFonteChegadas);
-
-            // EXTRAÇÃO DAS CHEGADAS
 
             List<List<Object>> chegadasTuristasInternacionaisBrasilMensalData = extract.extractChegadasTuristasInternacionaisBrasilMensalData(
                     fkFonteChegadas,
@@ -77,23 +76,24 @@ public class ETL {
                     12,
                     List.of("String", "Numeric", "String", "Numeric", "String", "Numeric", "String", "Numeric", "Numeric", "String", "Numeric", "Numeric")
             );
+            slackNotifier.sendNotification("[WiseTour] :white_check_mark: Extração dos registros concluída!");
 
-            // TRANSFORMAÇÃO DAS CHEGADAS
-
+            // 3. TRANSFORMAÇÃO DOS DADOS
+            slackNotifier.sendNotification("[WiseTour] :arrows_counterclockwise: Transformação dos dados em andamento...");
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilMensalDTO =
                     transform.transformChegadasTuristasInternacionaisBrasilMensal(
                             chegadasTuristasInternacionaisBrasilMensalData,
                             orgaoEmissorChegadas,
                             edicaoChegadas);
+            slackNotifier.sendNotification("[WiseTour] :sparkles: Dados transformados com sucesso!");
 
-
-
-            // CARREGAMENTO OS PAÍSES PRESENTES NA BASE CHEGADAS NO BANCO, CASO AINDA NÃO PERSISTAM
-
+            // 4. CARREGAMENTO INICIAL
+            slackNotifier.sendNotification("[WiseTour] :floppy_disk: Inserção no banco de dados iniciada...");
             load.loadPais(chegadasTuristasInternacionaisBrasilMensalDTO);
+            slackNotifier.sendNotification("[WiseTour] :card_file_box: Países carregados no banco!");
 
-            // CARREGAMENTO DA FONTE DAS FICHAS SÍNTESE
-
+            // 5. PROCESSAMENTO DAS FICHAS SÍNTESE
+            slackNotifier.sendNotification("[WiseTour] :page_facing_up: Processando fichas síntese...");
             load.loadFonte(
                     tituloArquivoFonteFichasSinteses,
                     edicaoFichasSinteses,
@@ -101,9 +101,6 @@ public class ETL {
                     urlFichasSinteses,
                     null
             );
-
-
-            // EXTRAÇÃO E TRASNFORMAÇÃO DA FICHA SÍNTESE BRASIL
 
             FichaSinteseBrasilDTO fichaSinteseBrasilDTO = transform.transformFichaSinteseBrasil(
                     extract.extractFichaSinteseBrasilData(
@@ -113,10 +110,7 @@ public class ETL {
                             List.of("string", "numeric"))
             );
 
-            // EXTRAÇÃO DAS FICHAS SÍNTESE POR PAÍS
-
             List<List<List<List<Object>>>> fichasSintesePaisData = new ArrayList<>();
-
             for (Integer i = 1; i < service.getSheetNumber(fileNameFichaSintesePais); i++) {
                 fichasSintesePaisData.add(extract.extractFichasSintesePaisData(
                         fileNameFichaSintesePais,
@@ -126,18 +120,12 @@ public class ETL {
                         List.of("string", "numeric")));
             }
 
-            // TRANFORMAÇÃO DAS FICHAS SÍNTESE POR PAÍS
-
             List<FichaSintesePaisDTO> fichasSintesePaisDTO = new ArrayList<>();
-
             for (List<List<List<Object>>> fichaSintesePaisData : fichasSintesePaisData) {
                 fichasSintesePaisDTO.add(transform.transformFichasSintesePais(fichaSintesePaisData));
             }
 
-            // EXTRAÇÃO DAS FICHAS SÍNTESE POR ESTADO
-
             List<List<List<List<Object>>>> fichasSinteseEstadosData = new ArrayList<>();
-
             for (Integer i = 1; i < service.getSheetNumber(fileNameFichaSinteseEstado); i++) {
                 fichasSinteseEstadosData.add(extract.extractFichasSinteseEstadoData(
                         fileNameFichaSinteseEstado,
@@ -147,36 +135,27 @@ public class ETL {
                         List.of("string", "numeric")));
             }
 
-            // TRANFORMAÇÃO DAS FICHAS SÍNTESE POR ESTADO
-
             List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = new ArrayList<>();
-
             for (List<List<List<Object>>> fichaSinteseEstadoData : fichasSinteseEstadosData) {
                 fichasSinteseEstadoDTO.add(transform.transformFichasSinteseEstado(fichaSinteseEstadoData));
             }
+            slackNotifier.sendNotification("[WiseTour] :clipboard: Fichas processadas!");
 
-            // TRANSFORMAÇÃO E CARREGAMENTO DOS perfis
-
+            // 6. PROCESSAMENTO DE PERFIS
+            slackNotifier.sendNotification("[WiseTour] :busts_in_silhouette: Gerando perfis de turistas...");
             List<PerfilDTO> perfisEstimadosTuristas;
-
             Perfil_Estimado_TuristasDAO perfilEstimadoTuristasDAO = new Perfil_Estimado_TuristasDAO(connection);
             Perfil_Estimado_Turista_FonteDAO perfilEstimadoTuristaFonteDAO = new Perfil_Estimado_Turista_FonteDAO(connection);
             PaisDAO paisDAO = new PaisDAO(connection);
             Unidade_Federativa_BrasilDAO unidadeFederativaBrasilDAO = new Unidade_Federativa_BrasilDAO(connection);
 
-
             List<Object[]> batchArgs = new ArrayList<>();
             List<Integer> fkPaisesDoLote = new ArrayList<>();
             List<Object[]> batchFonteArgs = new ArrayList<>();
             int batchMax = 10000;
-
-
-
+            int totalPerfis = 0;
 
             for (ChegadaTuristasInternacionaisBrasilMensalDTO chegadaTuristasInternacionaisBrasilMensalDTO : chegadasTuristasInternacionaisBrasilMensalDTO) {
-
-                // TRANSFORMAÇÃO
-
                 perfisEstimadosTuristas = transform.transformPerfis(
                         chegadaTuristasInternacionaisBrasilMensalDTO,
                         chegadasTuristasInternacionaisBrasilMensalDTO,
@@ -185,7 +164,7 @@ public class ETL {
                         fichaSinteseBrasilDTO
                 );
 
-                // CARREGAMENTO
+                totalPerfis += perfisEstimadosTuristas.size();
 
                 for (PerfilDTO perfil : perfisEstimadosTuristas) {
                     int fkPais = paisDAO.getId(perfil.getPaisesOrigem());
@@ -212,21 +191,18 @@ public class ETL {
                     fkPaisesDoLote.add(fkPais);
 
                     if (batchArgs.size() >= batchMax) {
-
                         load.loadPerfis(
                                 batchArgs,
                                 fkPaisesDoLote,
                                 batchFonteArgs,
                                 tituloArquivoFonteFichasSinteses
                         );
-
                         batchArgs.clear();
                         fkPaisesDoLote.clear();
                         batchFonteArgs.clear();
                     }
                 }
 
-                // Inserir o restante fora do loop
                 if (!batchArgs.isEmpty()) {
                     load.loadPerfis(
                             batchArgs,
@@ -234,35 +210,34 @@ public class ETL {
                             batchFonteArgs,
                             tituloArquivoFonteFichasSinteses
                     );
-
                     batchArgs.clear();
                     fkPaisesDoLote.clear();
                     batchFonteArgs.clear();
                 }
-
-                // Imprime no console
-                System.out.println(LocalDateTime.now() + "[FIM] Criação e inserção dos perfis finalizada.");
-
-                // Registra no log
-                logDAO.insertLog(
-                        fkFonteChegadas,  // fk_fonte (ajuste conforme necessário)
-                        3,  // Categoria: Sucesso
-                        1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
-                        "Criação dos perfis finalizada.",
-                        LocalDateTime.now(),
-                        0,  // Quantidade lida (ou ajuste conforme necessário)
-                        0,  // Quantidade inserida (ou ajuste conforme necessário)
-                        "Perfil_Estimado"
-                );
-
             }
+            slackNotifier.sendNotification("[WiseTour] :tada: *PERFIS GERADOS COM SUCESSO!* (" + totalPerfis + " registros)");
+
+            // 7. CONCLUSÃO
+            slackNotifier.sendNotification("[WiseTour] :checkered_flag: *PROCESSO FINALIZADO!* Sua dashboard está atualizada! Entre e confira já!");
+
+            logDAO.insertLog(
+                    fkFonteChegadas,
+                    3,
+                    1,
+                    "Criação dos perfis finalizada.",
+                    LocalDateTime.now(),
+                    0,
+                    0,
+                    "Perfil_Estimado"
+            );
+
         } catch (Exception e) {
-            // Log no banco
+            slackNotifier.sendNotification("[WiseTour] :x: *ERRO NO PROCESSO* \nDetalhes: " + e.getMessage());
             logDAO.insertLog(
                     1,
-                    1, // Erro
                     1,
-                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
+                    1,
+                    "[WiseTour] Erro ao tentar transforma dados de chegada: " + e.getMessage(),
                     LocalDateTime.now(),
                     0,
                     0,
@@ -270,10 +245,5 @@ public class ETL {
             );
             throw e;
         }
-
-
     }
-
-
 }
-
