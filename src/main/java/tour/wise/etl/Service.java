@@ -35,18 +35,6 @@ public class Service {
             // Iterando sobre as linhas da planilha
             for (Row row : sheet) {
 
-                if (row.getRowNum() == header) {
-                    System.out.println(LocalDateTime.now() + "\nLendo cabeçalho");
-
-                    for (int i = 0; i < colluns; i++) {
-                        String coluna = row.getCell(i).getStringCellValue();
-                        System.out.println(LocalDateTime.now() + "Coluna " + i + ": " + coluna);
-                    }
-
-                    System.out.println("--------------------");
-                    continue;
-                }
-
                 // Extraindo valor das células e criando objeto Linha
 
                 List<Object> linha = new ArrayList<>();
@@ -86,8 +74,6 @@ public class Service {
     ) {
         try (workbook){
 
-            System.out.printf(LocalDateTime.now() +  "\nIniciando leitura do arquivo %s\n%n", fileName);
-
             Sheet sheet = workbook.getSheetAt(sheetNumber);
             List<T> data = new ArrayList<>();
 
@@ -109,10 +95,6 @@ public class Service {
 
                 data.add(mapper.apply(linha));
             }
-
-            workbook.close();
-
-            System.out.println(LocalDateTime.now() + "\nLeitura finalizada\n");
 
             return data;
 

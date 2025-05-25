@@ -1,10 +1,8 @@
 package tour.wise.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Chegada_Turistas_Internacionais_Brasil_MensalDAO {
@@ -14,7 +12,7 @@ public class Chegada_Turistas_Internacionais_Brasil_MensalDAO {
         this.connection = connection;
     }
 
-    Unidade_Federativa_BrasilDAO unidade_federativa_brasil_dao = new Unidade_Federativa_BrasilDAO(connection);
+    UnidadeFederativaBrasilDAO unidade_federativa_brasil_dao = new UnidadeFederativaBrasilDAO(connection);
 
     public boolean hasChegadaMensal(int mes, int ano, String siglaUfDestino, int idFonteDados, int idPaisOrigem) {
         String sql = """

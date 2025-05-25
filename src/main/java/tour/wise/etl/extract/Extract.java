@@ -24,10 +24,10 @@ public class Extract {
         this.logDAO = new LogDAO(connection);
     }
 
-    public List<List<List<Object>>> extractFichasSinteseEstadoData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
+    public List<List<List<Object>>> extractFichasSinteseEstadoData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
 
         try {
-            Workbook workbook = service.loadWorkbook(fileName);
+
             String sheetName = service.getSheetName(fileName, sheetNumber);
             String estado = sheetName.split("\\s+", 2)[1]; // UF de entrada
 
@@ -94,7 +94,6 @@ public class Extract {
 
             }
 
-            workbook.close();
 
             return data;
         }catch (Exception e) {
@@ -113,9 +112,9 @@ public class Extract {
         }
     }
 
-    public List<List<List<Object>>> extractFichasSintesePaisData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
+    public List<List<List<Object>>> extractFichasSintesePaisData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
         try{
-            Workbook workbook = service.loadWorkbook(fileName);
+
             String sheetName = service.getSheetName(fileName, sheetNumber);
             String pais = sheetName.split("\\s+", 2)[1]; // pais de origem
 
@@ -180,10 +179,6 @@ public class Extract {
 
             }
 
-
-            workbook.close();
-
-
             return data;
         }catch (Exception e) {
             // Log no banco
@@ -202,7 +197,7 @@ public class Extract {
     }
 
     public List<List<List<Object>>> extractFichaSinteseBrasilData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
-
+        System.out.printf(LocalDateTime.now() +  "\n Iniciando leitura do arquivo %s\n%n", fileName);
         try{
             ZipSecureFile.setMinInflateRatio(0.0001);
             Workbook workbook = service.loadWorkbook(fileName);
@@ -270,6 +265,7 @@ public class Extract {
 
 
             workbook.close();
+            System.out.println(LocalDateTime.now() + "\n Leitura finalizada\n");
 
             return data;
         }catch (Exception e) {
@@ -302,16 +298,16 @@ public class Extract {
 
         } catch (Exception e) {
             // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar extrair dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+//            logDAO.insertLog(
+//                    1,
+//                    1, // Erro
+//                    1,
+//                    "Erro ao tentar extrair dados de chegada: " + e.getMessage(),
+//                    LocalDateTime.now(),
+//                    0,
+//                    0,
+//                    "Fonte_Dados"
+//            );
             throw e;
         }
 

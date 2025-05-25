@@ -2,15 +2,16 @@ package tour.wise;
 
 import tour.wise.etl.ETL;
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException {
 
         ETL etl = new ETL();
 
         etl.exe(
-                "C:/Users/leosa/OneDrive/Área de Trabalho/WiseTour/database/data/chegada_turistas_ministerio_turismo/chegadas_2019.xlsx",
+                "C:/Users/leosa/OneDrive/Área de Trabalho/WiseTour/database/data/chegada_turistas_ministerio_turismo/chegadas_2019 - Copia.xlsx",
                 "Chegadas 2019",
                 "https://www.gov.br/turismo/pt-br/acesso-a-informacao/acoes-e-programas/observatorio/demanda-turistica/demanda-turistica-internacional-1)",
                 "Ministério do Turismo",

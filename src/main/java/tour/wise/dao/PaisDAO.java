@@ -1,9 +1,13 @@
 package tour.wise.dao;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import tour.wise.model.Pais;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PaisDAO {
 
@@ -13,56 +17,62 @@ public class PaisDAO {
         this.connection = connection;
     }
 
-    public void insertIgnore(String pais) {
-        System.out.println("Tentando inserir o país: " + pais);
+    // RowMapper para mapear os resultados do banco para o objeto Pais
+    private final RowMapper<Pais> paisRowMapper = (rs, rowNum) -> {
+        Pais pais = new Pais();
+        pais.setIdPais(rs.getInt("id_pais"));
+        pais.setNomePais(rs.getString("pais"));
+        return pais;
+    };
 
-        String sql = "INSERT IGNORE INTO Pais (pais) VALUES (?)";
+    // Insert IGNORE (para evitar duplicados no nome)
+    public int insertIgnore(Pais pais) {
+        String sql = "INSERT IGNORE INTO pais (pais) VALUES (?)";
+        return connection.update(sql, pais.getNomePais());
+    }
 
+    // Buscar todos os registros
+    public List<Pais> findAll() {
+        String sql = "SELECT * FROM pais";
+        return connection.query(sql, paisRowMapper);
+    }
+
+    // Buscar por ID
+    public Pais findById(int id) {
+        String sql = "SELECT * FROM pais WHERE id_pais = ?";
         try {
-            int rowsAffected = connection.update(sql, pais);
-
-            if (rowsAffected > 0) {
-                System.out.println("País inserido com sucesso: " + pais);
-            } else {
-                System.out.println("País já existente, nenhuma inserção feita: " + pais);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Erro ao inserir país no banco: " + pais);
-
-            // Verifica se a causa da exceção é uma SQLException
-            Throwable cause = e.getCause();
-            if (cause instanceof java.sql.SQLException sqlEx) {
-                System.err.println("Erro SQL: " + sqlEx.getMessage());
-                System.err.println("Código de erro SQL: " + sqlEx.getErrorCode());
-                System.err.println("SQLState: " + sqlEx.getSQLState());
-            }
-
-            e.printStackTrace(); // imprime o stack trace completo para depuração
-
-            throw e; // lança a exceção para que a aplicação saiba que houve erro
+            return connection.queryForObject(sql, paisRowMapper, id);
+        } catch (DataAccessException e) {
+            return null;
         }
     }
 
-    public Integer getId(String nomePais) {
-        String sql = "SELECT id_pais FROM Pais WHERE pais = ?";
-
+    // Buscar por Nome
+    public Pais findByNome(String nome) {
+        String sql = "SELECT * FROM pais WHERE pais = ?";
         try {
-            Integer idPais = connection.queryForObject(sql, Integer.class, nomePais);
-
-            if (idPais != null) {
-//                System.out.println("País encontrado: " + nomePais + " (ID: " + idPais + ")");
-                return idPais;
-            } else {
-//                System.out.println("País não encontrado: " + nomePais);
-                return null;
-            }
-        } catch (Exception e) {
-            System.err.println(LocalDateTime.now() + "Erro ao buscar ID do país: " + nomePais);
-            e.printStackTrace();
+            return connection.queryForObject(sql, paisRowMapper, nome);
+        } catch (DataAccessException e) {
             return null;
         }
+    }
 
+    // Deletar por ID
+    public int deleteById(int id) {
+        String sql = "DELETE FROM pais WHERE id_pais = ?";
+        return connection.update(sql, id);
+    }
+
+    // Atualizar pelo ID
+    public int update(Pais pais) {
+        String sql = "UPDATE pais SET pais = ? WHERE id_pais = ?";
+        return connection.update(sql, pais.getNomePais(), pais.getIdPais());
+    }
+
+    // Contar quantos registros existem
+    public int count() {
+        String sql = "SELECT COUNT(*) FROM pais";
+        return connection.queryForObject(sql, Integer.class);
     }
 
 

@@ -29,29 +29,29 @@ public class Transform extends Util {
 
         try {
             System.out.println("[INÍCIO] Transformação dos dados iniciada.");
-            logDAO.insertLog(
-                    1,  // fk_fonte (ajuste conforme necessário)
-                    3,  // Categoria: Sucesso (indica que a transformação está sendo iniciada)
-                    1,  // Etapa: Extração
-                    String.format("Transformação dos dados iniciada. Fonte: %s, Edição: %s", fonte, edicao),
-                    LocalDateTime.now(),
-                    0,  // Quantidade lida ainda não processada
-                    0,  // Quantidade inserida
-                    "Chegada_Turistas"
-            );
+//            logDAO.insertLog(
+//                    1,  // fk_fonte (ajuste conforme necessário)
+//                    3,  // Categoria: Sucesso (indica que a transformação está sendo iniciada)
+//                    1,  // Etapa: Extração
+//                    String.format("Transformação dos dados iniciada. Fonte: %s, Edição: %s", fonte, edicao),
+//                    LocalDateTime.now(),
+//                    0,  // Quantidade lida ainda não processada
+//                    0,  // Quantidade inserida
+//                    "Chegada_Turistas"
+//            );
 
             System.out.println("[INFO] Fonte: " + fonte + ", Edição: " + edicao);
             System.out.println("[INFO] Total de registros brutos recebidos: " + (data != null ? data.size() : 0));
-            logDAO.insertLog(
-                    1,  // fk_fonte
-                    3,  // Categoria: Sucesso
-                    1,  // Etapa: Extração
-                    String.format("Fonte: %s, Edição: %s. Total de registros brutos recebidos: %d", fonte, edicao, data != null ? data.size() : 0),
-                    LocalDateTime.now(),
-                    data != null ? data.size() : 0,  // Quantidade lida
-                    0,  // Quantidade inserida (ainda não foi convertida)
-                    "Chegada_Turistas"
-            );
+//            logDAO.insertLog(
+//                    1,  // fk_fonte
+//                    3,  // Categoria: Sucesso
+//                    1,  // Etapa: Extração
+//                    String.format("Fonte: %s, Edição: %s. Total de registros brutos recebidos: %d", fonte, edicao, data != null ? data.size() : 0),
+//                    LocalDateTime.now(),
+//                    data != null ? data.size() : 0,  // Quantidade lida
+//                    0,  // Quantidade inserida (ainda não foi convertida)
+//                    "Chegada_Turistas"
+//            );
 
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadas_turistas_internacionais_brasil_mensal_dto = new ArrayList<>();
 
@@ -76,49 +76,50 @@ public class Transform extends Util {
 
                 } catch (Exception e) {
                     System.out.println("[ERRO] Falha ao transformar a linha " + linha + ": " + datum);
-                    logDAO.insertLog(
-                            1,  // fk_fonte
-                            1,  // Categoria: Erro
-                            1,  // Etapa: Extração
-                            String.format("Falha ao transformar a linha %d: %s. Erro: %s", linha, datum, e.getMessage()),
-                            LocalDateTime.now(),
-                            1,  // Quantidade lida
-                            0,  // Nenhuma quantidade inserida
-                            "Chegada_Turistas"
-                    );
+//                    logDAO.insertLog(
+//                            1,  // fk_fonte
+//                            1,  // Categoria: Erro
+//                            1,  // Etapa: Extração
+//                            String.format("Falha ao transformar a linha %d: %s. Erro: %s", linha, datum, e.getMessage()),
+//                            LocalDateTime.now(),
+//                            1,  // Quantidade lida
+//                            0,  // Nenhuma quantidade inserida
+//                            "Chegada_Turistas"
+//                    );
                     e.printStackTrace();
                 }
             }
 
             System.out.println(LocalDateTime.now() + "[FIM] Transformação concluída. Total de registros convertidos: " + chegadas_turistas_internacionais_brasil_mensal_dto.size());
-            logDAO.insertLog(
-                    1,  // fk_fonte
-                    3,  // Categoria: Sucesso
-                    1,  // Etapa: Extração
-                    String.format("Transformação concluída. Total de registros convertidos: %d", chegadas_turistas_internacionais_brasil_mensal_dto.size()),
-                    LocalDateTime.now(),
-                    0,  // Quantidade lida (já processada)
-                    chegadas_turistas_internacionais_brasil_mensal_dto.size(),  // Quantidade inserida
-                    "Chegada_Turistas"
-            );
+//            logDAO.insertLog(
+//                    1,  // fk_fonte
+//                    3,  // Categoria: Sucesso
+//                    1,  // Etapa: Extração
+//                    String.format("Transformação concluída. Total de registros convertidos: %d", chegadas_turistas_internacionais_brasil_mensal_dto.size()),
+//                    LocalDateTime.now(),
+//                    0,  // Quantidade lida (já processada)
+//                    chegadas_turistas_internacionais_brasil_mensal_dto.size(),  // Quantidade inserida
+//                    "Chegada_Turistas"
+//            );
 
             return chegadas_turistas_internacionais_brasil_mensal_dto;
         } catch (Exception e) {
             // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+//            logDAO.insertLog(
+//                    1,
+//                    1, // Erro
+//                    1,
+//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
+//                    LocalDateTime.now(),
+//                    0,
+//                    0,
+//                    "Fonte_Dados"
+//            );
             throw e;
         }
 
     }
+
 
     public FichaSinteseBrasilDTO transformFichaSinteseBrasil(List<List<List<Object>>> data) {
 
@@ -172,16 +173,16 @@ public class Transform extends Util {
             );
         } catch (Exception e) {
             // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+//            logDAO.insertLog(
+//                    1,
+//                    1, // Erro
+//                    1,
+//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
+//                    LocalDateTime.now(),
+//                    0,
+//                    0,
+//                    "Fonte_Dados"
+//            );
             throw e;
         }
     }
@@ -209,16 +210,16 @@ public class Transform extends Util {
             );
         } catch (Exception e) {
             // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+//            logDAO.insertLog(
+//                    1,
+//                    1, // Erro
+//                    1,
+//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
+//                    LocalDateTime.now(),
+//                    0,
+//                    0,
+//                    "Fonte_Dados"
+//            );
             throw e;
         }
     }
@@ -234,17 +235,17 @@ public class Transform extends Util {
         List<PerfilDTO> perfis = new ArrayList<>();
 
         try {
-            System.out.println(LocalDateTime.now() + "[INÍCIO] Criando perfis...");
-            logDAO.insertLog(
-                    1,  // fk_fonte (ajuste conforme necessário)
-                    3,  // Categoria: Sucesso (indica que o processo está começando)
-                    1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
-                    "Criando perfis",
-                    LocalDateTime.now(),
-                    0,  // Quantidade lida ainda não processada
-                    0,  // Quantidade inserida
-                    "Perfil_Estimado"
-            );
+
+//            logDAO.insertLog(
+//                    1,  // fk_fonte (ajuste conforme necessário)
+//                    3,  // Categoria: Sucesso (indica que o processo está começando)
+//                    1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
+//                    "Criando perfis",
+//                    LocalDateTime.now(),
+//                    0,  // Quantidade lida ainda não processada
+//                    0,  // Quantidade inserida
+//                    "Perfil_Estimado"
+//            );
 
             String paisOrigem = chegada.getPaisOrigem();
             String ufDestino = chegada.getUfDestino();
