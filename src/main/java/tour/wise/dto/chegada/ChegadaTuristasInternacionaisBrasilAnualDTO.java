@@ -7,10 +7,8 @@ public class ChegadaTuristasInternacionaisBrasilAnualDTO {
     private String via_acesso;
     private String pais_origem;
 
-
     public ChegadaTuristasInternacionaisBrasilAnualDTO() {
     }
-
 
     public ChegadaTuristasInternacionaisBrasilAnualDTO(Integer mes, Integer ano, Integer chegadas, String via_acesso, String pais_origem) {
         this.mes = mes;

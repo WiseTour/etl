@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Perfil_Estimado_Turista_FonteDAO {
 
-    private JdbcTemplate connection; // Conexão com o banco
+    private final JdbcTemplate connection; // Conexão com o banco
 
     public Perfil_Estimado_Turista_FonteDAO(JdbcTemplate connection) {
         this.connection = connection;
@@ -15,16 +15,15 @@ public class Perfil_Estimado_Turista_FonteDAO {
 
     public boolean exist(int fkFonte, int fkPerfilEstimadoTuristas, int fkPaisOrigem) {
         String sql = """
-        SELECT COUNT(*) FROM Perfil_Estimado_Turista_Fonte
-        WHERE fk_fonte = ? AND fk_perfil_estimado_turistas = ? AND fk_pais_origem = ?
-    """;
+            SELECT COUNT(*) FROM Perfil_Estimado_Turista_Fonte
+            WHERE fk_fonte = ? AND fk_perfil_estimado_turistas = ? AND fk_pais_origem = ?
+        """;
 
         Integer count = connection.queryForObject(sql, Integer.class, fkFonte, fkPerfilEstimadoTuristas, fkPaisOrigem);
 
         // Retorna true se já existe, caso contrário, false
         return count != null && count > 0;
     }
-
 
     public void insertIgnore(
             int fkFonte,
@@ -92,6 +91,4 @@ public class Perfil_Estimado_Turista_FonteDAO {
             throw e;
         }
     }
-
-
 }
