@@ -8,7 +8,9 @@ import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.Extract;
+import tour.wise.etl.extract.S3ExcelReader;
 import tour.wise.etl.load.Load;
+import tour.wise.etl.extract.S3ExcelReader;
 
 
 import java.io.IOException;
@@ -25,19 +27,25 @@ public class ETL {
     tour.wise.etl.transform.Transform transform;
     Load load;
     Service service;
+    S3ExcelReader s3Reader;
     String caminhoChegadaTurista;
     String caminhoFichaSinteseBrasil;
+    String caminhoArquivoFichaSintesePaises;
+    String caminhoArquivoFichaSinteseEstado;
 
-    public ETL(String bucketname, String caminhoChegadaTurista, String caminhoFichaSinteseBrasil) {
+    public ETL(String bucketname, String caminhoChegadaTurista, String caminhoFichaSinteseBrasil, String caminhoArquivoFichaSintesePaises, String caminhoArquivoFichaSinteseEstado) {
         this.dataBase = new DataBase();
         this.connection = dataBase.getConnection();;
         this.logDAO = new LogDAO(connection);
-        this.extract = new Extract(connection, bucketname, caminhoChegadaTurista, caminhoFichaSinteseBrasil);
+        this.s3Reader = new S3ExcelReader(bucketname);
+        this.extract = new Extract(connection, bucketname, caminhoChegadaTurista, caminhoFichaSinteseBrasil, caminhoArquivoFichaSintesePaises);
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
-        this.service = new Service();
+        this.service = new Service(s3Reader);
         this.caminhoChegadaTurista = caminhoChegadaTurista;
         this.caminhoFichaSinteseBrasil = caminhoFichaSinteseBrasil;
+        this.caminhoArquivoFichaSintesePaises = caminhoArquivoFichaSintesePaises;
+        this.caminhoArquivoFichaSinteseEstado = caminhoArquivoFichaSinteseEstado;
     }
 
 

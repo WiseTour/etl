@@ -6,12 +6,15 @@ import tour.wise.dto.perfil.DestinoDTO;
 import tour.wise.dto.perfil.ListaDestinosDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.Service;
+import tour.wise.etl.extract.S3ExcelReader;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 public class Util {
-    Service service = new Service();
+    S3ExcelReader leitor;
+    Service service = new Service(leitor);
 
     public  Integer transformAno(List<List<List<Object>>> data, Integer index) {
         // Apenas acessa e converte o valor necessário
@@ -150,8 +153,10 @@ public class Util {
 
         for (List<Object> utilizacaoAgenciaViagemData : utilizacoesAgenciaViagemData.get(index)) {
             String descricao = utilizacaoAgenciaViagemData.get(0).toString();
-            double valor = Double.parseDouble(utilizacaoAgenciaViagemData.get(1).toString());
+            String valorStr = utilizacaoAgenciaViagemData.get(1).toString().trim();
 
+            Double valor = valorStr.isEmpty() ? 0.0 : Double.parseDouble(valorStr);
+            // double valor = Double.parseDouble(utilizacaoAgenciaViagemData.get(1).toString());
             agencias.add(new UtilizacaoAgenciaViagemDTO(descricao, valor));
         }
 
@@ -184,8 +189,23 @@ public class Util {
 
         // Processa cada destino e adiciona/atualiza o valor no mapa
         for (List<Object> destinoData : destinosData) {
-            String nomeDestino = destinoData.get(0).toString().split(" - ")[1];
-            double valor = Double.parseDouble(destinoData.get(1).toString());
+            if (destinoData.size() < 2)
+            {
+                System.out.println("Linha com dados incompletos: "+ destinoData);
+                continue;
+            }
+            String[] partes = destinoData.get(0).toString().split(" - ");
+            if (partes.length < 2)
+            {
+                System.out.println("Formato inesperado: "+ destinoData.get(0));
+                continue;
+            }
+
+            String nomeDestino = partes[1];
+            String valorStr = destinoData.get(1).toString().trim();
+            double valor = valorStr.isEmpty() ? 0.0: Double.parseDouble(valorStr);
+            // String nomeDestino = destinoData.get(0).toString().split(" - ")[1];
+            // double valor = Double.parseDouble(destinoData.get(1).toString());
 
             destinosMap.merge(nomeDestino, valor, Double::sum);
         }

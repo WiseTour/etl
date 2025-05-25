@@ -20,21 +20,22 @@ public class Extract {
     S3ExcelReader leitor;
     String caminhoChegadaTurista;
     String caminhoFichaSinteseBrasil;
+    String caminhoArquivoFichaSintesePaises;
 
-    public Extract(JdbcTemplate connection, String bucketname, String caminhoChegadaTurista, String caminhoFichaSinteseBrasil) {
-        this.service = new Service();
+    public Extract(JdbcTemplate connection, String bucketname, String caminhoChegadaTurista, String caminhoFichaSinteseBrasil, String caminhoArquivoFichaSintesePaises) {
+        this.service = new Service(leitor);
         this.connection = connection;
         this.logDAO = new LogDAO(connection);
         this.leitor = new S3ExcelReader(bucketname);
         this.caminhoChegadaTurista = caminhoChegadaTurista;
         this.caminhoFichaSinteseBrasil = caminhoFichaSinteseBrasil;
+        this.caminhoArquivoFichaSintesePaises = caminhoArquivoFichaSintesePaises;
     }
 
     public List<List<List<Object>>> extractFichasSinteseEstadoData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
 
         try {
-            // Workbook workbook = leitor.lerExcelDireto(caminhoEstado);
-            Workbook workbook = service.loadWorkbook(fileName);
+            Workbook workbook = leitor.lerExcelDireto(caminhoArquivoFichaSintesePaises);
 
             String sheetName = service.getSheetName(fileName, sheetNumber);
             String estado = sheetName.split("\\s+", 2)[1]; // UF de entrada
@@ -123,8 +124,7 @@ public class Extract {
 
     public List<List<List<Object>>> extractFichasSintesePaisData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
         try{
-            Workbook workbook = service.loadWorkbook(fileName);
-            // Workbook workbook = leitor.lerExcelDireto(caminhoPaises);
+            Workbook workbook = leitor.lerExcelDireto(caminhoArquivoFichaSintesePaises);
 
             String sheetName = service.getSheetName(fileName, sheetNumber);
             String pais = sheetName.split("\\s+", 2)[1]; // pais de origem

@@ -14,9 +14,17 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import tour.wise.etl.extract.S3ExcelReader;
 
 
 public class Service {
+
+    private S3ExcelReader s3Reader;
+
+    public Service(S3ExcelReader s3reader) {
+        this.s3Reader = new S3ExcelReader("s3-lab-phelipe");
+    }
+
 
     public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
 
@@ -117,6 +125,7 @@ public class Service {
             throw new RuntimeException(e);
         }
     }
+    /*
 
     public  Workbook loadWorkbook(String fileName) {
         try {
@@ -129,6 +138,16 @@ public class Service {
                     new HSSFWorkbook(excelFile);
 
         } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    */
+    public Workbook loadWorkbook(String s3Key) {
+        try {
+            return  s3Reader.lerExcelDireto(s3Key);
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar o arquivo do S3: " + s3Key);
             e.printStackTrace();
             return null;
         }
