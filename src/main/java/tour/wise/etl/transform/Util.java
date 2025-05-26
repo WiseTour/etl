@@ -1,5 +1,6 @@
 package tour.wise.etl.transform;
 
+import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.DestinoDTO;
@@ -8,169 +9,171 @@ import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.Service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Util {
     Service service = new Service();
 
-    public  Integer transformAno(List<List<List<Object>>> data, Integer index) {
+    static Double tratarValor(Object valor) {
+        if (valor == null) {
+            return 0.0;
+        }
+
+        return ((Number) valor).doubleValue();
+
+    }
+
+    protected  Integer transformAno(List<List<List<Object>>> data, Integer index) {
         // Apenas acessa e converte o valor necessário
         return service.parseToInteger(data.get(index).get(0).get(1).toString());
     }
 
-    public  List<GeneroDTO> transformListGenero(List<List<List<Object>>> data, Integer index) {
-        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+    protected List<GeneroDTO> transformListGenero(List<List<List<Object>>> data, Integer index) {
         List<GeneroDTO> generoDTO = new ArrayList<>(2);
 
-        // Itera diretamente sobre os índices conhecidos (0 e 1)
         for (int i = 0; i < 2; i++) {
-            generoDTO.add(
-                    new GeneroDTO(
-                            data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString())
-                    )
-            );
+            String nome = (String) data.get(index).get(i).get(0);
+            Double valor = tratarValor(data.get(index).get(i).get(1));
+
+            generoDTO.add(new GeneroDTO(nome, valor));
         }
 
         return generoDTO;
     }
 
-    public  List<FaixaEtariaDTO> transformListFaixaEtaria(List<List<List<Object>>> data, Integer index) {
-        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
-        List<FaixaEtariaDTO> faixa_etariaDTO = new ArrayList<>(6);
+    protected List<FaixaEtariaDTO> transformListFaixaEtaria(List<List<List<Object>>> data, Integer index) {
+        List<FaixaEtariaDTO> faixaEtariaDTO = new ArrayList<>(6);
 
-        // Itera sobre os 6 primeiros elementos conhecidos
+        List<List<Object>> faixaEtariaData = data.get(index); // Evita chamadas repetidas
+
         for (int i = 0; i < 6; i++) {
-            faixa_etariaDTO.add(
-                    new FaixaEtariaDTO(
-                            data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString())
-                    )
-            );
+            String nome = (String) faixaEtariaData.get(i).get(0);
+            Double valor = tratarValor(faixaEtariaData.get(i).get(1));
+
+            faixaEtariaDTO.add(new FaixaEtariaDTO(nome, valor));
         }
 
-        return faixa_etariaDTO;
+        return faixaEtariaDTO;
     }
 
-    public List<MotivoViagemDTO> transformListMotivosViagem(List<List<List<Object>>> data, Integer index) {
-        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
+    protected List<MotivoViagemDTO> transformListMotivosViagem(List<List<List<Object>>> data, Integer index) {
         List<MotivoViagemDTO> motivos = new ArrayList<>(3);
 
-        // Itera sobre os 3 primeiros elementos conhecidos
+        List<List<Object>> motivosData = data.get(index); // Evita chamadas repetidas
+
         for (int i = 0; i < 3; i++) {
-            motivos.add(
-                    new MotivoViagemDTO(
-                            data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString())
-                    )
-            );
+            String motivo = (String) motivosData.get(i).get(0);
+            Double valor = tratarValor(motivosData.get(i).get(1));
+
+            motivos.add(new MotivoViagemDTO(motivo, valor));
         }
 
         return motivos;
     }
 
-    public List<MotivacaoViagemLazerDTO> transformListMotivacaoViagemLazer(List<List<List<Object>>> data, Integer index) {
-        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
-        List<MotivacaoViagemLazerDTO> motivacoes_viagem_lazer = new ArrayList<>(6);
+    protected List<MotivacaoViagemLazerDTO> transformListMotivacaoViagemLazer(List<List<List<Object>>> data, Integer index) {
+        List<MotivacaoViagemLazerDTO> motivacoesViagemLazer = new ArrayList<>(6);
 
-        // Itera sobre os 6 primeiros elementos conhecidos
-        for (int i = 0; i <= 5; i++) {
-            motivacoes_viagem_lazer.add(
-                    new MotivacaoViagemLazerDTO(
-                            data.get(index).get(i).get(0).toString(),
-                            Double.parseDouble(data.get(index).get(i).get(1).toString())
-                    )
-            );
+        List<List<Object>> motivacoesData = data.get(index); // Evita múltiplas chamadas
+
+        for (int i = 0; i < 6; i++) {
+
+            String motivacao;
+            Double valor;
+
+            if(data.size() == 7 && i == 4){
+                motivacao = (String) motivacoesData.get(7).get(0);
+                valor = tratarValor(motivacoesData.get(i).get(1)) + tratarValor(motivacoesData.get(7).get(1));
+            }else{
+                motivacao = (String) motivacoesData.get(i).get(0);
+                valor = tratarValor(motivacoesData.get(i).get(1));
+            }
+
+
+            motivacoesViagemLazer.add(new MotivacaoViagemLazerDTO(motivacao, valor));
         }
 
-        return motivacoes_viagem_lazer;
+        return motivacoesViagemLazer;
     }
 
-    public  List<ComposicaoGrupoViagemDTO> transformListComposicoesGrupo(List<List<List<Object>>> composicoesGrupoData, Integer index) {
-        // Inicializa a lista com o tamanho exato para evitar realocações desnecessárias
-        List<ComposicaoGrupoViagemDTO> composicoes = new ArrayList<>(composicoesGrupoData.get(index).size());
+    protected List<ComposicaoGrupoViagemDTO> transformListComposicoesGrupo(List<List<List<Object>>> composicoesGrupoData, Integer index) {
+        List<List<Object>> dadosGrupo = composicoesGrupoData.get(index); // Evita chamadas repetidas
+        List<ComposicaoGrupoViagemDTO> composicoes = new ArrayList<>(5);
 
-        // Itera diretamente sobre os dados
-        for (List<Object> composicaoGrupoData : composicoesGrupoData.get(index)) {
-            composicoes.add(createComposicaoGrupo(composicaoGrupoData));
+        for (int i = 0; i < 5; i++) {
+            String composicao = (String) dadosGrupo.get(i).get(0);
+            Double valor = tratarValor(dadosGrupo.get(i).get(1));
+
+            composicoes.add(new ComposicaoGrupoViagemDTO(composicao, valor));
         }
 
         return composicoes;
     }
 
-    public ComposicaoGrupoViagemDTO createComposicaoGrupo(List<Object> values) {
-        // Cria o DTO diretamente a partir dos valores fornecidos
-        return new ComposicaoGrupoViagemDTO(
-                values.get(0).toString(),
-                Double.parseDouble(values.get(1).toString())
-        );
-    }
+    protected List<GastoMedioPerCapitaMotivoDTO> transformListGastosMedioMotivo(List<List<List<Object>>> gastosMedioMotivoData, Integer index) {
+        List<List<Object>> gastosMedios = gastosMedioMotivoData.get(index); // Evita chamadas repetidas
+        List<GastoMedioPerCapitaMotivoDTO> gastos = new ArrayList<>(3);
 
-    public List<GastoMedioPerCapitaMotivoDTO> transformListGastosMedioMotivo(List<List<List<Object>>> gastosMedioMotivoData, Integer index) {
-        // Inicializa a lista com o tamanho exato necessário para evitar alocações excessivas
-        List<GastoMedioPerCapitaMotivoDTO> gastos = new ArrayList<>(gastosMedioMotivoData.get(index).size());
+        for (int i = 0; i < 3; i++) {
+            String motivo = (String) gastosMedios.get(i).get(0);
+            Double valor = tratarValor(gastosMedios.get(i).get(1));
 
-        for (List<Object> gastoMedioMotivoData : gastosMedioMotivoData.get(index)) {
-            String motivo = gastoMedioMotivoData.get(0).toString();
-            double valor = Double.parseDouble(gastoMedioMotivoData.get(1).toString());
             gastos.add(new GastoMedioPerCapitaMotivoDTO(motivo, valor));
         }
 
         return gastos;
     }
 
-    public List<PermanenciaMediaDTO> transformListPermanenciaMediaMotivo(List<List<List<Object>>> permanenciasMediaMotivoData, Integer index) {
-        // Inicializa a lista com o tamanho exato necessário para evitar alocações excessivas
-        List<PermanenciaMediaDTO> permanencias = new ArrayList<>(permanenciasMediaMotivoData.get(index).size());
+    protected List<PermanenciaMediaDTO> transformListPermanenciaMediaMotivo(List<List<List<Object>>> permanenciasMediaMotivoData, Integer index) {
+        List<List<Object>> permanenciasMedia = permanenciasMediaMotivoData.get(index); // Evita chamadas repetidas
+        List<PermanenciaMediaDTO> permanencias = new ArrayList<>(3);
 
-        for (List<Object> permanenciaMediaMotivoData : permanenciasMediaMotivoData.get(index)) {
-            String motivo = permanenciaMediaMotivoData.get(0).toString();
-            double valor = Double.parseDouble(permanenciaMediaMotivoData.get(1).toString());
+        for (int i = 0; i < 3; i++) {
+            String motivo = (String) permanenciasMedia.get(i).get(0);
+            Double valor = tratarValor(permanenciasMedia.get(i).get(1));
+
             permanencias.add(new PermanenciaMediaDTO(motivo, valor));
         }
+
 
         return permanencias;
     }
 
-    public List<FonteInformacaoDTO> transformListFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
-        List<FonteInformacaoDTO> fontes = new ArrayList<>(fontesInformacaoData.get(index).size());
+    protected List<FonteInformacaoDTO> transformListFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
+        List<List<Object>> fontesInformacao = fontesInformacaoData.get(index); // Evita chamadas repetidas
+        List<FonteInformacaoDTO> fontes = new ArrayList<>(8);
 
-        for (List<Object> fonteInformacaoData : fontesInformacaoData.get(index)) {
-            String descricao = fonteInformacaoData.get(0).toString();
-            double valor = Double.parseDouble(fonteInformacaoData.get(1).toString());
+        for (int i = 0; i < 8; i++) {
+            String motivo = (String) fontesInformacao.get(i).get(0);
+            Double valor = tratarValor(fontesInformacao.get(i).get(1));
 
-            fontes.add(new FonteInformacaoDTO(descricao, valor));
+            fontes.add(new FonteInformacaoDTO(motivo, valor));
         }
+
 
         return fontes;
     }
 
-    public List<UtilizacaoAgenciaViagemDTO> transformListUtilizacaoAgenciaViagem(List<List<List<Object>>> utilizacoesAgenciaViagemData, int index) {
-        List<UtilizacaoAgenciaViagemDTO> agencias = new ArrayList<>(utilizacoesAgenciaViagemData.get(index).size());
+    protected List<DestinosMaisVisitadosPorMotivoDTO> transformListDestinosMaisVisitadosPorMotivo(List<List<List<Object>>> data, Integer index) {
+        final String[] motivos = { "Lazer", "Negócios, eventos e convenções", "Outros motivos" };
+        final int tamanho = motivos.length;
 
-        for (List<Object> utilizacaoAgenciaViagemData : utilizacoesAgenciaViagemData.get(index)) {
-            String descricao = utilizacaoAgenciaViagemData.get(0).toString();
-            double valor = Double.parseDouble(utilizacaoAgenciaViagemData.get(1).toString());
+        List<DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = new ArrayList<>(tamanho);
 
-            agencias.add(new UtilizacaoAgenciaViagemDTO(descricao, valor));
-        }
+        // Evita acessar índices fora do limite da lista 'data'
+        int dataSize = data.size();
 
-        return agencias;
-    }
+        for (int i = 0; i < tamanho; i++) {
+            int currentIndex = index + i;
 
-    public List<DestinosMaisVisitadosPorMotivoDTO> transformListDestinosMaisVisitadosPorMotivo(List<List<List<Object>>> data, Integer index) {
-        // Definir os motivos diretamente
-        String[] motivos = { "Lazer", "Negócios, eventos e convenções", "Outros motivos" };
+            // Garante que não ocorra IndexOutOfBoundsException
+            List<List<Object>> dadosMotivo = currentIndex < dataSize ? data.get(currentIndex) : List.of();
 
-        // Inicializa a lista de DestinosMaisVisitadosPorMotivoDTO
-        List<DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = new ArrayList<>(motivos.length);
-
-        // Processa cada motivo e cria o DTO correspondente
-        for (int i = 0; i < motivos.length; i++) {
             destinosPorMotivo.add(
                     new DestinosMaisVisitadosPorMotivoDTO(
                             motivos[i],
-                            createListDestinosMaisVisitados(data.get(index + i))
+                            createListDestinosMaisVisitados(dadosMotivo)
                     )
             );
         }
@@ -178,26 +181,29 @@ public class Util {
         return destinosPorMotivo;
     }
 
-    public List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
-        // Usamos um mapa para armazenar destinos e suas porcentagens, evitando a duplicação
+    protected List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
         Map<String, Double> destinosMap = new HashMap<>();
 
-        // Processa cada destino e adiciona/atualiza o valor no mapa
         for (List<Object> destinoData : destinosData) {
-            String nomeDestino = destinoData.get(0).toString().split(" - ")[1];
-            double valor = Double.parseDouble(destinoData.get(1).toString());
+            String nomeCompleto = destinoData.get(0).toString();
+            // Divide em 2 partes só (antes e depois do " - ")
+            String[] partes = nomeCompleto.split(" - ", 2);
+            String nomeDestino = partes.length > 1 ? partes[1] : nomeCompleto;
+
+            Double valor = tratarValor(destinoData.get(1));
 
             destinosMap.merge(nomeDestino, valor, Double::sum);
         }
 
-        // Cria a lista de DTOs a partir do mapa
         List<DestinoMaisVisitadoDTO> destinos = new ArrayList<>(destinosMap.size());
+
+
+        double total = 0;
         for (Map.Entry<String, Double> entry : destinosMap.entrySet()) {
             destinos.add(new DestinoMaisVisitadoDTO(entry.getKey(), entry.getValue()));
+            total += entry.getValue();
         }
 
-        // Calcula o total e adiciona "Outros estados" se necessário
-        double total = destinos.stream().mapToDouble(DestinoMaisVisitadoDTO::getPorcentagem).sum();
         double outrosValor = 100.0 - total;
         if (outrosValor > 0) {
             destinos.add(new DestinoMaisVisitadoDTO("Outros estados", outrosValor));
@@ -206,225 +212,155 @@ public class Util {
         return destinos;
     }
 
-    public String extractNomePais(List<List<List<Object>>> data, Integer index) {
+    protected String extractNomePais(List<List<List<Object>>> data, Integer index) {
+        if (data == null || data.size() <= index || data.get(index).isEmpty() || data.get(index).get(0).isEmpty()) {
+            return ""; // ou null, dependendo do que for melhor para seu caso
+        }
         return data.get(index).get(0).get(0).toString();
     }
 
-    public String trasnformEstado(List<List<List<Object>>> data, Integer index) {
+    protected String transformEstado(List<List<List<Object>>> data, Integer index) {
+        if (data == null || data.size() <= index || data.get(index).isEmpty() || data.get(index).get(0).isEmpty()) {
+            return "";
+        }
         return data.get(index).get(0).get(0).toString();
     }
 
-    public List<PaisOrigemDTO> trasnformListPaisesOrigem(List<List<List<Object>>> data, int index) {
-        return data.get(index).stream()
-                .map(this::createPaisOrigem)
-                .collect(Collectors.toList());
+    protected List<PaisOrigemDTO> transformListPaisesOrigem(List<List<List<Object>>> data, int index) {
+        List<List<Object>> rawList = data.get(index);
+        List<PaisOrigemDTO> result = new ArrayList<>(rawList.size());
+        for (List<Object> item : rawList) {
+            result.add(createPaisOrigem(item));
+        }
+        return result;
     }
 
-    public PaisOrigemDTO createPaisOrigem(List<Object> row) {
-        return new PaisOrigemDTO(
-                row.get(0).toString(),
-                Double.parseDouble(row.get(1).toString())
-        );
+    protected PaisOrigemDTO createPaisOrigem(List<Object> row) {
+        Object obj0 = row.get(0);
+        String nome = (obj0 instanceof String) ? (String) obj0 : obj0.toString();
+
+        Object obj1 = row.get(1);
+        double valor;
+        if (obj1 instanceof Number) {
+            valor = ((Number) obj1).doubleValue();
+        } else {
+            valor = tratarValor(obj1);
+        }
+
+
+        return new PaisOrigemDTO(nome, valor);
     }
 
-    public List<PerfilDTO>createPerfisCombinations(FichaSinteseBrasilDTO fichaSinteseBrasilDTO){
-        List<PerfilDTO> perfisFichaSinteseBrasilDTO = new ArrayList<>();
+    protected List<PerfilDTO> createPerfisCombinations(FichaSinteseBrasilDTO fichaSinteseBrasilDTO) {
+        List<PerfilDTO> perfis = new ArrayList<>();
+
+        // Mapas para acesso rápido por motivo (chave minúscula)
+        Map<String, GastoMedioPerCapitaMotivoDTO> gastosPorMotivo = fichaSinteseBrasilDTO.getGastosMedioPerCapitaMotivo()
+                .stream()
+                .collect(Collectors.toMap(g -> g.getMotivo().toLowerCase(), Function.identity()));
+
+        Map<String, PermanenciaMediaDTO> permanenciaPorMotivo = fichaSinteseBrasilDTO.getPermanenciaMediaDTO()
+                .stream()
+                .collect(Collectors.toMap(p -> p.getMotivo().toLowerCase(), Function.identity()));
+
+        Map<String, DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = fichaSinteseBrasilDTO.getDestinosMaisVisistadosMotivo()
+                .stream()
+                .collect(Collectors.toMap(d -> d.getMotivo().toLowerCase(), Function.identity()));
+
+        List<MotivacaoViagemLazerDTO> motivacoesViagemLazer = fichaSinteseBrasilDTO.getMotivacoesViagemLazer();
 
         for (GeneroDTO generoDTO : fichaSinteseBrasilDTO.getGeneroDTO()) {
+            double generoPorc = generoDTO.getPorcentagem();
+            String genero = generoDTO.getGenero();
 
             for (FaixaEtariaDTO faixaEtariaDTO : fichaSinteseBrasilDTO.getFaixaEtariaDTO()) {
+                double faixaPorc = faixaEtariaDTO.getPorcentagem();
+                String faixa = faixaEtariaDTO.getFaixa_etaria();
 
-                for (UtilizacaoAgenciaViagemDTO utilizacaoAgenciaViagemDTO : fichaSinteseBrasilDTO.getUtilizacaoAgenciaViagemDTO()) {
+                for (ComposicaoGrupoViagemDTO composicaoDTO : fichaSinteseBrasilDTO.getComposicaoGruposViagem()) {
+                    double composicaoPorc = composicaoDTO.getPorcentagem();
+                    String composicao = composicaoDTO.getComposicao();
 
-                    for (ComposicaoGrupoViagemDTO composicaoGrupoViagemDTO : fichaSinteseBrasilDTO.getComposicaoGruposViagem()) {
+                    for (FonteInformacaoDTO fonteDTO : fichaSinteseBrasilDTO.getFontesInformacao()) {
+                        double fontePorc = fonteDTO.getPorcentagem();
+                        String fonte = fonteDTO.getFonte();
 
-                        for (FonteInformacaoDTO fonteInformacaoDTO : fichaSinteseBrasilDTO.getFontesInformacao()) {
+                        for (MotivoViagemDTO motivoDTO : fichaSinteseBrasilDTO.getMotivos()) {
+                            double motivoPorc = motivoDTO.getPorcentagem();
+                            String motivo = motivoDTO.getMotivo();
 
-                            for (MotivoViagemDTO motivoDTO : fichaSinteseBrasilDTO.getMotivos()) {
+                            GastoMedioPerCapitaMotivoDTO gasto = gastosPorMotivo.get(motivo.toLowerCase());
+                            PermanenciaMediaDTO permanencia = permanenciaPorMotivo.get(motivo.toLowerCase());
+                            DestinosMaisVisitadosPorMotivoDTO destinosMotivo = destinosPorMotivo.get(motivo.toLowerCase());
 
-                                DestinosMaisVisitadosPorMotivoDTO destinosMaisVisitadosPorMotivoDTO = fichaSinteseBrasilDTO.getDestinosMaisVisistadosMotivo().stream()
-                                        .filter(d -> d.getMotivo().equalsIgnoreCase(motivoDTO.getMotivo()))
-                                        .findFirst()
-                                        .orElse(null);
-
-                                List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitadosDTOCombinations = createDestinosMaisVisitadosCombinations(destinosMaisVisitadosPorMotivoDTO);
-
-                                for (List<DestinoMaisVisitadoDTO> destinosMaisVisitadosDTOCombination : destinosMaisVisitadosDTOCombinations) {
-
-                                    GastoMedioPerCapitaMotivoDTO gastoMedioPerCapitaMotivoDTO = fichaSinteseBrasilDTO.getGastosMedioPerCapitaMotivo().stream()
-                                            .filter(g -> g.getMotivo().equalsIgnoreCase(motivoDTO.getMotivo()))
-                                            .findFirst()
-                                            .orElse(null);
-
-                                    PermanenciaMediaDTO permanenciaMediaMotivoDTO = fichaSinteseBrasilDTO.getPermanenciaMediaDTO().stream()
-                                            .filter(p -> p.getMotivo().equalsIgnoreCase(motivoDTO.getMotivo()))
-                                            .findFirst()
-                                            .orElse(null);
-
-                                    List<MotivacaoViagemLazerDTO> motivacoesLazer = "Lazer".equalsIgnoreCase(motivoDTO.getMotivo())
-                                            ? fichaSinteseBrasilDTO.getMotivacoesViagemLazer()
-                                            : Collections.emptyList();
-
-                                    ListaDestinosDTO listaDestinosDTO = createListaDestinosDTO(destinosMaisVisitadosDTOCombination, permanenciaMediaMotivoDTO.getDias());
-                                    Double taxaTuristasDestino = (destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem() > 0) ? destinosMaisVisitadosDTOCombination.getFirst().getPorcentagem() : 100/fichaSinteseBrasilDTO.getDestinosMaisVisistadosMotivo().size();
-                                    String genero = (generoDTO.getPorcentagem() > 0) ? generoDTO.getGenero() : null;
-                                    Double gerenoPorcentagem = (generoDTO.getPorcentagem() > 0) ? generoDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getGeneroDTO().size();
-                                    String faixaEtaria = (faixaEtariaDTO.getPorcentagem() > 0) ? faixaEtariaDTO.getFaixa_etaria() : null;
-                                    Double faixaEtariaPorcentagem = (faixaEtariaDTO.getPorcentagem() > 0) ? faixaEtariaDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getFaixaEtariaDTO().size();
-                                    String utilizacaoAgenciaViagem = (utilizacaoAgenciaViagemDTO.getPorcentagem() > 0) ? utilizacaoAgenciaViagemDTO.getTipo() : null;
-                                    Double utilizacaoAgenciaViagemPorcentagem = (utilizacaoAgenciaViagemDTO.getPorcentagem() > 0) ? utilizacaoAgenciaViagemDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getUtilizacaoAgenciaViagemDTO().size();
-                                    String composicaogrupoViagem =  (composicaoGrupoViagemDTO.getPorcentagem() > 0) ? composicaoGrupoViagemDTO.getComposicao() : null;
-                                    Double composicaogrupoViagemPorcentagem = (composicaoGrupoViagemDTO.getPorcentagem() > 0) ? composicaoGrupoViagemDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getComposicaoGruposViagem().size();
-                                    String fonteInformacao = (fonteInformacaoDTO.getPorcentagem() > 0) ? fonteInformacaoDTO.getFonte() : null;
-                                    Double fonteInformacaoPorcentagem = (fonteInformacaoDTO.getPorcentagem() > 0) ? fonteInformacaoDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getFontesInformacao().size();
-                                    String motivo = (motivoDTO.getPorcentagem() > 0) ? motivoDTO.getMotivo() : null;
-                                    Double motivoPorcentagem = (motivoDTO.getPorcentagem() > 0) ? motivoDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getMotivos().size();
-
-                                    Double taxaTuristas = gerenoPorcentagem/100 *
-                                            faixaEtariaPorcentagem/100 *
-                                            utilizacaoAgenciaViagemPorcentagem/100 *
-                                            fonteInformacaoPorcentagem/100 *
-                                            composicaogrupoViagemPorcentagem/100 *
-                                            motivoPorcentagem/100 *
-                                            taxaTuristasDestino/100;
-
-                                    if(!motivacoesLazer.isEmpty()){
-
-                                        for (MotivacaoViagemLazerDTO motivacaoViagemLazerDTO : fichaSinteseBrasilDTO.getMotivacoesViagemLazer()) {
-
-                                            String motivacaoViagemLazer = (motivacaoViagemLazerDTO.getPorcentagem() > 0) ? motivacaoViagemLazerDTO.getMotivacao() : null;
-                                            Double motivacaoViagemLazerPorcentagem = (motivacaoViagemLazerDTO.getPorcentagem() > 0) ? motivacaoViagemLazerDTO.getPorcentagem() : 100/fichaSinteseBrasilDTO.getMotivacoesViagemLazer().size();
-
-                                            taxaTuristas *= motivacaoViagemLazerPorcentagem/100;
-
-                                            perfisFichaSinteseBrasilDTO.add(
-                                                    new PerfilDTO(
-                                                            taxaTuristas,
-                                                            fichaSinteseBrasilDTO.getAno(),
-                                                            genero,
-                                                            faixaEtaria,
-                                                            composicaogrupoViagem,
-                                                            fonteInformacao,
-                                                            utilizacaoAgenciaViagem,
-                                                            motivo,
-                                                            motivacaoViagemLazer,
-                                                            gastoMedioPerCapitaMotivoDTO.getGasto(),
-                                                            listaDestinosDTO
-
-                                                    )
-                                            );
-
-                                        }
-
-                                    }else{
-
-                                        perfisFichaSinteseBrasilDTO.add(
-                                                new PerfilDTO(
-                                                        taxaTuristas,
-                                                        fichaSinteseBrasilDTO.getAno(),
-                                                        genero,
-                                                        faixaEtaria,
-                                                        composicaogrupoViagem,
-                                                        fonteInformacao,
-                                                        utilizacaoAgenciaViagem,
-                                                        motivo,
-                                                        null,
-                                                        gastoMedioPerCapitaMotivoDTO.getGasto(),
-                                                        listaDestinosDTO
-
-                                                )
-                                        );
-
-                                    }
-
-                                }
-
+                            if (gasto == null || permanencia == null || destinosMotivo == null) {
+                                throw new IllegalArgumentException("Dados faltantes para o motivo '" + motivo + "'");
                             }
 
+                            for (DestinoMaisVisitadoDTO destino : destinosMotivo.getDestinos_mais_visistado()) {
+                                double taxaTuristasDestino = destino.getPorcentagem();
+
+                                double taxaTuristas = (generoPorc / 100.0) *
+                                        (faixaPorc / 100.0) *
+                                        (fontePorc / 100.0) *
+                                        (composicaoPorc / 100.0) *
+                                        (motivoPorc / 100.0) *
+                                        (taxaTuristasDestino / 100.0);
+
+                                if ("Lazer".equalsIgnoreCase(motivo) && !motivacoesViagemLazer.isEmpty()) {
+                                    for (MotivacaoViagemLazerDTO motivacao : motivacoesViagemLazer) {
+                                        double motivacaoPorc = motivacao.getPorcentagem();
+
+                                        double taxaComMotivacao = taxaTuristas * (motivacaoPorc / 100.0);
+
+
+                                        perfis.add(new PerfilDTO(
+                                                taxaComMotivacao,
+                                                fichaSinteseBrasilDTO.getAno(),
+                                                genero,
+                                                faixa,
+                                                composicao,
+                                                fonte,
+                                                motivo,
+                                                motivacao.getMotivacao(),
+                                                gasto.getGasto() * permanencia.getDias(),
+                                                destino
+                                        ));
+                                    }
+                                } else {
+                                    perfis.add(new PerfilDTO(
+                                            taxaTuristas,
+                                            fichaSinteseBrasilDTO.getAno(),
+                                            genero,
+                                            faixa,
+                                            composicao,
+                                            fonte,
+                                            motivo,
+                                            null,
+                                            gasto.getGasto() * permanencia.getDias(),
+                                            destino
+                                    ));
+                                }
+                            }
                         }
-
                     }
-
                 }
-
             }
-
         }
 
-        return perfisFichaSinteseBrasilDTO;
-
-    };
-
-    public ListaDestinosDTO createListaDestinosDTO(List<DestinoMaisVisitadoDTO> destinosMaisVisitadosDTOCombination, Double permanenciaMediaMotivoDTO){
-        List<DestinoDTO> destinosDTO = new ArrayList<>();
-
-        for (DestinoMaisVisitadoDTO destinoMaisVisitadoDTO : destinosMaisVisitadosDTOCombination) {
-
-            destinosDTO.add(new DestinoDTO(destinoMaisVisitadoDTO.getDestino()));
-
-        }
-
-        return new ListaDestinosDTO(destinosDTO, permanenciaMediaMotivoDTO);
+        return perfis;
     }
 
-    public List<List<DestinoMaisVisitadoDTO>> createDestinosMaisVisitadosCombinations(
-            DestinosMaisVisitadosPorMotivoDTO destinosMaisVisitadosPorMotivoDTO) {
 
-        List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitadosCombinations = new ArrayList<>();
 
-        cretateConbinations(destinosMaisVisitadosPorMotivoDTO.getDestinos_mais_visistado(), destinosMaisVisitadosCombinations);
 
-        return destinosMaisVisitadosCombinations;
-    }
 
-    public void cretateConbinations(
-            List<DestinoMaisVisitadoDTO> destinosMaisVisitados,
-            List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitadosCombinations) {
 
-        int totalDestinos = destinosMaisVisitados.size();
 
-        for (int tamanhoCombinacao = 1; tamanhoCombinacao <= totalDestinos; tamanhoCombinacao++) {
-            combineDestinos(destinosMaisVisitados, destinosMaisVisitadosCombinations, tamanhoCombinacao, new ArrayList<>(), 0);
-        }
-    }
 
-    public void combineDestinos(
-            List<DestinoMaisVisitadoDTO> destinosMaisVisitados,
-            List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitadosCombinations,
-            int tamanhoCombinacao,
-            List<DestinoMaisVisitadoDTO> combinacaoAtual,
-            int inicio) {
 
-        if (combinacaoAtual.size() == tamanhoCombinacao) {
-            adicionarCombinacaoComPorcentagem(combinacaoAtual, destinosMaisVisitadosCombinations);
-            return;
-        }
 
-        for (int i = inicio; i < destinosMaisVisitados.size(); i++) {
-            combinacaoAtual.add(destinosMaisVisitados.get(i));
-            combineDestinos(destinosMaisVisitados, destinosMaisVisitadosCombinations, tamanhoCombinacao, combinacaoAtual, i + 1);
-            combinacaoAtual.remove(combinacaoAtual.size() - 1);
-        }
-    }
 
-    public void adicionarCombinacaoComPorcentagem(
-            List<DestinoMaisVisitadoDTO> combinacaoAtual,
-            List<List<DestinoMaisVisitadoDTO>> destinosMaisVisitadosCombinations) {
-
-        // Calcula a porcentagem acumulada fora do lambda
-        double porcentagemAcumulada = 1.0;
-        for (DestinoMaisVisitadoDTO d : combinacaoAtual) {
-            porcentagemAcumulada *= d.getPorcentagem() / 100.0;
-        }
-
-        // Cria nova lista de destinos com a mesma porcentagem acumulada
-        List<DestinoMaisVisitadoDTO> novaCombinacao = new ArrayList<>();
-        for (DestinoMaisVisitadoDTO d : combinacaoAtual) {
-            novaCombinacao.add(new DestinoMaisVisitadoDTO(d.getDestino(), porcentagemAcumulada * 100));
-        }
-
-        destinosMaisVisitadosCombinations.add(novaCombinacao);
-    }
 
 
 

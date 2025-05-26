@@ -3,6 +3,7 @@ package tour.wise.etl.load;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dao.*;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
+import tour.wise.model.Destino;
 import tour.wise.model.OrigemDados;
 import tour.wise.model.Pais;
 
@@ -141,6 +142,7 @@ public class Load {
             OrigemDadosDAO origemDadosDAO = new OrigemDadosDAO(connection);
             PerfilEstimadoTuristaOrigemDAO perfilEstimadoTuristaFonteDAO = new PerfilEstimadoTuristaOrigemDAO(connection);
 
+
             List<Integer> idsInseridos = perfilEstimadoTuristasDAO.insertLoteRetornandoIds(batchArgs);
             int fkFonte = origemDadosDAO.findByTitulo(tituloArquivoFonteFichasSinteses).getIdOrigemDados();
 
@@ -152,6 +154,7 @@ public class Load {
             }
 
             perfilEstimadoTuristaFonteDAO.insertLote(batchFonteArgs);
+
         }catch (Exception e) {
             // Log no banco
 //            logDAO.insertLog(

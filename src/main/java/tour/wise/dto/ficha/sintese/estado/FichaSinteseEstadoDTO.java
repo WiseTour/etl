@@ -19,8 +19,8 @@ public class FichaSinteseEstadoDTO extends FichaSinteseBrasilDTO {
         this.permanenciaMediaDTODestinoPrincipal = permanenciaMediaDTODestinoPrincipal;
     }
 
-    public FichaSinteseEstadoDTO(Integer ano, List<GeneroDTO> generoDTO, List<FaixaEtariaDTO> faixaEtariaDTO, List<ComposicaoGrupoViagemDTO> composicaoGruposViagem, List<FonteInformacaoDTO> fontesInformacao, List<UtilizacaoAgenciaViagemDTO> utilizacaoAgenciaViagemDTO, List<MotivoViagemDTO> motivos, List<MotivacaoViagemLazerDTO> motivacoesViagemLazer, List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo, List<PermanenciaMediaDTO> permanenciaMediaDTO, List<DestinosMaisVisitadosPorMotivoDTO> destinosMaisVisistadosMotivo, List<PaisOrigemDTO> paisesOrigem, String destinoPrincipal, List<PermanenciaMediaDTO> permanenciaMediaDTODestinoPrincipal) {
-        super(ano, generoDTO, faixaEtariaDTO, composicaoGruposViagem, fontesInformacao, utilizacaoAgenciaViagemDTO, motivos, motivacoesViagemLazer, gastosMedioPerCapitaMotivo, permanenciaMediaDTO, destinosMaisVisistadosMotivo);
+    public FichaSinteseEstadoDTO(Integer ano, List<GeneroDTO> generoDTO, List<FaixaEtariaDTO> faixaEtariaDTO, List<ComposicaoGrupoViagemDTO> composicaoGruposViagem, List<FonteInformacaoDTO> fontesInformacao, List<MotivoViagemDTO> motivos, List<MotivacaoViagemLazerDTO> motivacoesViagemLazer, List<GastoMedioPerCapitaMotivoDTO> gastosMedioPerCapitaMotivo, List<PermanenciaMediaDTO> permanenciaMediaDTO, List<DestinosMaisVisitadosPorMotivoDTO> destinosMaisVisistadosMotivo, List<PaisOrigemDTO> paisesOrigem, String destinoPrincipal, List<PermanenciaMediaDTO> permanenciaMediaDTODestinoPrincipal) {
+        super(ano, generoDTO, faixaEtariaDTO, composicaoGruposViagem, fontesInformacao, motivos, motivacoesViagemLazer, gastosMedioPerCapitaMotivo, permanenciaMediaDTO, destinosMaisVisistadosMotivo);
         this.paisesOrigem = paisesOrigem;
         this.destinoPrincipal = destinoPrincipal;
         this.permanenciaMediaDTODestinoPrincipal = permanenciaMediaDTODestinoPrincipal;

@@ -157,7 +157,7 @@ public class Service {
 
     private Object transformTypeCell(Cell cell, String tipo) {
         if (cell == null) {
-            return ""; // ou algum valor padrão, ou até lançar uma exceção personalizada
+            return "";
         }
         switch (tipo.toLowerCase()) {
             case "string":
@@ -169,7 +169,7 @@ public class Service {
                         return cell.getNumericCellValue();
                     case STRING:
                         String texto = cell.getStringCellValue().trim();
-                        if (texto.equals("-") || texto.isEmpty()) {
+                        if (texto.contains("-") || texto.contains("(") || texto.isEmpty()){
                             return 0;
                         }
                         try {

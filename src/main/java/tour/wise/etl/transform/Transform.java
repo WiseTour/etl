@@ -11,6 +11,7 @@ import tour.wise.dto.perfil.PerfilDTO;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,107 +20,60 @@ public class Transform extends Util {
     JdbcTemplate connection;
     LogDAO logDAO;
 
-
     public Transform(JdbcTemplate connection) {
         this.connection = connection;
         this.logDAO = new LogDAO(connection);
     }
 
-    public List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(List<List<Object>> data, String fonte, String edicao) {
+    public List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(
+            List<List<Object>> data, String fonte, String edicao) {
 
-        try {
-            System.out.println("[INÍCIO] Transformação dos dados iniciada.");
-//            logDAO.insertLog(
-//                    1,  // fk_fonte (ajuste conforme necessário)
-//                    3,  // Categoria: Sucesso (indica que a transformação está sendo iniciada)
-//                    1,  // Etapa: Extração
-//                    String.format("Transformação dos dados iniciada. Fonte: %s, Edição: %s", fonte, edicao),
-//                    LocalDateTime.now(),
-//                    0,  // Quantidade lida ainda não processada
-//                    0,  // Quantidade inserida
-//                    "Chegada_Turistas"
-//            );
+        System.out.println("[INÍCIO] Transformação dos dados iniciada.");
+        System.out.println("[INFO] Fonte: " + fonte + ", Edição: " + edicao);
+        System.out.println("[INFO] Total de registros brutos recebidos: " + (data != null ? data.size() : 0));
 
-            System.out.println("[INFO] Fonte: " + fonte + ", Edição: " + edicao);
-            System.out.println("[INFO] Total de registros brutos recebidos: " + (data != null ? data.size() : 0));
-//            logDAO.insertLog(
-//                    1,  // fk_fonte
-//                    3,  // Categoria: Sucesso
-//                    1,  // Etapa: Extração
-//                    String.format("Fonte: %s, Edição: %s. Total de registros brutos recebidos: %d", fonte, edicao, data != null ? data.size() : 0),
-//                    LocalDateTime.now(),
-//                    data != null ? data.size() : 0,  // Quantidade lida
-//                    0,  // Quantidade inserida (ainda não foi convertida)
-//                    "Chegada_Turistas"
-//            );
-
-            List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadas_turistas_internacionais_brasil_mensal_dto = new ArrayList<>();
-
-            int linha = 0;
-            for (List<Object> datum : data) {
-                try {
-                    linha++;
-                    String pais_origem = datum.get(2).toString();
-                    String uf_destino = datum.get(4).toString();
-                    String via_acesso = datum.get(6).toString();
-                    Integer ano = Double.valueOf(datum.get(8).toString()).intValue();
-                    Integer mes = Double.valueOf(datum.get(10).toString()).intValue();
-                    Integer chegada = Double.valueOf(datum.get(11).toString()).intValue();
-
-                    if (chegada > 0) {
-                        ChegadaTuristasInternacionaisBrasilMensalDTO chegada_turistas_internacionais_brasil_mensal_dto = new ChegadaTuristasInternacionaisBrasilMensalDTO(
-                                mes, ano, chegada, via_acesso, uf_destino, pais_origem
-                        );
-
-                        chegadas_turistas_internacionais_brasil_mensal_dto.add(chegada_turistas_internacionais_brasil_mensal_dto);
-                    }
-
-                } catch (Exception e) {
-                    System.out.println("[ERRO] Falha ao transformar a linha " + linha + ": " + datum);
-//                    logDAO.insertLog(
-//                            1,  // fk_fonte
-//                            1,  // Categoria: Erro
-//                            1,  // Etapa: Extração
-//                            String.format("Falha ao transformar a linha %d: %s. Erro: %s", linha, datum, e.getMessage()),
-//                            LocalDateTime.now(),
-//                            1,  // Quantidade lida
-//                            0,  // Nenhuma quantidade inserida
-//                            "Chegada_Turistas"
-//                    );
-                    e.printStackTrace();
-                }
-            }
-
-            System.out.println(LocalDateTime.now() + "[FIM] Transformação concluída. Total de registros convertidos: " + chegadas_turistas_internacionais_brasil_mensal_dto.size());
-//            logDAO.insertLog(
-//                    1,  // fk_fonte
-//                    3,  // Categoria: Sucesso
-//                    1,  // Etapa: Extração
-//                    String.format("Transformação concluída. Total de registros convertidos: %d", chegadas_turistas_internacionais_brasil_mensal_dto.size()),
-//                    LocalDateTime.now(),
-//                    0,  // Quantidade lida (já processada)
-//                    chegadas_turistas_internacionais_brasil_mensal_dto.size(),  // Quantidade inserida
-//                    "Chegada_Turistas"
-//            );
-
-            return chegadas_turistas_internacionais_brasil_mensal_dto;
-        } catch (Exception e) {
-            // Log no banco
-//            logDAO.insertLog(
-//                    1,
-//                    1, // Erro
-//                    1,
-//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-//                    LocalDateTime.now(),
-//                    0,
-//                    0,
-//                    "Fonte_Dados"
-//            );
-            throw e;
+        if (data == null || data.isEmpty()) {
+            return Collections.emptyList();
         }
 
-    }
+        List<ChegadaTuristasInternacionaisBrasilMensalDTO> result = new ArrayList<>(data.size());
 
+        int linha = 0;
+        for (List<Object> row : data) {
+            linha++;
+            try {
+                String paisOrigem = String.valueOf(row.get(2));
+                String ufDestino = String.valueOf(row.get(4));
+                String viaAcesso = String.valueOf(row.get(6));
+
+                Object anoObj = row.get(8);
+                Object mesObj = row.get(10);
+                Object chegadaObj = row.get(11);
+
+                if (anoObj == null || mesObj == null || chegadaObj == null) {
+                    continue; // pula linhas com dados essenciais faltando
+                }
+
+                // Use parsing direto sem Double para economizar tempo e memória
+                int ano = (anoObj instanceof Number) ? ((Number) anoObj).intValue() : Integer.parseInt(anoObj.toString());
+                int mes = (mesObj instanceof Number) ? ((Number) mesObj).intValue() : Integer.parseInt(mesObj.toString());
+                int chegada = (chegadaObj instanceof Number) ? ((Number) chegadaObj).intValue() : Integer.parseInt(chegadaObj.toString());
+
+                if (chegada > 0) {
+                    result.add(new ChegadaTuristasInternacionaisBrasilMensalDTO(
+                            mes, ano, chegada, viaAcesso, ufDestino, paisOrigem
+                    ));
+                }
+
+            } catch (Exception e) {
+                System.err.println("[ERRO] Linha " + linha + ": " + row + " - " + e.getMessage());
+                // Considerar log mais detalhado no futuro
+            }
+        }
+
+        System.out.println("[FIM] Transformação concluída. Total de registros convertidos: " + result.size());
+        return result;
+    }
 
     public FichaSinteseBrasilDTO transformFichaSinteseBrasil(List<List<List<Object>>> data) {
 
@@ -130,7 +84,6 @@ public class Transform extends Util {
                     transformListFaixaEtaria(data, 13),
                     transformListComposicoesGrupo(data, 4),
                     transformListFontesInformacao(data, 10),
-                    transformListUtilizacaoAgenciaViagem(data, 11),
                     transformListMotivosViagem(data, 2),
                     transformListMotivacaoViagemLazer(data, 3),
                     transformListGastosMedioMotivo(data, 5),
@@ -163,7 +116,6 @@ public class Transform extends Util {
                     transformListFaixaEtaria(data, 13),
                     transformListComposicoesGrupo(data, 4),
                     transformListFontesInformacao(data, 10),
-                    transformListUtilizacaoAgenciaViagem(data, 11),
                     transformListMotivosViagem(data, 2),
                     transformListMotivacaoViagemLazer(data, 3),
                     transformListGastosMedioMotivo(data, 5),
@@ -171,6 +123,7 @@ public class Transform extends Util {
                     transformListDestinosMaisVisitadosPorMotivo(data, 7),
                     extractNomePais(data, 0)
             );
+
         } catch (Exception e) {
             // Log no banco
 //            logDAO.insertLog(
@@ -196,14 +149,13 @@ public class Transform extends Util {
                     transformListFaixaEtaria(data, 15),
                     transformListComposicoesGrupo(data, 5),
                     transformListFontesInformacao(data, 13),
-                    transformListUtilizacaoAgenciaViagem(data, 12),
                     transformListMotivosViagem(data, 3),
                     transformListMotivacaoViagemLazer(data, 4),
                     transformListGastosMedioMotivo(data, 6),
                     transformListPermanenciaMediaMotivo(data, 7),
                     transformListDestinosMaisVisitadosPorMotivo(data, 9),
-                    trasnformListPaisesOrigem(data, 2),
-                    trasnformEstado(data, 0),
+                    transformListPaisesOrigem(data, 2),
+                    transformEstado(data, 0),
                     transformListPermanenciaMediaMotivo(data, 8)
 
 
@@ -251,7 +203,6 @@ public class Transform extends Util {
             String ufDestino = chegada.getUfDestino();
             Integer ano = chegada.getAno();
 
-            Integer qtdChegadas = 0, qtdChegadasPerfil = 0;
 
             // Tenta encontrar na ficha estadual o pais e o estado
 
@@ -276,12 +227,16 @@ public class Transform extends Util {
                     perfilDTOEstado.setTaxaTuristas(
                             perfilDTOEstado.getTaxaTuristas()
                     );
+                    if (Double.isInfinite(perfilDTOEstado.getTaxaTuristas())) {
+                        System.out.println(perfilDTOEstado.getTaxaTuristas() + "TAXA - ESTADO/PAIS é infinito!");
+                    }
                     Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas())).intValue();
                     perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
-
+                    if (Double.isInfinite(qtdTuristas)) {
+                        System.out.println(qtdTuristas + "quantidade - ESTADO/PAIS é infinito!");
+                    }
 
                 }
-
 
                 perfisEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
 
@@ -312,9 +267,20 @@ public class Transform extends Util {
                                 && f.getAno().equals(ano))
                         .count();
 
-                int quantidadePaisesFichas = fichaEstado.getPaisesOrigem().size();
+                int quantidadePaisesFichas = (int) fichaEstado.getPaisesOrigem()
+                        .stream()
+                        .filter(paisOrigemDTO -> chegadas.stream()
+                                .anyMatch(c -> c.getUfDestino().equalsIgnoreCase(ufDestino)
+                                        && c.getAno().equals(ano)
+                                        && c.getPaisOrigem().equalsIgnoreCase(paisOrigemDTO.getPais())
+                                )
+                        )
+                        .count();
 
-                taxaTuristas = taxaTuristas / (quantidadePaises - quantidadePaisesFichas);
+                int denominador = (int) (quantidadePaises - quantidadePaisesFichas);
+                if (denominador != 0) {
+                    taxaTuristas = taxaTuristas / denominador;
+                }
 
                 List<PerfilDTO> perfisEstado = createPerfisCombinations(fichaEstado);
 
@@ -324,14 +290,19 @@ public class Transform extends Util {
                     perfilEstado.setAno(chegada.getAno());
                     perfilEstado.setMes(chegada.getMes());
                     perfilEstado.setViaAcesso(chegada.getViaAcesso());
+
                     perfilEstado.setTaxaTuristas(
                             perfilEstado.getTaxaTuristas() *
                                     taxaTuristas / 100
                     );
+                    if (Double.isInfinite(perfilEstado.getTaxaTuristas())) {
+
+                    }
                     Double taxaAtualizada = perfilEstado.getTaxaTuristas();
                     Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * taxaAtualizada)).intValue();
 
                     perfilEstado.setQuantidadeTuristas(qtdTuristas);
+
                 }
 
                 perfisEstado.removeIf(perfil -> perfil.getQuantidadeTuristas() == null || perfil.getQuantidadeTuristas() < 1);
@@ -362,6 +333,13 @@ public class Transform extends Util {
                     Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilPais.getTaxaTuristas())).intValue();
                     perfilPais.setQuantidadeTuristas(qtdTuristas);
 
+                    if (Double.isInfinite(perfilPais.getTaxaTuristas())) {
+                        System.out.println(perfilPais.getTaxaTuristas() + "TAXA - PAIS é infinito!");
+                    }
+                    if (Double.isInfinite(qtdTuristas)) {
+                        System.out.println(qtdTuristas + "QTD - PAIS é infinito!");
+                    }
+
                 }
 
                 // Remove todos os perfis com quantidadeTuristas < 1
@@ -386,6 +364,13 @@ public class Transform extends Util {
                 perfilBrasil.setViaAcesso(chegada.getViaAcesso());
                 Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilBrasil.getTaxaTuristas())).intValue();
                 perfilBrasil.setQuantidadeTuristas(qtdTuristas);
+                if (Double.isInfinite(perfilBrasil.getTaxaTuristas())) {
+                    System.out.println(perfilBrasil.getTaxaTuristas() + "TAXA - BRASIL é infinito!");
+                }
+                if (Double.isInfinite(qtdTuristas)) {
+                    System.out.println(qtdTuristas + "QTD - BRASIL é infinito!");
+                }
+
             }
 
             // Remove todos os perfis com quantidadeTuristas < 1

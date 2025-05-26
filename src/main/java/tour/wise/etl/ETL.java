@@ -2,35 +2,33 @@ package tour.wise.etl;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.jdbc.core.JdbcTemplate;
-import javax.sql.DataSource;
 import tour.wise.dao.*;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.FichaSintesePaisDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
+import tour.wise.dto.perfil.DestinoDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.Extract;
 import tour.wise.etl.load.Load;
+import tour.wise.model.Destino;
 import tour.wise.model.OrigemDados;
 import tour.wise.model.Pais;
 import tour.wise.model.UnidadeFederativaBrasil;
 
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ETL {
 
-    private DataBase dataBase;
-    private JdbcTemplate connection;
+    private final DataBase dataBase;
+    private final JdbcTemplate connection;
     private LogDAO logDAO;
-    private Extract extract;
+    private final Extract extract;
     private tour.wise.etl.transform.Transform transform;
     private Load load;
     private Service service;
@@ -62,18 +60,14 @@ public class ETL {
     ) throws IOException, SQLException {
 
         try {
-
             // CARREGAMENTO DA FONTE DAS CHEGADAS NA TABELA FONTE_DADOS
-
             load.loadOrigemDados(new OrigemDados(tituloArquivoFonteChegadas, edicaoChegadas, orgaoEmissorChegadas));
             dataBase.getConnection().commit();
 
             OrigemDadosDAO fonteDadosDAO = new OrigemDadosDAO(connection);
-
             Integer fkFonteChegadas = (fonteDadosDAO.findByTitulo(tituloArquivoFonteChegadas).getIdOrigemDados() == null) ? 0 : 1;
 
             // EXTRAÇÃO DAS CHEGADAS
-
             List<List<Object>> chegadasTuristasInternacionaisBrasilMensalData = extract.extractChegadasTuristasInternacionaisBrasilMensalData(
                     fkFonteChegadas,
                     "Chegada_Turistas_Internacionais_Brasil_Mensal",
@@ -85,7 +79,6 @@ public class ETL {
             );
 
             // TRANSFORMAÇÃO DAS CHEGADAS
-
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilMensalDTO =
                     transform.transformChegadasTuristasInternacionaisBrasilMensal(
                             chegadasTuristasInternacionaisBrasilMensalData,
@@ -95,10 +88,9 @@ public class ETL {
             chegadasTuristasInternacionaisBrasilMensalData.clear();
 
             // CARREGAMENTO OS PAÍSES PRESENTES NA BASE CHEGADAS NO BANCO, CASO AINDA NÃO PERSISTAM
+            List<Pais> paises = listarPaisesNaoCadastrados(chegadasTuristasInternacionaisBrasilMensalDTO, new PaisDAO(connection).findAll());
 
-            List<Pais> paises = listarPaisesNaoCadastrados(chegadasTuristasInternacionaisBrasilMensalDTO, new PaisDAO(connection).findAll());;
-
-            if(!paises.isEmpty()) {
+            if (!paises.isEmpty()) {
                 for (Pais pais : paises) {
                     load.loadPais(pais);
                 }
@@ -106,13 +98,10 @@ public class ETL {
             }
 
             // CARREGAMENTO DA FONTE DAS FICHAS SÍNTESE
-
             load.loadOrigemDados(new OrigemDados(tituloArquivoFonteFichasSinteses, edicaoFichasSinteses, orgaoEmissorFichasSinteses));
             dataBase.getConnection().commit();
 
-
-            // EXTRAÇÃO E TRASNFORMAÇÃO DA FICHA SÍNTESE BRASIL
-
+            // EXTRAÇÃO E TRANSFORMAÇÃO DA FICHA SÍNTESE BRASIL
             FichaSinteseBrasilDTO fichaSinteseBrasilDTO = transform.transformFichaSinteseBrasil(
                     extract.extractFichaSinteseBrasilData(
                             fileNameFichaSinteseBrasil, 1,
@@ -122,10 +111,9 @@ public class ETL {
             );
 
             // EXTRAÇÃO E TRANSFORMAÇÃO DAS FICHAS SÍNTESE POR PAÍS
-
             List<FichaSintesePaisDTO> fichasSintesePaisDTO = new ArrayList<>();
 
-            System.out.printf(LocalDateTime.now() +  "\n Iniciando leitura do arquivo %s\n%n", fileNameFichaSintesePais);
+            System.out.printf(LocalDateTime.now() + "\n Iniciando leitura do arquivo %s\n%n", fileNameFichaSintesePais);
             Workbook workbook = service.loadWorkbook(fileNameFichaSintesePais);
 
             for (Integer indicePlanilha = 1; indicePlanilha < service.getSheetNumber(fileNameFichaSintesePais); indicePlanilha++) {
@@ -139,15 +127,12 @@ public class ETL {
                                 List.of("string", "numeric"))
                 ));
             }
-
             workbook.close();
             System.out.println(LocalDateTime.now() + "\n Leitura finalizada\n");
 
-
             // EXTRAÇÃO E TRANSFORMAÇÃO DAS FICHAS SÍNTESE POR ESTADO
-
             List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = new ArrayList<>();
-            System.out.printf(LocalDateTime.now() +  "\n Iniciando leitura do arquivo %s\n%n", fileNameFichaSinteseEstado);
+            System.out.printf(LocalDateTime.now() + "\n Iniciando leitura do arquivo %s\n%n", fileNameFichaSinteseEstado);
 
             workbook = service.loadWorkbook(fileNameFichaSinteseEstado);
             for (Integer indicePlanilha = 1; indicePlanilha < service.getSheetNumber(fileNameFichaSinteseEstado); indicePlanilha++) {
@@ -160,70 +145,53 @@ public class ETL {
                                 List.of(10, 16),
                                 List.of("string", "numeric"))
                 ));
-
             }
+            workbook.close();
             System.out.println(LocalDateTime.now() + "\n Leitura finalizada\n");
 
-            // TRANSFORMAÇÃO E CARREGAMENTO DOS PERFIS
-
-
+            // PREPARAR MAPAS PARA ACESSO RÁPIDO A PAÍSES E UFs
             PaisDAO paisDAO = new PaisDAO(connection);
             UnidadeFederativaBrasilDAO unidadeFederativaBrasilDAO = new UnidadeFederativaBrasilDAO(connection);
 
-            List<PerfilDTO> perfisEstimadosTuristas;
             paises = paisDAO.findAll();
             List<UnidadeFederativaBrasil> ufs = unidadeFederativaBrasilDAO.findAll();
 
+            Map<String, Integer> mapaPaises = paises.stream()
+                    .collect(Collectors.toMap(p -> p.getNomePais().toLowerCase(), Pais::getIdPais));
+
+            Map<String, String> mapaUfs = ufs.stream()
+                    .collect(Collectors.toMap(uf -> uf.getUnidadeFederativa().toLowerCase(), UnidadeFederativaBrasil::getSigla));
+
+            // INICIANDO PROCESSAMENTO DOS PERFIS
             List<Object[]> batchArgs = new ArrayList<>();
             List<Integer> fkPaisesDoLote = new ArrayList<>();
             List<String> fkUfsDoLote = new ArrayList<>();
             List<Object[]> batchFonteArgs = new ArrayList<>();
             int batchMax = 10000;
 
+            System.out.println(LocalDateTime.now() + " [INÍCIO] Criando perfis...");
 
-            System.out.println(LocalDateTime.now() + "[INÍCIO] Criando perfis...");
+            Iterator<ChegadaTuristasInternacionaisBrasilMensalDTO> iterator = chegadasTuristasInternacionaisBrasilMensalDTO.iterator();
 
-            for (ChegadaTuristasInternacionaisBrasilMensalDTO chegadaTuristasInternacionaisBrasilMensalDTO : chegadasTuristasInternacionaisBrasilMensalDTO) {
+            while (iterator.hasNext()) {
+                ChegadaTuristasInternacionaisBrasilMensalDTO chegada = iterator.next();
 
                 // TRANSFORMAÇÃO
-
-                perfisEstimadosTuristas = transform.transformPerfis(
-                        chegadaTuristasInternacionaisBrasilMensalDTO,
+                List<PerfilDTO> perfisEstimadosTuristas = transform.transformPerfis(
+                        chegada,
                         chegadasTuristasInternacionaisBrasilMensalDTO,
                         fichasSinteseEstadoDTO,
                         fichasSintesePaisDTO,
                         fichaSinteseBrasilDTO
                 );
 
-                // CARREGAMENTO
-
                 for (PerfilDTO perfil : perfisEstimadosTuristas) {
-                    int fkPais = paises.stream()
-                            .filter(pais -> perfil.getPaisesOrigem().equalsIgnoreCase(pais.getNomePais()))
-                            .findFirst()
-                            .map(Pais::getIdPais)
-                            .orElse(-1);
+                    int fkPais = mapaPaises.getOrDefault(perfil.getPaisesOrigem().toLowerCase(), -1);
+                    String fkUf = mapaUfs.getOrDefault(perfil.getEstadoEntrada().toLowerCase(), null);
 
-                    String fkUf = ufs.stream()
-                            .filter(uf -> perfil.getEstadoEntrada().equalsIgnoreCase(uf.getUnidadeFederativa()))
-                            .findFirst()
-                            .map(UnidadeFederativaBrasil::getSigla)
-                            .orElse(null);
-
-                    if(fkUf == null || fkPais == -1){
-                        return;
-                        // Registra no log
-//                logDAO.insertLog(
-//                        fkFonteChegadas,  // fk_fonte (ajuste conforme necessário)
-//                        3,  // Categoria: Sucesso
-//                        1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
-//                        "Criação dos perfis finalizada.",
-//                        LocalDateTime.now(),
-//                        0,  // Quantidade lida (ou ajuste conforme necessário)
-//                        0,  // Quantidade inserida (ou ajuste conforme necessário)
-//                        "Perfil_Estimado"
-//                );
-
+                    if (fkUf == null || fkPais == -1) {
+                        // ignorar perfil inválido e continuar
+                        continue;
                     }
 
                     Object[] params = new Object[]{
@@ -237,18 +205,20 @@ public class ETL {
                             perfil.getViaAcesso(),
                             perfil.getComposicaoGruposViagem(),
                             perfil.getFonteInformacao(),
-                            perfil.getUtilizacaoAgenciaViagemDTO(),
                             perfil.getMotivo(),
                             perfil.getMotivacaoViagemLazer(),
                             perfil.getGastosMedioPerCapitaMotivo()
                     };
+
+
+                    // Aqui: se você usa destinosDoLote, deve decidir como tratar batch deles
 
                     batchArgs.add(params);
                     fkPaisesDoLote.add(fkPais);
                     fkUfsDoLote.add(fkUf);
 
                     if (batchArgs.size() >= batchMax) {
-                        System.out.println(LocalDateTime.now() + "Inserindo perfis.");
+                        System.out.println(LocalDateTime.now() + " Inserindo perfis.");
 
                         load.loadPerfis(
                                 batchArgs,
@@ -267,23 +237,11 @@ public class ETL {
                     }
                 }
 
-
-                // Registra no log
-//                logDAO.insertLog(
-//                        fkFonteChegadas,  // fk_fonte (ajuste conforme necessário)
-//                        3,  // Categoria: Sucesso
-//                        1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
-//                        "Criação dos perfis finalizada.",
-//                        LocalDateTime.now(),
-//                        0,  // Quantidade lida (ou ajuste conforme necessário)
-//                        0,  // Quantidade inserida (ou ajuste conforme necessário)
-//                        "Perfil_Estimado"
-//                );
-
+                iterator.remove();
             }
-            // Inserir o restante fora do loop
+
             if (!batchArgs.isEmpty()) {
-                System.out.println(LocalDateTime.now() + "Inserindo perfis.");
+                System.out.println(LocalDateTime.now() + " Inserindo perfis.");
 
                 load.loadPerfis(
                         batchArgs,
@@ -294,48 +252,56 @@ public class ETL {
                 );
 
                 dataBase.getConnection().commit();
+
                 batchArgs.clear();
                 fkPaisesDoLote.clear();
                 fkUfsDoLote.clear();
                 batchFonteArgs.clear();
             }
 
-            // Imprime no console
-            System.out.println(LocalDateTime.now() + "[FIM] Criação e inserção dos perfis finalizada.");
+            System.out.println(LocalDateTime.now() + " [FIM] Criação e inserção dos perfis finalizada.");
 
             dataBase.getConnection().close();
+
         } catch (Exception e) {
-            // Log no banco
-//            logDAO.insertLog(
-//                    1,
-//                    1, // Erro
-//                    1,
-//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-//                    LocalDateTime.now(),
-//                    0,
-//                    0,
-//                    "Fonte_Dados"
-//            );
+            // Log no banco (descomente se desejar usar)
+//        logDAO.insertLog(
+//                 "erro",
+//                 "Erro na criação dos perfis do projeto",
+//                 "exe",
+//                 e.getMessage(),
+//                 null
+//        );
+            e.printStackTrace();
             throw e;
         }
-
-
     }
 
-    static List<Pais> listarPaisesNaoCadastrados(List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilMensalDTO, List<Pais> paises){
-        Set<String> nomesPaisesChegadas = chegadasTuristasInternacionaisBrasilMensalDTO.stream()
-                .map(ChegadaTuristasInternacionaisBrasilMensalDTO::getPaisOrigem)
+
+    static List<Pais> listarPaisesNaoCadastrados(
+            List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadas,
+            List<Pais> paisesExistentes
+    ) {
+        // Mapa para pesquisa rápida: nomes existentes em minúsculo
+        Set<String> nomesPaisesExistentes = paisesExistentes.stream()
+                .map(p -> p.getNomePais().toLowerCase())
                 .collect(Collectors.toSet());
 
+        // Usar lista para acumular e evitar streams intermediários
+        List<Pais> paisesNovos = new ArrayList<>();
 
-        Set<String> nomesPaisesExistentes = paises.stream()
-                .map(Pais::getNomePais)
-                .collect(Collectors.toSet());
-
-        return nomesPaisesChegadas.stream()
-                .filter(nomePais -> !nomesPaisesExistentes.contains(nomePais))
-                .map(Pais::new)
-                .toList();
+        for (ChegadaTuristasInternacionaisBrasilMensalDTO chegada : chegadas) {
+            String paisOrigem = chegada.getPaisOrigem();
+            if (paisOrigem != null) {
+                String paisOrigemLower = paisOrigem.toLowerCase();
+                if (!nomesPaisesExistentes.contains(paisOrigemLower)) {
+                    paisesNovos.add(new Pais(paisOrigem));
+                    // Opcional: adicionar ao set para evitar repetição de mesmo nome
+                    nomesPaisesExistentes.add(paisOrigemLower);
+                }
+            }
+        }
+        return paisesNovos;
     }
 
 

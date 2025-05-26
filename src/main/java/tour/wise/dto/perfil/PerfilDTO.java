@@ -1,5 +1,7 @@
 package tour.wise.dto.perfil;
 
+import tour.wise.dto.ficha.sintese.brasil.DestinoMaisVisitadoDTO;
+
 import java.util.List;
 
 public class PerfilDTO {
@@ -14,32 +16,30 @@ public class PerfilDTO {
     private String faixaEtariaDTO;
     private String composicaoGruposViagem;
     private String fonteInformacao;
-    private String utilizacaoAgenciaViagemDTO;
     private String motivo;
     private String motivacaoViagemLazer;
     private Double gastosMedioPerCapitaMotivo;
-    private ListaDestinosDTO listaDestinosDTO;
+    private DestinoMaisVisitadoDTO destinoMaisVisitado;
 
 
     public PerfilDTO() {
 
     }
-    public PerfilDTO(Double taxaTuristas, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, ListaDestinosDTO listaDestinosDTO) {
+    public PerfilDTO(Double taxaTuristas, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, DestinoMaisVisitadoDTO destinoMaisVisitado) {
         this.taxaTuristas = taxaTuristas;
         this.ano = ano;
         this.generoDTO = generoDTO;
         this.faixaEtariaDTO = faixaEtariaDTO;
         this.composicaoGruposViagem = composicaoGruposViagem;
         this.fonteInformacao = fonteInformacao;
-        this.utilizacaoAgenciaViagemDTO = utilizacaoAgenciaViagemDTO;
         this.motivo = motivo;
         this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
-        this.listaDestinosDTO = listaDestinosDTO;
+        this.destinoMaisVisitado = destinoMaisVisitado;
     }
 
 
-    public PerfilDTO(Double taxaTuristas, Integer quantidadeTuristas, String paisesOrigem, Integer ano, Integer mes, String viaAcesso, String estadoEntrada, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String utilizacaoAgenciaViagemDTO, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, ListaDestinosDTO listaDestinosDTO) {
+    public PerfilDTO(Double taxaTuristas, Integer quantidadeTuristas, String paisesOrigem, Integer ano, Integer mes, String viaAcesso, String estadoEntrada, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, DestinoMaisVisitadoDTO destinoMaisVisitado) {
         this.taxaTuristas = taxaTuristas;
         this.quantidadeTuristas = quantidadeTuristas;
         this.paisesOrigem = paisesOrigem;
@@ -51,11 +51,10 @@ public class PerfilDTO {
         this.faixaEtariaDTO = faixaEtariaDTO;
         this.composicaoGruposViagem = composicaoGruposViagem;
         this.fonteInformacao = fonteInformacao;
-        this.utilizacaoAgenciaViagemDTO = utilizacaoAgenciaViagemDTO;
         this.motivo = motivo;
         this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
-        this.listaDestinosDTO = listaDestinosDTO;
+        this.destinoMaisVisitado = destinoMaisVisitado;
     }
 
 
@@ -147,14 +146,6 @@ public class PerfilDTO {
         this.fonteInformacao = fonteInformacao;
     }
 
-    public String getUtilizacaoAgenciaViagemDTO() {
-        return utilizacaoAgenciaViagemDTO;
-    }
-
-    public void setUtilizacaoAgenciaViagemDTO(String utilizacaoAgenciaViagemDTO) {
-        this.utilizacaoAgenciaViagemDTO = utilizacaoAgenciaViagemDTO;
-    }
-
     public String getMotivo() {
         return motivo;
     }
@@ -179,12 +170,12 @@ public class PerfilDTO {
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
     }
 
-    public ListaDestinosDTO getListaDestinosDTO() {
-        return listaDestinosDTO;
+    public DestinoMaisVisitadoDTO getDestinoMaisVisitadoDTO() {
+        return destinoMaisVisitado;
     }
 
-    public void setListaDestinosDTO(ListaDestinosDTO listaDestinosDTO) {
-        this.listaDestinosDTO = listaDestinosDTO;
+    public void setDestinoMaisVisitadoDTO(DestinoMaisVisitadoDTO destinoMaisVisitado) {
+        this.destinoMaisVisitado = destinoMaisVisitado;
     }
 
     @Override
@@ -201,11 +192,10 @@ public class PerfilDTO {
                 ", faixaEtariaDTO='" + faixaEtariaDTO + '\'' +
                 ", composicaoGruposViagem='" + composicaoGruposViagem + '\'' +
                 ", fonteInformacao='" + fonteInformacao + '\'' +
-                ", utilizacaoAgenciaViagemDTO='" + utilizacaoAgenciaViagemDTO + '\'' +
                 ", motivo='" + motivo + '\'' +
                 ", motivacaoViagemLazer='" + motivacaoViagemLazer + '\'' +
                 ", gastosMedioPerCapitaMotivo=" + gastosMedioPerCapitaMotivo +
-                ", listaDestinosDTO=" + listaDestinosDTO +
+                ", listaDestinosDTO=" + destinoMaisVisitado +
                 '}';
     }
 }
