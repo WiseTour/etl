@@ -18,19 +18,27 @@ public class SlackWiseTour {
         this.slack = Slack.getInstance();
     }
 
-    public boolean sendNotification(String message) {
+    public void sendNotification(String message) {
         Objects.requireNonNull(message, "A mensagem não pode ser nula");
 
         try {
             Payload payload = Payload.builder()
-                    .text(message)
+                    .text("*Notificação do WiseTour:*\n" + message)
                     .build();
 
             WebhookResponse response = slack.send(webhookUrl, payload);
-            return response.getCode() == 200;
+            System.out.println("Código HTTP: " + response.getCode());
+            System.out.println("Resposta: " + response.getBody());
+
+            if (response.getCode() == 200) {
+                System.out.println("Mensagem enviada com sucesso para o Slack!");
+            } else {
+                System.out.println("Falha ao enviar mensagem para o Slack. Código: " + response.getCode());
+            }
 
         } catch (Exception e) {
-            return false;
+            System.out.println("Erro ao enviar para o Slack: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

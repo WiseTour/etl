@@ -7,18 +7,14 @@ import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.FichaSintesePaisDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
-import tour.wise.dto.perfil.DestinoDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.Extract;
 import tour.wise.etl.load.Load;
-import tour.wise.model.Destino;
+import tour.wise.etl.transform.Transform;
 import tour.wise.model.OrigemDados;
 import tour.wise.model.Pais;
 import tour.wise.model.UnidadeFederativaBrasil;
 import tour.wise.slack.SlackWiseTour;
-
-
-import java.awt.font.TextHitInfo;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -31,13 +27,14 @@ public class ETL {
     private final JdbcTemplate connection;
     private LogDAO logDAO;
     private final Extract extract;
-    private tour.wise.etl.transform.Transform transform;
-    private Load load;
-    private Service service;
+    private final Transform transform;
+    private final Load load;
+    private final Service service;
     private final SlackWiseTour slackNotifier;
+    private final Properties props;
 
 
-    public ETL() throws SQLException {
+    public ETL() throws SQLException, IOException {
         this.dataBase = new DataBase();
         this.connection = dataBase.getJdbcTemplate();;
         this.logDAO = new LogDAO(connection);
@@ -45,7 +42,9 @@ public class ETL {
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
         this.service = new Service();
-        this.slackNotifier = new SlackWiseTour("https://hooks.slack.com/services/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");
+        this.props = new Properties();
+        this.props.load( getClass().getClassLoader().getResourceAsStream("config.properties"));
+        this.slackNotifier = new SlackWiseTour(props.getProperty("SLACK_URL"));
     }
 
     public void exe(
