@@ -11,7 +11,7 @@ public class Main {
         ETL etl = new ETL();
 
         etl.exe(
-                "C:/Users/leosa/OneDrive/Área de Trabalho/WiseTour/database/data/chegada_turistas_ministerio_turismo/chegadas_2019 - Copia.xlsx",
+                "C:/Users/leosa/OneDrive/Área de Trabalho/WiseTour/database/data/chegada_turistas_ministerio_turismo/chegadas_2019.xlsx",
                 "Chegadas 2019",
                 "https://www.gov.br/turismo/pt-br/acesso-a-informacao/acoes-e-programas/observatorio/demanda-turistica/demanda-turistica-internacional-1)",
                 "Ministério do Turismo",
