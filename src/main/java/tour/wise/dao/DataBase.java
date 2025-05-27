@@ -21,6 +21,7 @@ public class DataBase {
     private final JdbcTemplate jdbcTemplate;
 
     public DataBase() throws SQLException {
+
         Properties props = new Properties();
         String tempDBName = "";
         String tempHost = "";
@@ -59,9 +60,7 @@ public class DataBase {
 
         this.jdbcTemplate = new JdbcTemplate(new SingleConnectionDataSource(connection, false));
 
-
     }
-
 
     public String getUrl() {
         return url;

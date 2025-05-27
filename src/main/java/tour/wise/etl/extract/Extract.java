@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dao.LogDAO;
 import tour.wise.etl.Service;
+import tour.wise.s3.S3;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ public class Extract {
     JdbcTemplate connection;
     LogDAO logDAO;
 
-    public Extract(JdbcTemplate connection) {
+    public Extract(JdbcTemplate connection) throws IOException {
         this.service = new Service();
         this.connection = connection;
         this.logDAO = new LogDAO(connection);
@@ -28,7 +29,7 @@ public class Extract {
 
         try {
 
-            String sheetName = service.getSheetName(fileName, sheetNumber);
+            String sheetName = service.getSheetName(workbook, sheetNumber);
             String estado = sheetName.split("\\s+", 2)[1]; // UF de entrada
 
             // Parâmetros das seções a serem lidas
@@ -115,7 +116,7 @@ public class Extract {
     public List<List<List<Object>>> extractFichasSintesePaisData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
         try{
 
-            String sheetName = service.getSheetName(fileName, sheetNumber);
+            String sheetName = service.getSheetName(workbook, sheetNumber);
             String pais = sheetName.split("\\s+", 2)[1]; // pais de origem
 
             // Parâmetros das seções a serem lidas
@@ -196,11 +197,10 @@ public class Extract {
         }
     }
 
-    public List<List<List<Object>>> extractFichaSinteseBrasilData(String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
+    public List<List<List<Object>>> extractFichaSinteseBrasilData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
         System.out.printf(LocalDateTime.now() +  "\n Iniciando leitura do arquivo %s\n%n", fileName);
         try{
             ZipSecureFile.setMinInflateRatio(0.0001);
-            Workbook workbook = service.loadWorkbook(fileName);
 
             // Parâmetros das seções a serem lidas
             List<int[]> ranges = List.of(
@@ -284,12 +284,12 @@ public class Extract {
         }
     }
 
-    public List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+    public List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(Workbook workbook, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
 
         List<List<Object>> data = null;
 
         try {
-            data = service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types);
+            data = service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, workbook);
 
             System.out.println("[SUCESSO] Extração finalizada com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
             System.out.println();

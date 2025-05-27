@@ -9,6 +9,7 @@ import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +21,7 @@ public class Transform extends Util {
     JdbcTemplate connection;
     LogDAO logDAO;
 
-    public Transform(JdbcTemplate connection) {
+    public Transform(JdbcTemplate connection) throws IOException {
         this.connection = connection;
         this.logDAO = new LogDAO(connection);
     }

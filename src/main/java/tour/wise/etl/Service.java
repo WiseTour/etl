@@ -1,30 +1,24 @@
 package tour.wise.etl;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 public class Service {
 
-    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+
+    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
 
         try {
             System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
-
-            // Criando um objeto Workbook a partir do arquivo recebido,
-            Workbook workbook = loadWorkbook(fileName);
 
             // Pegando a planilha referenciada em "sheetNumber" do arquivo
             Sheet sheet = workbook.getSheetAt(sheetNumber);
@@ -103,56 +97,23 @@ public class Service {
         }
     }
 
-    public  Workbook loadWorkbook(String fileName) {
-        try {
-            Path path = Path.of(fileName);
 
-            InputStream excelFile = Files.newInputStream(path);
 
-            return fileName.endsWith(".xlsx") ?
-                    new XSSFWorkbook(excelFile) :
-                    new HSSFWorkbook(excelFile);
+    public String getSheetName(Workbook workbook, int sheetNumber) {
+        int numeroDePlanilhas = workbook.getNumberOfSheets();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        if (sheetNumber >= 0 && sheetNumber < numeroDePlanilhas) {
+            return workbook.getSheetName(sheetNumber);
         }
-    }
-
-    public String getSheetName(String fileName, int sheetNumber) {
-
-        try(Workbook workbook = loadWorkbook(fileName)) {
-
-            int numeroDePlanilhas = workbook.getNumberOfSheets();
-
-            if (sheetNumber >= 0 && sheetNumber < numeroDePlanilhas) {
-                return workbook.getSheetName(sheetNumber);
-            } else {
-                System.err.println("Índice fora do intervalo. Total de planilhas: " + numeroDePlanilhas);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        System.err.println("Índice fora do intervalo. Total de planilhas: " + numeroDePlanilhas);
         return null;
     }
 
-    public Integer getSheetNumber(String fileName) {
+    public Integer getSheetNumber(Workbook workbook) {
 
-        try(Workbook workbook = loadWorkbook(fileName)) {
+        Integer sheetNumber = workbook.getNumberOfSheets();
 
-            Integer sheetNumber = workbook.getNumberOfSheets();
-
-
-                return sheetNumber;
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+        return sheetNumber;
     }
 
     private Object transformTypeCell(Cell cell, String tipo) {

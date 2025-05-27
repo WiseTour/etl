@@ -11,13 +11,18 @@ import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.Extract;
 import tour.wise.etl.load.Load;
 import tour.wise.etl.transform.Transform;
+import tour.wise.s3.S3;
+import tour.wise.slack.SlackWiseTour;
 import tour.wise.model.OrigemDados;
 import tour.wise.model.Pais;
 import tour.wise.model.UnidadeFederativaBrasil;
-import tour.wise.slack.SlackWiseTour;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,12 +37,14 @@ public class ETL {
     private final Service service;
     private final SlackWiseTour slackNotifier;
     private final Properties props;
+    private final S3 s3;
 
 
-    public ETL() throws SQLException, IOException {
+    public ETL() throws IOException, SQLException {
         this.dataBase = new DataBase();
-        this.connection = dataBase.getJdbcTemplate();;
+        this.connection = dataBase.getJdbcTemplate();
         this.logDAO = new LogDAO(connection);
+        this.s3 = new S3();
         this.extract = new Extract(connection);
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
@@ -45,19 +52,18 @@ public class ETL {
         this.props = new Properties();
         this.props.load( getClass().getClassLoader().getResourceAsStream("config.properties"));
         this.slackNotifier = new SlackWiseTour(props.getProperty("SLACK_URL"));
+
     }
 
     public void exe(
             String fileNameChegadas,
             String tituloArquivoFonteChegadas,
-            String urlChegadas,
             String orgaoEmissorChegadas,
             String edicaoChegadas,
             String fileNameFichaSintesePais,
             String fileNameFichaSinteseBrasil,
             String fileNameFichaSinteseEstado,
             String tituloArquivoFonteFichasSinteses,
-            String urlFichasSinteses,
             String orgaoEmissorFichasSinteses,
             String edicaoFichasSinteses
     ) throws IOException, SQLException {
@@ -77,8 +83,10 @@ public class ETL {
             OrigemDadosDAO fonteDadosDAO = new OrigemDadosDAO(connection);
             Integer fkFonteChegadas = (fonteDadosDAO.findByTitulo(tituloArquivoFonteChegadas).getIdOrigemDados() == null) ? 0 : 1;
 
+            Workbook workbook = s3.readFile(fileNameChegadas);
             // EXTRAÇÃO DAS CHEGADAS
             List<List<Object>> chegadasTuristasInternacionaisBrasilMensalData = extract.extractChegadasTuristasInternacionaisBrasilMensalData(
+                    workbook,
                     fkFonteChegadas,
                     "Chegada_Turistas_Internacionais_Brasil_Mensal",
                     fileNameChegadas,
@@ -121,9 +129,11 @@ public class ETL {
             load.loadOrigemDados(new OrigemDados(tituloArquivoFonteFichasSinteses, edicaoFichasSinteses, orgaoEmissorFichasSinteses));
             dataBase.getConnection().commit();
 
+            workbook = s3.readFile(fileNameFichaSinteseBrasil);
             // EXTRAÇÃO E TRANSFORMAÇÃO DA FICHA SÍNTESE BRASIL
             FichaSinteseBrasilDTO fichaSinteseBrasilDTO = transform.transformFichaSinteseBrasil(
                     extract.extractFichaSinteseBrasilData(
+                            workbook,
                             fileNameFichaSinteseBrasil, 1,
                             List.of(1, 7),
                             List.of(10, 16),
@@ -134,9 +144,9 @@ public class ETL {
             List<FichaSintesePaisDTO> fichasSintesePaisDTO = new ArrayList<>();
 
             System.out.printf(LocalDateTime.now() + "\n Iniciando leitura do arquivo %s\n%n", fileNameFichaSintesePais);
-            Workbook workbook = service.loadWorkbook(fileNameFichaSintesePais);
+            workbook = s3.readFile(fileNameFichaSintesePais);
 
-            for (Integer indicePlanilha = 1; indicePlanilha < service.getSheetNumber(fileNameFichaSintesePais); indicePlanilha++) {
+            for (Integer indicePlanilha = 1; indicePlanilha < service.getSheetNumber(workbook); indicePlanilha++) {
                 fichasSintesePaisDTO.add(transform.transformFichasSintesePais(
                         extract.extractFichasSintesePaisData(
                                 workbook,
@@ -154,8 +164,8 @@ public class ETL {
             List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = new ArrayList<>();
             System.out.printf(LocalDateTime.now() + "\n Iniciando leitura do arquivo %s\n%n", fileNameFichaSinteseEstado);
 
-            workbook = service.loadWorkbook(fileNameFichaSinteseEstado);
-            for (Integer indicePlanilha = 1; indicePlanilha < service.getSheetNumber(fileNameFichaSinteseEstado); indicePlanilha++) {
+            workbook = s3.readFile(fileNameFichaSinteseEstado);
+            for (Integer indicePlanilha = 1; indicePlanilha < service.getSheetNumber(workbook); indicePlanilha++) {
                 fichasSinteseEstadoDTO.add(transform.transformFichasSinteseEstado(
                         extract.extractFichasSinteseEstadoData(
                                 workbook,
@@ -191,7 +201,8 @@ public class ETL {
             List<Object[]> batchFonteArgs = new ArrayList<>();
             int batchMax = 10000;
 
-// 5. PROCESSAMENTO DE PERFIS
+            // 5. PROCESSAMENTO DE PERFIS
+
             slackNotifier.sendNotification("[WiseTour] :busts_in_silhouette: Gerando perfis de turistas...");
             System.out.println(LocalDateTime.now() + " [INÍCIO] Criando perfis...");
 
@@ -234,9 +245,6 @@ public class ETL {
                             perfil.getMotivacaoViagemLazer(),
                             perfil.getGastosMedioPerCapitaMotivo()
                     };
-
-
-                    // Aqui: se você usa destinosDoLote, deve decidir como tratar batch deles
 
                     batchArgs.add(params);
                     fkPaisesDoLote.add(fkPais);

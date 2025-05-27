@@ -1,27 +1,25 @@
 package tour.wise.etl.transform;
 
-import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
-import tour.wise.dto.perfil.DestinoDTO;
-import tour.wise.dto.perfil.ListaDestinosDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.Service;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
 public class Util {
+
     Service service = new Service();
 
     static Double tratarValor(Object valor) {
         if (valor == null) {
             return 0.0;
         }
-
         return ((Number) valor).doubleValue();
-
     }
 
     protected  Integer transformAno(List<List<List<Object>>> data, Integer index) {
@@ -35,10 +33,8 @@ public class Util {
         for (int i = 0; i < 2; i++) {
             String nome = (String) data.get(index).get(i).get(0);
             Double valor = tratarValor(data.get(index).get(i).get(1));
-
             generoDTO.add(new GeneroDTO(nome, valor));
         }
-
         return generoDTO;
     }
 
@@ -161,7 +157,6 @@ public class Util {
 
         List<DestinosMaisVisitadosPorMotivoDTO> destinosPorMotivo = new ArrayList<>(tamanho);
 
-        // Evita acessar índices fora do limite da lista 'data'
         int dataSize = data.size();
 
         for (int i = 0; i < tamanho; i++) {
