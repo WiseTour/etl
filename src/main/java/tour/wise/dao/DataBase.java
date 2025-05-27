@@ -3,6 +3,7 @@ package tour.wise.dao;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+import tour.wise.config.ConfigLoader;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -21,8 +22,7 @@ public class DataBase {
     private final JdbcTemplate jdbcTemplate;
 
     public DataBase() throws SQLException {
-
-        Properties props = new Properties();
+        
         String tempDBName = "";
         String tempHost = "";
         String tempPort = "";
@@ -33,12 +33,12 @@ public class DataBase {
             if (input == null) {
                 throw new IOException("Arquivo config.properties não encontrado no classpath.");
             }
-            props.load(input);
-            tempDBName = props.getProperty("DB_NAME");
-            tempHost = props.getProperty("DB_HOST");
-            tempPort = props.getProperty("DB_PORT");
-            tempUsername = props.getProperty("DB_USERNAME");
-            tempPassword = props.getProperty("DB_PASSWORD");
+            
+            tempDBName = ConfigLoader.get("DB_NAME");
+            tempHost = ConfigLoader.get("DB_HOST");
+            tempPort = ConfigLoader.get("DB_PORT");
+            tempUsername = ConfigLoader.get("DB_USERNAME");
+            tempPassword = ConfigLoader.get("DB_PASSWORD");
 
 
         } catch (IOException e) {

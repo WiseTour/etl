@@ -2,6 +2,7 @@ package tour.wise.etl;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.jdbc.core.JdbcTemplate;
+import tour.wise.config.ConfigLoader;
 import tour.wise.dao.*;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.FichaSintesePaisDTO;
@@ -36,7 +37,6 @@ public class ETL {
     private final Load load;
     private final Service service;
     private final SlackWiseTour slackNotifier;
-    private final Properties props;
     private final S3 s3;
 
 
@@ -49,9 +49,7 @@ public class ETL {
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
         this.service = new Service();
-        this.props = new Properties();
-        this.props.load( getClass().getClassLoader().getResourceAsStream("config.properties"));
-        this.slackNotifier = new SlackWiseTour(props.getProperty("SLACK_URL"));
+        this.slackNotifier = new SlackWiseTour(ConfigLoader.get("SLACK_URL"));
 
     }
 

@@ -10,13 +10,14 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import tour.wise.config.ConfigLoader;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
+
 
 public class S3 {
     private final S3Client s3;
@@ -24,32 +25,46 @@ public class S3 {
 
     public S3() throws IOException {
 
-        Properties props = new Properties();
-        props.load(getClass().getClassLoader().getResourceAsStream("config.properties"));
+        // Verificações individuais das variáveis de ambiente
+        String bucketName = ConfigLoader.get("AWS_BUCKET_NAME");
+        if (bucketName == null || bucketName.isEmpty()) {
+            throw new IllegalArgumentException("Variável de ambiente 'AWS_BUCKET_NAME' não encontrada ou vazia.");
+        }
+        this.bucketName = bucketName;
 
-        this.bucketName = props.getProperty("AWS_BUCKET_NAME");
+        String accessKey = ConfigLoader.get("aws_access_key_id");
+        if (accessKey == null || accessKey.isEmpty()) {
+            throw new IllegalArgumentException("Variável de ambiente 'aws_access_key_id' não encontrada ou vazia.");
+        }
 
-        if (props.containsKey("AWS_SESSION_TOKEN") &&
-                !props.getProperty("AWS_SESSION_TOKEN").isEmpty()) {
+        String secretKey = ConfigLoader.get("aws_secret_access_key");
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new IllegalArgumentException("Variável de ambiente 'aws_secret_access_key' não encontrada ou vazia.");
+        }
 
-            AwsSessionCredentials credentials = AwsSessionCredentials.create(
-                    props.getProperty("AWS_ACCESS_KEY_ID"),
-                    props.getProperty("AWS_SECRET_ACCESS_KEY"),
-                    props.getProperty("AWS_SESSION_TOKEN")
-            );
+        String sessionToken = ConfigLoader.get("aws_session_token");
+        if (sessionToken == null || sessionToken.isEmpty()) {
+            throw new IllegalArgumentException("Variável de ambiente 'aws_session_token' não encontrada ou vazia.");
+        }
+
+        String region = ConfigLoader.get("AWS_BUCKET_REGION");
+        if (region == null || region.isEmpty()) {
+            throw new IllegalArgumentException("Variável de ambiente 'AWS_BUCKET_REGION' não encontrada ou vazia.");
+        }
+
+        // Conectar ao S3
+        try {
+            AwsSessionCredentials credentials = AwsSessionCredentials.create(accessKey, secretKey, sessionToken);
 
             this.s3 = S3Client.builder()
-                    .region(Region.of(props.getProperty("AWS_BUCKET_REGION")))
+                    .region(Region.of(region))
                     .credentialsProvider(StaticCredentialsProvider.create(credentials))
                     .build();
 
-            System.out.println("Conexão com o S3 estabelecida");
-        } else {
-            this.s3 = S3Client.builder()
-                    .region(Region.of(props.getProperty("AWS_BUCKET_REGION")))
-                    .build();
+            System.out.println("Conexão com o S3 estabelecida com sucesso.");
 
-            System.out.println("Conexão com o S3 estabelecida");
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao conectar com o S3: " + e.getMessage(), e);
         }
     }
 
@@ -113,9 +128,6 @@ public class S3 {
         }
     }
 
-    public List<String> getFileNames() {
-        return getFileNames("");
-    }
 
     public List<String> getFileNames(String prefix) {
         List<String> fileNames = new ArrayList<>();
@@ -142,4 +154,31 @@ public class S3 {
 
         return fileNames;
     }
+
+    public List<String> getFileNames() {
+        List<String> fileNames = new ArrayList<>();
+
+        try {
+            ListObjectsV2Request request = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .delimiter("/")  // Importante: faz o S3 tratar "pastas"
+                    .build();
+
+            s3.listObjectsV2Paginator(request)
+                    .stream()
+                    .flatMap(response -> response.contents().stream())
+                    .filter(s3Object -> {
+                        String key = s3Object.key();
+                        return !key.endsWith("/");  // Ignora pastas
+                    })
+                    .forEach(s3Object -> fileNames.add(s3Object.key()));
+
+        } catch (S3Exception e) {
+            System.err.println("Erro ao listar arquivos: " + e.getMessage());
+            throw new RuntimeException("Falha ao listar objetos no S3", e);
+        }
+
+        return fileNames;
+    }
+
 }

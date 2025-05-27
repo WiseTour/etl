@@ -1,6 +1,7 @@
 # Ignorar todos os arquivos .properties em qualquer diretório
 *.properties
 src/main/resources/config.properties
+*config.properties
 
 # Exceto esses específicos (se necessário)
 !**/src/main/resources/application.properties
