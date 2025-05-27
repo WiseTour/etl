@@ -15,10 +15,6 @@ public class Main {
         String caminhoArquivoFichaSintesePaises = "05 - Ficha Síntese Países 2015-2019_DIVULGAÇÃO.xlsx";
         String caminhoArquivoFichaSinteseEstado = "06 - Ficha Síntese UF 2015-2019_DIVULGAÇÃO.xlsx";
 
-        /*String caminhoFichaSintesePaises = "demanda-turistica-internacional/demanda_turistica_internacional_-_fichas_sinteses_2015-2019/05 - Ficha Síntese Países 2015-2019_DIVULGAÇÃO.xlsx";
-        String caminhoFichaSinteseBrasil = "demanda-turistica-internacional/demanda_turistica_internacional_-_fichas_sinteses_2015-2019/01 - Ficha Síntese Brasil - 2015-2019_DIVULGAÇÃO.xlsx";
-        String caminhoFichaSinteseEstado = "demanda-turistica-internacional/demanda_turistica_internacional_-_fichas_sinteses_2015-2019/06 - Ficha Síntese UF 2015-2019_DIVULGAÇÃO.xlsx";*/
-
         S3ExcelReader reader = new S3ExcelReader(bucketName);
         reader.lerExcelDireto(caminhoChegadaTurista2019);
         reader.lerExcelDireto(caminhoArquivoFichaSinteseBrasil);;
