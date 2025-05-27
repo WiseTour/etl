@@ -98,17 +98,7 @@ public class Extract {
 
             return data;
         }catch (Exception e) {
-            // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar extrair dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+
             throw e;
         }
     }
@@ -182,17 +172,7 @@ public class Extract {
 
             return data;
         }catch (Exception e) {
-            // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar extrair dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+
             throw e;
         }
     }
@@ -270,16 +250,7 @@ public class Extract {
             return data;
         }catch (Exception e) {
             // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar extrair dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+
             throw e;
         }
     }

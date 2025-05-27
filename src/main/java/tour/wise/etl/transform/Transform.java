@@ -94,17 +94,7 @@ public class Transform extends Util {
 
             );
         } catch (Exception e) {
-            // Log no banco
-            logDAO.insertLog(
-                    1,
-                    1, // Erro
-                    1,
-                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-                    LocalDateTime.now(),
-                    0,
-                    0,
-                    "Fonte_Dados"
-            );
+
             throw e;
         }
     }

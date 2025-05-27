@@ -4,6 +4,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.core.JdbcTemplate;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -12,9 +13,16 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import tour.wise.config.ConfigLoader;
+import tour.wise.dao.DataBase;
+import tour.wise.dao.LogDAO;
+import tour.wise.model.EEtapa;
+import tour.wise.model.ELogCategoria;
+import tour.wise.model.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,8 +30,13 @@ import java.util.List;
 public class S3 {
     private final S3Client s3;
     private final String bucketName;
+    private final LogDAO logDAO;
+    private final DataBase dataBase;
 
-    public S3() throws IOException {
+    public S3() throws IOException, SQLException {
+
+        this.dataBase = new DataBase();
+        this.logDAO = new LogDAO(dataBase.getJdbcTemplate());
 
         // Verificações individuais das variáveis de ambiente
         String bucketName = ConfigLoader.get("AWS_BUCKET_NAME");
@@ -64,8 +77,29 @@ public class S3 {
             System.out.println("Conexão com o S3 estabelecida com sucesso.");
 
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao conectar com o S3: " + e.getMessage(), e);
+            logDAO.insert(new Log(
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.CONEXAO_S3.getId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    e.getMessage()
+            ));
+
+            dataBase.getConnection().commit();
+
+            String msg = String.format(
+                    "Categoria: %d, Etapa: %d, Mensagem: %s",
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.CONEXAO_S3.getId(),
+                    e.getMessage()
+            );
+
+            throw new RuntimeException(msg, e);
+
         }
+
     }
 
 
@@ -86,21 +120,45 @@ public class S3 {
     }
 
 
-    public Workbook readFile(String key) throws IOException {
-        GetObjectRequest request = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
+    public Workbook readFile(String key) throws IOException, SQLException {
+        try {
+            GetObjectRequest request = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
 
-        ZipSecureFile.setMinInflateRatio(0.0);
-        InputStream inputStream = s3.getObject(request);
+            ZipSecureFile.setMinInflateRatio(0.0);
+            InputStream inputStream = s3.getObject(request);
 
-        return key.endsWith(".xlsx") ?
-                new XSSFWorkbook(inputStream) :
-                new HSSFWorkbook(inputStream);
+            return key.endsWith(".xlsx") ?
+                    new XSSFWorkbook(inputStream) :
+                    new HSSFWorkbook(inputStream);
+        } catch (Exception e) {
+            logDAO.insert(new Log(
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.INCIALIZACAO.getId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    e.getMessage()
+            ));
+
+            dataBase.getConnection().commit();
+
+            String msg = String.format(
+                    "Categoria: %d, Etapa: %d, Mensagem: %s",
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.INCIALIZACAO.getId(),
+                    e.getMessage()
+            );
+
+            throw new RuntimeException(msg, e);
+        }
     }
 
-    public void moveFile(String sourceKey, String destinationKey) {
+
+    public void moveFile(String sourceKey, String destinationKey) throws SQLException {
         try {
             // 1. Copiar o arquivo para o novo local
             CopyObjectRequest copyRequest = CopyObjectRequest.builder()
@@ -123,13 +181,29 @@ public class S3 {
             System.out.println("Arquivo movido com sucesso de " + sourceKey + " para " + destinationKey);
 
         } catch (S3Exception e) {
-            System.err.println("Erro ao mover arquivo: " + e.getMessage());
-            throw e;
+            logDAO.insert(new Log(
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.FINALIZACAO.getId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    e.getMessage()
+            ));
+
+            dataBase.getConnection().commit();
+
+            String msg = String.format(
+                    "Categoria: %d, Etapa: %d, Mensagem: %s",
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.FINALIZACAO.getId(),
+                    e.getMessage()
+            );
         }
     }
 
 
-    public List<String> getFileNames(String prefix) {
+    public List<String> getFileNames(String prefix) throws SQLException {
         List<String> fileNames = new ArrayList<>();
 
         try {
@@ -148,14 +222,30 @@ public class S3 {
                     .forEach(fileNames::add);
 
         } catch (S3Exception e) {
-            System.err.println("Erro ao listar arquivos: " + e.getMessage());
-            throw new RuntimeException("Falha ao listar objetos no S3", e);
+            logDAO.insert(new Log(
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.FINALIZACAO.getId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    e.getMessage()
+            ));
+
+            dataBase.getConnection().commit();
+
+            String msg = String.format(
+                    "Categoria: %d, Etapa: %d, Mensagem: %s",
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.FINALIZACAO.getId(),
+                    e.getMessage()
+            );
         }
 
         return fileNames;
     }
 
-    public List<String> getFileNames() {
+    public List<String> getFileNames() throws SQLException {
         List<String> fileNames = new ArrayList<>();
 
         try {
@@ -174,8 +264,24 @@ public class S3 {
                     .forEach(s3Object -> fileNames.add(s3Object.key()));
 
         } catch (S3Exception e) {
-            System.err.println("Erro ao listar arquivos: " + e.getMessage());
-            throw new RuntimeException("Falha ao listar objetos no S3", e);
+            logDAO.insert(new Log(
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.FINALIZACAO.getId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    e.getMessage()
+            ));
+
+            dataBase.getConnection().commit();
+
+            String msg = String.format(
+                    "Categoria: %d, Etapa: %d, Mensagem: %s",
+                    ELogCategoria.ERRO.getId(),
+                    EEtapa.FINALIZACAO.getId(),
+                    e.getMessage()
+            );
         }
 
         return fileNames;
