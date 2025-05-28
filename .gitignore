@@ -1,6 +1,13 @@
-### .properties ###
-.properties
+# Ignorar todos os arquivos .properties em qualquer diretório
+*.properties
+src/main/resources/config.properties
+*config.properties
 
+# Exceto esses específicos (se necessário)
+!**/src/main/resources/application.properties
+!**/src/test/resources/application-test.properties
+
+# Outras exclusões padrão
 ### Target ###
 target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -34,5 +41,3 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-

@@ -1,41 +1,47 @@
 package tour.wise.model;
 
-import java.util.List;
-
 public class Pais {
-    private Integer id_pais;
-    private String pais;
 
+    private int idPais;
+    private String nomePais;
 
-    public Pais() {
+    // Construtor padrão
+    public Pais() {}
+
+    // Construtor com parâmetro
+    public Pais(String nomePais) {
+        this.nomePais = nomePais;
     }
 
-    public Pais(Integer id_pais, String pais) {
-        this.id_pais = id_pais;
-        this.pais = pais;
+
+    // Construtor com parâmetros
+    public Pais(int idPais, String nomePais) {
+        this.idPais = idPais;
+        this.nomePais = nomePais;
     }
 
-    public Integer getId_pais() {
-        return id_pais;
+    // Getters e Setters
+    public int getIdPais() {
+        return idPais;
     }
 
-    public void setId_pais(Integer id_pais) {
-        this.id_pais = id_pais;
+    public void setIdPais(int idPais) {
+        this.idPais = idPais;
     }
 
-    public String getPais() {
-        return pais;
+    public String getNomePais() {
+        return nomePais;
     }
 
-    public void setPais(String pais) {
-        this.pais = pais;
+    public void setNomePais(String nomePais) {
+        this.nomePais = nomePais;
     }
 
     @Override
     public String toString() {
         return "Pais{" +
-                "id_pais=" + id_pais +
-                ", pais='" + pais + '\'' +
+                "idPais=" + idPais +
+                ", nomePais='" + nomePais + '\'' +
                 '}';
     }
 }

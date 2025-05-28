@@ -1,46 +1,24 @@
 package tour.wise.etl;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import tour.wise.dao.LogDAO;
-import tour.wise.model.Log;
 
 
 public class Service {
 
 
-
-    public List<List<Object>> extract(LogDAO logDAO, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
 
         try {
             System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
-
-            logDAO.insertLog(
-                    6,  // fk_fonte
-                    3,  // Sucesso (categoria "Sucesso")
-                    1,  // Etapa "Extração"
-                    "Início da leitura do arquivo: " + fileName,
-                    LocalDateTime.now(),
-                    0,  // Quantidade lida (ainda não lida)
-                    0,  // Quantidade inserida (ainda não inserida)
-                    "Fonte_Dados"
-            );
-
-
-            // Criando um objeto Workbook a partir do arquivo recebido,
-            Workbook workbook = loadWorkbook(fileName);
 
             // Pegando a planilha referenciada em "sheetNumber" do arquivo
             Sheet sheet = workbook.getSheetAt(sheetNumber);
@@ -50,18 +28,6 @@ public class Service {
 
             // Iterando sobre as linhas da planilha
             for (Row row : sheet) {
-
-                if (row.getRowNum() == header) {
-                    System.out.println(LocalDateTime.now() + "\nLendo cabeçalho");
-
-                    for (int i = 0; i < colluns; i++) {
-                        String coluna = row.getCell(i).getStringCellValue();
-                        System.out.println(LocalDateTime.now() + "Coluna " + i + ": " + coluna);
-                    }
-
-                    System.out.println("--------------------");
-                    continue;
-                }
 
                 // Extraindo valor das células e criando objeto Linha
 
@@ -81,18 +47,6 @@ public class Service {
 
             System.out.println(LocalDateTime.now() + "\nLeitura do arquivo finalizada\n");
 
-            // Inserindo log de fim da extração
-            logDAO.insertLog(
-                    fkFonte,
-                    3,  // Sucesso (categoria "Sucesso")
-                    1,  // Etapa "Extração"
-                    "Leitura do arquivo finalizada com sucesso: " + fileName,
-                    LocalDateTime.now(),
-                    data.size(), // Quantidade lida: número de linhas lidas
-                    0,  // Quantidade inserida: ainda não inseridas
-                    tabela
-            );
-
             return data;
 
 
@@ -102,8 +56,7 @@ public class Service {
         }
     }
 
-
-    public  <T> List<T> extractRange(
+    public <T> List<T> extractRange(
             String fileName,
             Workbook workbook,
             Integer sheetNumber,
@@ -114,9 +67,6 @@ public class Service {
             Function<List<Object>, T> mapper
     ) {
         try (workbook){
-
-            System.out.printf(LocalDateTime.now() +  "\nIniciando leitura do arquivo %s\n%n", fileName);
-
 
             Sheet sheet = workbook.getSheetAt(sheetNumber);
             List<T> data = new ArrayList<>();
@@ -140,10 +90,6 @@ public class Service {
                 data.add(mapper.apply(linha));
             }
 
-            workbook.close();
-
-            System.out.println(LocalDateTime.now() + "\nLeitura finalizada\n");
-
             return data;
 
         } catch (IOException e) {
@@ -152,60 +98,27 @@ public class Service {
     }
 
 
-    public  Workbook loadWorkbook(String fileName) {
-        try {
-            Path path = Path.of(fileName);
-            InputStream excelFile = Files.newInputStream(path);
 
-            return fileName.endsWith(".xlsx") ?
-                    new XSSFWorkbook(excelFile) :
-                    new HSSFWorkbook(excelFile);
+    public String getSheetName(Workbook workbook, int sheetNumber) {
+        int numeroDePlanilhas = workbook.getNumberOfSheets();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        if (sheetNumber >= 0 && sheetNumber < numeroDePlanilhas) {
+            return workbook.getSheetName(sheetNumber);
         }
-    }
-
-    public String getSheetName(String fileName, int sheetNumber) {
-
-        try(Workbook workbook = loadWorkbook(fileName)) {
-
-            int numeroDePlanilhas = workbook.getNumberOfSheets();
-
-            if (sheetNumber >= 0 && sheetNumber < numeroDePlanilhas) {
-                return workbook.getSheetName(sheetNumber);
-            } else {
-                System.err.println("Índice fora do intervalo. Total de planilhas: " + numeroDePlanilhas);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        System.err.println("Índice fora do intervalo. Total de planilhas: " + numeroDePlanilhas);
         return null;
     }
 
-    public Integer getSheetNumber(String fileName) {
+    public Integer getSheetNumber(Workbook workbook) {
 
-        try(Workbook workbook = loadWorkbook(fileName)) {
+        Integer sheetNumber = workbook.getNumberOfSheets();
 
-            Integer sheetNumber = workbook.getNumberOfSheets();
-
-
-                return sheetNumber;
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+        return sheetNumber;
     }
 
     private Object transformTypeCell(Cell cell, String tipo) {
         if (cell == null) {
-            return ""; // ou algum valor padrão, ou até lançar uma exceção personalizada
+            return "";
         }
         switch (tipo.toLowerCase()) {
             case "string":
@@ -217,7 +130,7 @@ public class Service {
                         return cell.getNumericCellValue();
                     case STRING:
                         String texto = cell.getStringCellValue().trim();
-                        if (texto.equals("-") || texto.isEmpty()) {
+                        if (texto.contains("-") || texto.contains("(") || texto.isEmpty()){
                             return 0;
                         }
                         try {
@@ -242,8 +155,6 @@ public class Service {
         }
     }
 
-
-
     public Integer parseToInteger(Object obj) {
         if (obj == null) return 0;
         try {
@@ -252,6 +163,5 @@ public class Service {
             return 0; // ou lance uma exceção se quiser validar
         }
     }
-
 
 }

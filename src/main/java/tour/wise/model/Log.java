@@ -3,74 +3,139 @@ package tour.wise.model;
 import java.time.LocalDateTime;
 
 public class Log {
-    private int idLog;
-    private int fkFonte;
-    private int fkLogCategoria;
-    private int fkEtapa;
+
+    private Integer idLog;
+    private Integer fkLogCategoria;  // fk_log_categoria
+    private Integer fkEtapa;             // fk_etapa
+
+    // Campos da FK composta perfil_estimado_turista_origem
+    private Integer fkOrigemDados;
+    private Integer fkPerfilEstimadoTuristas;
+    private Integer fkPaisOrigem;
+    private String fkUfEntrada;
+
     private String mensagem;
+    private String erro;
     private LocalDateTime dataHora;
-    private Integer quantidadeLida;
-    private Integer quantidadeInserida;
-    private String tabelaDestino;
 
-    // Construtor completo
-    public Log(int idLog, int fkFonte, int fkLogCategoria, int fkEtapa, String mensagem,
-               LocalDateTime dataHora, Integer quantidadeLida, Integer quantidadeInserida, String tabelaDestino) {
+    public Log() {
+    }
+
+    public Log(Integer idLog, Integer fkLogCategoria, Integer fkEtapa,
+               Integer fkOrigemDados, Integer fkPerfilEstimadoTuristas,
+               Integer fkPaisOrigem, String fkUfEntrada, String erro,
+               String mensagem) {
         this.idLog = idLog;
-        this.fkFonte = fkFonte;
         this.fkLogCategoria = fkLogCategoria;
         this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = fkOrigemDados;
+        this.fkPerfilEstimadoTuristas = fkPerfilEstimadoTuristas;
+        this.fkPaisOrigem = fkPaisOrigem;
+        this.fkUfEntrada = fkUfEntrada;
         this.mensagem = mensagem;
-        this.dataHora = dataHora;
-        this.quantidadeLida = quantidadeLida;
-        this.quantidadeInserida = quantidadeInserida;
-        this.tabelaDestino = tabelaDestino;
+        this.erro = erro;
+        this.dataHora =  LocalDateTime.now();
     }
 
-    // Construtor sem ID (para inserts automáticos)
-    public Log(int fkFonte, int fkLogCategoria, int fkEtapa, String mensagem,
-               LocalDateTime dataHora, Integer quantidadeLida, Integer quantidadeInserida, String tabelaDestino) {
-        this.fkFonte = fkFonte;
+    public Log(Integer fkLogCategoria, Integer fkEtapa,
+               Integer fkOrigemDados, Integer fkPerfilEstimadoTuristas,
+               Integer fkPaisOrigem, String fkUfEntrada, String erro,
+               String mensagem) {
         this.fkLogCategoria = fkLogCategoria;
         this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = fkOrigemDados;
+        this.fkPerfilEstimadoTuristas = fkPerfilEstimadoTuristas;
+        this.fkPaisOrigem = fkPaisOrigem;
+        this.fkUfEntrada = fkUfEntrada;
         this.mensagem = mensagem;
-        this.dataHora = dataHora;
-        this.quantidadeLida = quantidadeLida;
-        this.quantidadeInserida = quantidadeInserida;
-        this.tabelaDestino = tabelaDestino;
+        this.erro = erro;
+        this.dataHora = LocalDateTime.now();
     }
 
-    // Getters e Setters
-    public int getIdLog() {
+    public Log(Integer fkLogCategoria,
+               Integer fkEtapa,
+               String erro,
+               String mensagem) {
+        this.fkLogCategoria = fkLogCategoria;
+        this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = null;
+        this.fkPerfilEstimadoTuristas = null;
+        this.fkPaisOrigem = null;
+        this.fkUfEntrada = null;
+        this.mensagem = mensagem;
+        this.erro = erro;
+        this.dataHora = LocalDateTime.now();
+    }
+
+    public Log(Integer fkLogCategoria,
+               Integer fkEtapa,
+               String mensagem) {
+        this.fkLogCategoria = fkLogCategoria;
+        this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = null;
+        this.fkPerfilEstimadoTuristas = null;
+        this.fkPaisOrigem = null;
+        this.fkUfEntrada = null;
+        this.mensagem = mensagem;
+        this.erro = null;
+        this.dataHora = LocalDateTime.now();
+    }
+
+
+    public Integer getIdLog() {
         return idLog;
     }
 
-    public void setIdLog(int idLog) {
+    public void setIdLog(Integer idLog) {
         this.idLog = idLog;
     }
 
-    public int getFkFonte() {
-        return fkFonte;
-    }
-
-    public void setFkFonte(int fkFonte) {
-        this.fkFonte = fkFonte;
-    }
-
-    public int getFkLogCategoria() {
+    public Integer getFkLogCategoria() {
         return fkLogCategoria;
     }
 
-    public void setFkLogCategoria(int fkLogCategoria) {
+    public void setFkLogCategoria(Integer fkLogCategoria) {
         this.fkLogCategoria = fkLogCategoria;
     }
 
-    public int getFkEtapa() {
+    public Integer getFkEtapa() {
         return fkEtapa;
     }
 
-    public void setFkEtapa(int fkEtapa) {
+    public void setFkEtapa(Integer fkEtapa) {
         this.fkEtapa = fkEtapa;
+    }
+
+    public Integer getFkOrigemDados() {
+        return fkOrigemDados;
+    }
+
+    public void setFkOrigemDados(Integer fkOrigemDados) {
+        this.fkOrigemDados = fkOrigemDados;
+    }
+
+    public Integer getFkPerfilEstimadoTuristas() {
+        return fkPerfilEstimadoTuristas;
+    }
+
+    public void setFkPerfilEstimadoTuristas(Integer fkPerfilEstimadoTuristas) {
+        this.fkPerfilEstimadoTuristas = fkPerfilEstimadoTuristas;
+    }
+
+    public Integer getFkPaisOrigem() {
+        return fkPaisOrigem;
+    }
+
+    public void setFkPaisOrigem(Integer fkPaisOrigem) {
+        this.fkPaisOrigem = fkPaisOrigem;
+    }
+
+    public String getFkUfEntrada() {
+        return fkUfEntrada;
+    }
+
+    public void setFkUfEntrada(String fkUfEntrada) {
+        this.fkUfEntrada = fkUfEntrada;
     }
 
     public String getMensagem() {
@@ -81,6 +146,14 @@ public class Log {
         this.mensagem = mensagem;
     }
 
+    public String getErro() {
+        return erro;
+    }
+
+    public void setErro(String erro) {
+        this.erro = erro;
+    }
+
     public LocalDateTime getDataHora() {
         return dataHora;
     }
@@ -89,28 +162,19 @@ public class Log {
         this.dataHora = dataHora;
     }
 
-    public Integer getQuantidadeLida() {
-        return quantidadeLida;
-    }
-
-    public void setQuantidadeLida(Integer quantidadeLida) {
-        this.quantidadeLida = quantidadeLida;
-    }
-
-    public Integer getQuantidadeInserida() {
-        return quantidadeInserida;
-    }
-
-    public void setQuantidadeInserida(Integer quantidadeInserida) {
-        this.quantidadeInserida = quantidadeInserida;
-    }
-
-    public String getTabelaDestino() {
-        return tabelaDestino;
-    }
-
-    public void setTabelaDestino(String tabelaDestino) {
-        this.tabelaDestino = tabelaDestino;
+    @Override
+    public String toString() {
+        return "Log{" +
+                "idLog=" + idLog +
+                ", fkLogCategoria=" + fkLogCategoria +
+                ", fkEtapa=" + fkEtapa +
+                ", fkOrigemDados=" + fkOrigemDados +
+                ", fkPerfilEstimadoTuristas=" + fkPerfilEstimadoTuristas +
+                ", fkPaisOrigem=" + fkPaisOrigem +
+                ", fkUfEntrada='" + fkUfEntrada + '\'' +
+                ", mensagem='" + mensagem + '\'' +
+                ", erro='" + erro + '\'' +
+                ", dataHora=" + dataHora +
+                '}';
     }
 }
-
