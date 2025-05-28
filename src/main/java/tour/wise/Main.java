@@ -6,6 +6,7 @@ import tour.wise.dao.DataBase;
 import tour.wise.dao.LogDAO;
 import tour.wise.etl.ETL;
 import tour.wise.s3.S3;
+import tour.wise.slack.SlackWiseTour;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,19 +18,14 @@ public class Main {
 
     public static void main(String[] args) throws IOException, SQLException {
 
-
         try {
-            ConfigLoader.load(args.length == 0?"src/main/resources/config.properties":args[0]);
+            ConfigLoader.load(args.length == 0 ? "src/main/resources/config.properties" : args[0]);
         } catch (Exception e) {
             System.err.println("Erro ao carregar a configuração: " + e.getMessage());
             e.printStackTrace();
         }
 
-        DataBase dataBase = new DataBase();
-        JdbcTemplate connection = dataBase.getJdbcTemplate();
-        LogDAO logDAO = new LogDAO(connection);
-
-        S3 s3 = new S3();
+        S3 s3 = new S3(new SlackWiseTour(ConfigLoader.get("SLACK_URL")));
 
         List<String> files = s3.getFileNames();
 

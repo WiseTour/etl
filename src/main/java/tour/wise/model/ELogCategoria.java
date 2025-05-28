@@ -3,7 +3,8 @@ package tour.wise.model;
 public enum ELogCategoria {
     ERRO(1, "erro"),
     AVISO(2, "aviso"),
-    SUCESSO(3, "sucesso");
+    SUCESSO(3, "sucesso"),
+    INFO(4, "info");
 
     private final int id;
     private final String nome;

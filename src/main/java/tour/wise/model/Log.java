@@ -15,6 +15,7 @@ public class Log {
     private String fkUfEntrada;
 
     private String mensagem;
+    private String erro;
     private LocalDateTime dataHora;
 
     public Log() {
@@ -22,8 +23,8 @@ public class Log {
 
     public Log(Integer idLog, Integer fkLogCategoria, Integer fkEtapa,
                Integer fkOrigemDados, Integer fkPerfilEstimadoTuristas,
-               Integer fkPaisOrigem, String fkUfEntrada,
-               String mensagem, LocalDateTime dataHora) {
+               Integer fkPaisOrigem, String fkUfEntrada, String erro,
+               String mensagem) {
         this.idLog = idLog;
         this.fkLogCategoria = fkLogCategoria;
         this.fkEtapa = fkEtapa;
@@ -32,12 +33,13 @@ public class Log {
         this.fkPaisOrigem = fkPaisOrigem;
         this.fkUfEntrada = fkUfEntrada;
         this.mensagem = mensagem;
-        this.dataHora = dataHora;
+        this.erro = erro;
+        this.dataHora =  LocalDateTime.now();
     }
 
     public Log(Integer fkLogCategoria, Integer fkEtapa,
                Integer fkOrigemDados, Integer fkPerfilEstimadoTuristas,
-               Integer fkPaisOrigem, String fkUfEntrada,
+               Integer fkPaisOrigem, String fkUfEntrada, String erro,
                String mensagem) {
         this.fkLogCategoria = fkLogCategoria;
         this.fkEtapa = fkEtapa;
@@ -46,8 +48,39 @@ public class Log {
         this.fkPaisOrigem = fkPaisOrigem;
         this.fkUfEntrada = fkUfEntrada;
         this.mensagem = mensagem;
+        this.erro = erro;
         this.dataHora = LocalDateTime.now();
     }
+
+    public Log(Integer fkLogCategoria,
+               Integer fkEtapa,
+               String erro,
+               String mensagem) {
+        this.fkLogCategoria = fkLogCategoria;
+        this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = null;
+        this.fkPerfilEstimadoTuristas = null;
+        this.fkPaisOrigem = null;
+        this.fkUfEntrada = null;
+        this.mensagem = mensagem;
+        this.erro = erro;
+        this.dataHora = LocalDateTime.now();
+    }
+
+    public Log(Integer fkLogCategoria,
+               Integer fkEtapa,
+               String mensagem) {
+        this.fkLogCategoria = fkLogCategoria;
+        this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = null;
+        this.fkPerfilEstimadoTuristas = null;
+        this.fkPaisOrigem = null;
+        this.fkUfEntrada = null;
+        this.mensagem = mensagem;
+        this.erro = null;
+        this.dataHora = LocalDateTime.now();
+    }
+
 
     public Integer getIdLog() {
         return idLog;
@@ -113,6 +146,14 @@ public class Log {
         this.mensagem = mensagem;
     }
 
+    public String getErro() {
+        return erro;
+    }
+
+    public void setErro(String erro) {
+        this.erro = erro;
+    }
+
     public LocalDateTime getDataHora() {
         return dataHora;
     }
@@ -125,13 +166,14 @@ public class Log {
     public String toString() {
         return "Log{" +
                 "idLog=" + idLog +
-                ", categoria=" + fkLogCategoria +
-                ", etapa=" + fkEtapa +
+                ", fkLogCategoria=" + fkLogCategoria +
+                ", fkEtapa=" + fkEtapa +
                 ", fkOrigemDados=" + fkOrigemDados +
                 ", fkPerfilEstimadoTuristas=" + fkPerfilEstimadoTuristas +
                 ", fkPaisOrigem=" + fkPaisOrigem +
                 ", fkUfEntrada='" + fkUfEntrada + '\'' +
                 ", mensagem='" + mensagem + '\'' +
+                ", erro='" + erro + '\'' +
                 ", dataHora=" + dataHora +
                 '}';
     }

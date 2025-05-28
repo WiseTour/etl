@@ -2,6 +2,7 @@ package tour.wise.etl;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.jdbc.core.JdbcTemplate;
+import tour.wise.Evento;
 import tour.wise.config.ConfigLoader;
 import tour.wise.dao.*;
 import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
@@ -12,18 +13,15 @@ import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.Extract;
 import tour.wise.etl.load.Load;
 import tour.wise.etl.transform.Transform;
+import tour.wise.model.*;
 import tour.wise.s3.S3;
 import tour.wise.slack.SlackWiseTour;
-import tour.wise.model.OrigemDados;
-import tour.wise.model.Pais;
-import tour.wise.model.UnidadeFederativaBrasil;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,25 +29,23 @@ public class ETL {
 
     private final DataBase dataBase;
     private final JdbcTemplate connection;
-    private LogDAO logDAO;
     private final Extract extract;
     private final Transform transform;
     private final Load load;
     private final Service service;
-    private final SlackWiseTour slackNotifier;
+    private final SlackWiseTour slackWiseTour;
     private final S3 s3;
 
 
     public ETL() throws IOException, SQLException {
         this.dataBase = new DataBase();
         this.connection = dataBase.getJdbcTemplate();
-        this.logDAO = new LogDAO(connection);
-        this.s3 = new S3();
         this.extract = new Extract(connection);
         this.transform = new tour.wise.etl.transform.Transform(connection);
         this.load = new Load(connection);
         this.service = new Service();
-        this.slackNotifier = new SlackWiseTour(ConfigLoader.get("SLACK_URL"));
+        this.slackWiseTour = new SlackWiseTour(ConfigLoader.get("SLACK_URL"));
+        this.s3 = new S3(slackWiseTour);
 
     }
 
@@ -69,10 +65,12 @@ public class ETL {
         try {
 
             // 1. INÍCIO DO PROCESSO
-            slackNotifier.sendNotification(":gear: *PROCESSAMENTO ETL INICIADO COM SUCESSO!* ");
+            String msg = "PROCESSAMENTO ETL INICIADO COM SUCESSO!";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.INCIALIZACAO, msg, dataBase, slackWiseTour, "gear");
 
             // 2. EXTRAÇÃO DOS DADOS DE CHEGADA INICIADA
-            slackNotifier.sendNotification("[WiseTour] :mag: Extração de dados de chegada iniciada");
+            msg = "Extração de dados de chegada iniciada";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.INCIALIZACAO, msg, dataBase, slackWiseTour, "mag");
 
             // CARREGAMENTO DA FONTE DAS CHEGADAS NA TABELA FONTE_DADOS
             load.loadOrigemDados(new OrigemDados(tituloArquivoFonteChegadas, edicaoChegadas, orgaoEmissorChegadas));
@@ -93,12 +91,15 @@ public class ETL {
                     12,
                     List.of("String", "Numeric", "String", "Numeric", "String", "Numeric", "String", "Numeric", "Numeric", "String", "Numeric", "Numeric")
             );
+            
             // 2.1 EXTRAÇÃO DOS DADOS DE CHEGADA FINALIZADA
-            slackNotifier.sendNotification("[WiseTour] :white_check_mark: Extração dos registros de chegadas concluída!");
-
-
+            msg = "Extração de dados de chegada finalizada";
+            Evento.registrarEvento(ELogCategoria.SUCESSO, EEtapa.EXTRACAO, msg, dataBase, slackWiseTour, "white_check_mark");
+            
             // 3. TRANSFORMAÇÃO DOS DADOS DE CHEGADAS INICIADA
-            slackNotifier.sendNotification("[WiseTour] :arrows_counterclockwise: Transformação dos dados de chegadas em andamento...");
+
+            msg = "Transformação dos dados de chegadas em andamento...";
+            Evento.registrarEvento(ELogCategoria.SUCESSO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "arrows_counterclockwise");
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadasTuristasInternacionaisBrasilMensalDTO =
                     transform.transformChegadasTuristasInternacionaisBrasilMensal(
                             chegadasTuristasInternacionaisBrasilMensalData,
@@ -106,12 +107,17 @@ public class ETL {
                             edicaoChegadas);
 
             // 3.1. TRANSFORMAÇÃO DOS DADOS DE CHEGADAS FINALIZADA
-            slackNotifier.sendNotification("[WiseTour] :sparkles: Dados de chegadas transformados com sucesso!");
+            msg = "Dados de chegadas transformados com sucesso!";
+            Evento.registrarEvento(ELogCategoria.SUCESSO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "sparkles");
 
             chegadasTuristasInternacionaisBrasilMensalData.clear();
 
             // 4. PROCESSAMENTO DAS FICHAS SÍNTESE
-            slackNotifier.sendNotification("[WiseTour] :page_facing_up: Processando fichas síntese...");
+            msg = "Dados de chegadas transformados com sucesso!";
+            Evento.registrarEvento(ELogCategoria.SUCESSO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "page_facing_up");
+
+            msg = "Processando fichas síntese...";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.EXTRACAO, msg, dataBase, slackWiseTour, "sparkles");
 
             // CARREGAMENTO OS PAÍSES PRESENTES NA BASE CHEGADAS NO BANCO, CASO AINDA NÃO PERSISTAM
             List<Pais> paises = listarPaisesNaoCadastrados(chegadasTuristasInternacionaisBrasilMensalDTO, new PaisDAO(connection).findAll());
@@ -156,7 +162,7 @@ public class ETL {
                 ));
             }
             workbook.close();
-            System.out.println(LocalDateTime.now() + "\n Leitura finalizada\n");
+            
 
             // EXTRAÇÃO E TRANSFORMAÇÃO DAS FICHAS SÍNTESE POR ESTADO
             List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO = new ArrayList<>();
@@ -175,9 +181,9 @@ public class ETL {
                 ));
             }
             workbook.close();
-            System.out.println(LocalDateTime.now() + "\n Leitura finalizada\n");
 
-            slackNotifier.sendNotification("[WiseTour] :clipboard: Fichas processadas!");
+            msg = "Fichas processadas!";
+            Evento.registrarEvento(ELogCategoria.SUCESSO, EEtapa.EXTRACAO, msg, dataBase, slackWiseTour, "clipboard");
 
             // PREPARAR MAPAS PARA ACESSO RÁPIDO A PAÍSES E UFs
             PaisDAO paisDAO = new PaisDAO(connection);
@@ -201,8 +207,11 @@ public class ETL {
 
             // 5. PROCESSAMENTO DE PERFIS
 
-            slackNotifier.sendNotification("[WiseTour] :busts_in_silhouette: Gerando perfis de turistas...");
-            System.out.println(LocalDateTime.now() + " [INÍCIO] Criando perfis...");
+            msg = "Gerando perfis de turistas...";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "busts_in_silhouette");
+
+            msg = "[INÍCIO] Criando perfis...";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "busts_in_silhouette");
 
             Iterator<ChegadaTuristasInternacionaisBrasilMensalDTO> iterator = chegadasTuristasInternacionaisBrasilMensalDTO.iterator();
 
@@ -251,8 +260,8 @@ public class ETL {
                     if (batchArgs.size() >= batchMax) {
 
                         // 5.1 CARREGANDO DE PERFIS
-                        slackNotifier.sendNotification("[WiseTour] :busts_in_silhouette: Inserindo perfis de turistas no banco...");
-                        System.out.println(LocalDateTime.now() + " Inserindo perfis.");
+                        msg = "Inserindo perfis de turistas no banco...";
+                        Evento.registrarEvento(ELogCategoria.INFO, EEtapa.CARREGAMENTO, msg, dataBase, slackWiseTour, "busts_in_silhouette");
 
                         load.loadPerfis(
                                 batchArgs,
@@ -270,8 +279,8 @@ public class ETL {
                         batchFonteArgs.clear();
 
                         // 5. PROCESSAMENTO DE PERFIS
-                        slackNotifier.sendNotification("[WiseTour] :busts_in_silhouette: Gerando perfis de turistas...");
-
+                        msg = " Gerando perfis de turistas...";
+                        Evento.registrarEvento(ELogCategoria.INFO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "busts_in_silhouette");
                     }
                 }
 
@@ -279,8 +288,8 @@ public class ETL {
             }
 
             if (!batchArgs.isEmpty()) {
-                slackNotifier.sendNotification("[WiseTour] :busts_in_silhouette: Inserindo perfis de turistas no banco...");
-                System.out.println(LocalDateTime.now() + " Inserindo perfis.");
+                msg = "Inserindo perfis de turistas no banco...";
+                Evento.registrarEvento(ELogCategoria.INFO, EEtapa.CARREGAMENTO, msg, dataBase, slackWiseTour, "busts_in_silhouette");
 
                 load.loadPerfis(
                         batchArgs,
@@ -298,24 +307,20 @@ public class ETL {
                 batchFonteArgs.clear();
             }
 
-            System.out.println(LocalDateTime.now() + " [FIM] Criação e inserção dos perfis finalizada.");
+            msg = "[FIM] Criação e inserção dos perfis finalizada.";
+            Evento.registrarEvento(ELogCategoria.SUCESSO, EEtapa.TRANSFORMACAO, msg, dataBase, slackWiseTour, "checkered_flag");
 
             // 7. CONCLUSÃO
-            slackNotifier.sendNotification("[WiseTour] :checkered_flag: *PROCESSO FINALIZADO!* Sua dashboard está atualizada! Entre e confira já!");
+            msg = "Sua dashboard está atualizada! Entre e confira já!";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.FINALIZACAO, msg, dataBase, slackWiseTour, "checkered_flag");
 
             dataBase.getConnection().close();
 
-
         } catch (Exception e) {
-            // Log no banco (descomente se desejar usar)
-//        logDAO.insertLog(
-//                 "erro",
-//                 "Erro na criação dos perfis do projeto",
-//                 "exe",
-//                 e.getMessage(),
-//                 null
-//        );
-            e.printStackTrace();
+
+            String msg = "Erro para rodar o ETL.";
+            Evento.registrarEvento(ELogCategoria.INFO, EEtapa.FINALIZACAO, msg, dataBase, slackWiseTour, "checkered_flag");
+
             throw e;
         }
     }

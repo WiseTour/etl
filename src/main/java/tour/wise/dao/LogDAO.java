@@ -30,6 +30,7 @@ public class LogDAO {
         log.setFkPaisOrigem(rs.getInt("fk_pais_origem"));
         log.setFkUfEntrada(rs.getString("fk_uf_entrada"));
         log.setMensagem(rs.getString("mensagem"));
+        log.setErro(rs.getString("erro"));
         Timestamp ts = rs.getTimestamp("data_hora");
         if (ts != null) {
             log.setDataHora(ts.toLocalDateTime());
@@ -38,7 +39,7 @@ public class LogDAO {
     };
 
     public void insert(Log log) {
-        String sql = "INSERT INTO log (fk_log_categoria, fk_etapa, fk_origem_dados, fk_perfil_estimado_turistas, fk_pais_origem, fk_uf_entrada, mensagem, data_hora) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO log (fk_log_categoria, fk_etapa, fk_origem_dados, fk_perfil_estimado_turistas, fk_pais_origem, fk_uf_entrada, mensagem, erro, data_hora) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -82,11 +83,18 @@ public class LogDAO {
             // mensagem (obrigatório, pode ser vazio mas não nulo)
             ps.setString(7, log.getMensagem());
 
-            // data_hora (obrigatório)
-            if (log.getDataHora() != null) {
-                ps.setTimestamp(8, Timestamp.valueOf(log.getDataHora()));
+            // erro
+            if (log.getErro() != null) {
+                ps.setTimestamp(8, Timestamp.valueOf(log.getErro()));
             } else {
                 ps.setNull(8, Types.TIMESTAMP);
+            }
+
+            // data_hora (obrigatório)
+            if (log.getDataHora() != null) {
+                ps.setTimestamp(9, Timestamp.valueOf(log.getDataHora()));
+            } else {
+                ps.setNull(9, Types.TIMESTAMP);
             }
 
             return ps;
@@ -100,7 +108,7 @@ public class LogDAO {
 
 
     public void update(Log log) {
-        String sql = "UPDATE log SET fk_log_categoria = ?, fk_etapa = ?, fk_origem_dados = ?, fk_perfil_estimado_turistas = ?, fk_pais_origem = ?, fk_uf_entrada = ?, mensagem = ?, data_hora = ? WHERE id_log = ?";
+        String sql = "UPDATE log SET fk_log_categoria = ?, fk_etapa = ?, fk_origem_dados = ?, fk_perfil_estimado_turistas = ?, fk_pais_origem = ?, fk_uf_entrada = ?, mensagem = ?, erro = ?, data_hora = ? WHERE id_log = ?";
         jdbcTemplate.update(sql,
                 log.getFkLogCategoria(),
                 log.getFkEtapa(),
@@ -109,6 +117,7 @@ public class LogDAO {
                 log.getFkPaisOrigem(),
                 log.getFkUfEntrada(),
                 log.getMensagem(),
+                log.getErro(),
                 Timestamp.valueOf(log.getDataHora()),
                 log.getIdLog());
     }
