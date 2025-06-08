@@ -70,7 +70,7 @@ public class S3 {
             }
 
             String msg = "Leitura do arquivo: " + key + " realizada com sucesso.";
-            Event.registerEvent(jdbc, conn, new Log(ELogCategoria.SUCESSO.getId(), EEtapa.INCIALIZACAO.getId()), msg);
+            Event.registerEvent(jdbc, conn, new Log(ELogCategoria.SUCESSO.getId(), EEtapa.INCIALIZACAO.getId()), msg, false);
 
             return workbook;
 

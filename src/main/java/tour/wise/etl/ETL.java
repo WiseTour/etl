@@ -557,7 +557,6 @@ public class ETL {
                 throw new RuntimeException(e);
             }
 
-
             // 5.4.2 EXTRAÇÃO DAS FICHAS SÍNTESE POR ESTADO
             Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(), EEtapa.INCIALIZACAO.getId()),
