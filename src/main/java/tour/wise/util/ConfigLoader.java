@@ -1,4 +1,4 @@
-package tour.wise.config;
+package tour.wise.util;
 
 import java.io.FileInputStream;
 import java.io.IOException;

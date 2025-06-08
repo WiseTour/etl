@@ -4,16 +4,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 
 import tour.wise.model.Destino;
+import tour.wise.util.DataBaseConnection;
 
 public class DestinoDAO {
 
-    private final JdbcTemplate connection;
-
-    public DestinoDAO(JdbcTemplate connection) {
-        this.connection = connection;
-    }
-
-    public void insertLote(List<Destino> destinos) {
+    public void insertLote(JdbcTemplate jdbcTemplate, List<Destino> destinos) {
         String sql = """
         INSERT INTO destino (
             fk_perfil_estimado_turistas,
@@ -35,7 +30,7 @@ public class DestinoDAO {
                 .toList();
 
         try {
-            int[] resultados = connection.batchUpdate(sql, batchArgs);
+            int[] resultados = jdbcTemplate.batchUpdate(sql, batchArgs);
             System.out.println("[DestinoDAO] Lote de destinos inserido. Registros inseridos: " + resultados.length);
         } catch (Exception e) {
             System.err.println("[DestinoDAO] Erro ao inserir lote de destinos:");

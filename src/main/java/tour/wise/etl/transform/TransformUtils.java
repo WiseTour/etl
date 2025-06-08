@@ -4,16 +4,12 @@ import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.Service;
-
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
-public class Util {
-
-    Service service = new Service();
+public class TransformUtils {
 
     static Double tratarValor(Object valor) {
         if (valor == null) {
@@ -22,12 +18,12 @@ public class Util {
         return ((Number) valor).doubleValue();
     }
 
-    protected  Integer transformAno(List<List<List<Object>>> data, Integer index) {
+    protected static Integer transformAno(List<List<List<Object>>> data, Integer index) {
         // Apenas acessa e converte o valor necessário
-        return service.parseToInteger(data.get(index).get(0).get(1).toString());
+        return Service.parseToInteger(data.get(index).get(0).get(1).toString());
     }
 
-    protected List<GeneroDTO> transformListGenero(List<List<List<Object>>> data, Integer index) {
+    protected static List<GeneroDTO> transformListGenero(List<List<List<Object>>> data, Integer index) {
         List<GeneroDTO> generoDTO = new ArrayList<>(2);
 
         for (int i = 0; i < 2; i++) {
@@ -38,7 +34,7 @@ public class Util {
         return generoDTO;
     }
 
-    protected List<FaixaEtariaDTO> transformListFaixaEtaria(List<List<List<Object>>> data, Integer index) {
+    protected static List<FaixaEtariaDTO> transformListFaixaEtaria(List<List<List<Object>>> data, Integer index) {
         List<FaixaEtariaDTO> faixaEtariaDTO = new ArrayList<>(6);
 
         List<List<Object>> faixaEtariaData = data.get(index); // Evita chamadas repetidas
@@ -53,7 +49,7 @@ public class Util {
         return faixaEtariaDTO;
     }
 
-    protected List<MotivoViagemDTO> transformListMotivosViagem(List<List<List<Object>>> data, Integer index) {
+    protected static List<MotivoViagemDTO> transformListMotivosViagem(List<List<List<Object>>> data, Integer index) {
         List<MotivoViagemDTO> motivos = new ArrayList<>(3);
 
         List<List<Object>> motivosData = data.get(index); // Evita chamadas repetidas
@@ -68,7 +64,7 @@ public class Util {
         return motivos;
     }
 
-    protected List<MotivacaoViagemLazerDTO> transformListMotivacaoViagemLazer(List<List<List<Object>>> data, Integer index) {
+    protected static List<MotivacaoViagemLazerDTO> transformListMotivacaoViagemLazer(List<List<List<Object>>> data, Integer index) {
         List<MotivacaoViagemLazerDTO> motivacoesViagemLazer = new ArrayList<>(6);
 
         List<List<Object>> motivacoesData = data.get(index); // Evita múltiplas chamadas
@@ -93,7 +89,7 @@ public class Util {
         return motivacoesViagemLazer;
     }
 
-    protected List<ComposicaoGrupoViagemDTO> transformListComposicoesGrupo(List<List<List<Object>>> composicoesGrupoData, Integer index) {
+    protected static List<ComposicaoGrupoViagemDTO> transformListComposicoesGrupo(List<List<List<Object>>> composicoesGrupoData, Integer index) {
         List<List<Object>> dadosGrupo = composicoesGrupoData.get(index); // Evita chamadas repetidas
         List<ComposicaoGrupoViagemDTO> composicoes = new ArrayList<>(5);
 
@@ -107,7 +103,7 @@ public class Util {
         return composicoes;
     }
 
-    protected List<GastoMedioPerCapitaMotivoDTO> transformListGastosMedioMotivo(List<List<List<Object>>> gastosMedioMotivoData, Integer index) {
+    protected static List<GastoMedioPerCapitaMotivoDTO> transformListGastosMedioMotivo(List<List<List<Object>>> gastosMedioMotivoData, Integer index) {
         List<List<Object>> gastosMedios = gastosMedioMotivoData.get(index); // Evita chamadas repetidas
         List<GastoMedioPerCapitaMotivoDTO> gastos = new ArrayList<>(3);
 
@@ -121,7 +117,7 @@ public class Util {
         return gastos;
     }
 
-    protected List<PermanenciaMediaDTO> transformListPermanenciaMediaMotivo(List<List<List<Object>>> permanenciasMediaMotivoData, Integer index) {
+    protected static List<PermanenciaMediaDTO> transformListPermanenciaMediaMotivo(List<List<List<Object>>> permanenciasMediaMotivoData, Integer index) {
         List<List<Object>> permanenciasMedia = permanenciasMediaMotivoData.get(index); // Evita chamadas repetidas
         List<PermanenciaMediaDTO> permanencias = new ArrayList<>(3);
 
@@ -136,7 +132,7 @@ public class Util {
         return permanencias;
     }
 
-    protected List<FonteInformacaoDTO> transformListFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
+    protected static List<FonteInformacaoDTO> transformListFontesInformacao(List<List<List<Object>>> fontesInformacaoData, int index) {
         List<List<Object>> fontesInformacao = fontesInformacaoData.get(index); // Evita chamadas repetidas
         List<FonteInformacaoDTO> fontes = new ArrayList<>(8);
 
@@ -151,7 +147,7 @@ public class Util {
         return fontes;
     }
 
-    protected List<DestinosMaisVisitadosPorMotivoDTO> transformListDestinosMaisVisitadosPorMotivo(List<List<List<Object>>> data, Integer index) {
+    protected static List<DestinosMaisVisitadosPorMotivoDTO> transformListDestinosMaisVisitadosPorMotivo(List<List<List<Object>>> data, Integer index) {
         final String[] motivos = { "Lazer", "Negócios, eventos e convenções", "Outros motivos" };
         final int tamanho = motivos.length;
 
@@ -176,7 +172,7 @@ public class Util {
         return destinosPorMotivo;
     }
 
-    protected List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
+    protected static List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
         Map<String, Double> destinosMap = new HashMap<>();
 
         for (List<Object> destinoData : destinosData) {
@@ -207,21 +203,21 @@ public class Util {
         return destinos;
     }
 
-    protected String extractNomePais(List<List<List<Object>>> data, Integer index) {
+    protected static String extractNomePais(List<List<List<Object>>> data, Integer index) {
         if (data == null || data.size() <= index || data.get(index).isEmpty() || data.get(index).get(0).isEmpty()) {
             return ""; // ou null, dependendo do que for melhor para seu caso
         }
         return data.get(index).get(0).get(0).toString();
     }
 
-    protected String transformEstado(List<List<List<Object>>> data, Integer index) {
+    protected static String transformEstado(List<List<List<Object>>> data, Integer index) {
         if (data == null || data.size() <= index || data.get(index).isEmpty() || data.get(index).get(0).isEmpty()) {
             return "";
         }
         return data.get(index).get(0).get(0).toString();
     }
 
-    protected List<PaisOrigemDTO> transformListPaisesOrigem(List<List<List<Object>>> data, int index) {
+    protected static List<PaisOrigemDTO> transformListPaisesOrigem(List<List<List<Object>>> data, int index) {
         List<List<Object>> rawList = data.get(index);
         List<PaisOrigemDTO> result = new ArrayList<>(rawList.size());
         for (List<Object> item : rawList) {
@@ -230,7 +226,7 @@ public class Util {
         return result;
     }
 
-    protected PaisOrigemDTO createPaisOrigem(List<Object> row) {
+    protected static PaisOrigemDTO createPaisOrigem(List<Object> row) {
         Object obj0 = row.get(0);
         String nome = (obj0 instanceof String) ? (String) obj0 : obj0.toString();
 
@@ -246,7 +242,7 @@ public class Util {
         return new PaisOrigemDTO(nome, valor);
     }
 
-    protected List<PerfilDTO> createPerfisCombinations(FichaSinteseBrasilDTO fichaSinteseBrasilDTO) {
+    protected static List<PerfilDTO> createPerfisCombinations(FichaSinteseBrasilDTO fichaSinteseBrasilDTO) {
         List<PerfilDTO> perfis = new ArrayList<>();
 
         // Mapas para acesso rápido por motivo (chave minúscula)
@@ -345,19 +341,4 @@ public class Util {
 
         return perfis;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

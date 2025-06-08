@@ -15,7 +15,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 public class Service {
 
 
-    public List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
+    public static List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
 
         try {
             System.out.printf("\nIniciando leitura do arquivo %s\n%n", fileName);
@@ -56,7 +56,7 @@ public class Service {
         }
     }
 
-    public <T> List<T> extractRange(
+    public static <T> List<T> extractRange(
             String fileName,
             Workbook workbook,
             Integer sheetNumber,
@@ -97,9 +97,7 @@ public class Service {
         }
     }
 
-
-
-    public String getSheetName(Workbook workbook, int sheetNumber) {
+    public static String getSheetName(Workbook workbook, int sheetNumber) {
         int numeroDePlanilhas = workbook.getNumberOfSheets();
 
         if (sheetNumber >= 0 && sheetNumber < numeroDePlanilhas) {
@@ -109,14 +107,12 @@ public class Service {
         return null;
     }
 
-    public Integer getSheetNumber(Workbook workbook) {
+    public static Integer getSheetNumber(Workbook workbook) {
 
-        Integer sheetNumber = workbook.getNumberOfSheets();
-
-        return sheetNumber;
+        return workbook.getNumberOfSheets();
     }
 
-    private Object transformTypeCell(Cell cell, String tipo) {
+    private static Object transformTypeCell(Cell cell, String tipo) {
         if (cell == null) {
             return "";
         }
@@ -155,7 +151,7 @@ public class Service {
         }
     }
 
-    public Integer parseToInteger(Object obj) {
+    public static Integer parseToInteger(Object obj) {
         if (obj == null) return 0;
         try {
             return (int) Double.parseDouble(obj.toString());
