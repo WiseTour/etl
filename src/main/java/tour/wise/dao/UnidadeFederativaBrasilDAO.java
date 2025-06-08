@@ -30,5 +30,10 @@ public class UnidadeFederativaBrasilDAO {
         return jdbcTemplate.query(sql, new UnidadeFederativaBrasilRowMapper());
     }
 
+    public static List<String> findAllSigla(JdbcTemplate jdbcTemplate) {
+        String sql = "SELECT sigla FROM unidade_federativa_brasil";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("sigla"));
+    }
+
 
 }

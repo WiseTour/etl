@@ -3,13 +3,9 @@ package tour.wise.dao;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 
-import tour.wise.model.Destino;
-import tour.wise.util.DataBaseConnection;
-
 public class DestinoDAO {
 
-    public void insertLote(JdbcTemplate jdbcTemplate, List<Destino> destinos) {
-        String sql = """
+    private static final String SQL_INSERT_DESTINO = """
         INSERT INTO destino (
             fk_perfil_estimado_turistas,
             fk_pais_origem,
@@ -17,25 +13,35 @@ public class DestinoDAO {
             fk_uf_entrada,
             permanencia_media
         ) VALUES (?, ?, ?, ?, ?)
-        """;
+    """;
 
-        List<Object[]> batchArgs = destinos.stream()
-                .map(destino -> new Object[]{
-                        destino.getFkPerfilEstimadoTuristas(),
-                        destino.getFkPaisOrigem(),
-                        destino.getFkUfDestino(),
-                        destino.getFkUfEntrada(),
-                        destino.getPermanenciaMedia()
-                })
-                .toList();
-
-        try {
-            int[] resultados = jdbcTemplate.batchUpdate(sql, batchArgs);
-            System.out.println("[DestinoDAO] Lote de destinos inserido. Registros inseridos: " + resultados.length);
-        } catch (Exception e) {
-            System.err.println("[DestinoDAO] Erro ao inserir lote de destinos:");
-            e.printStackTrace();
-            throw e; // Opcional: propagar exceção
+    /**
+     * Insere em lote os destinos relacionados a um perfil estimado de turista.
+     *
+     * @param jdbcTemplate           JdbcTemplate com a conexão configurada
+     * @param idPerfil               ID do perfil estimado de turista
+     * @param fkPaisOrigem           ID do país de origem
+     * @param fkUfEntrada            Sigla da UF de entrada no Brasil
+     * @param ufsDestino             Lista de siglas das UFs visitadas (destinos)
+     * @param permanenciaMediaDias  Número de dias de permanência média
+     */
+    public static void insertDestinosLote(
+            JdbcTemplate jdbcTemplate,
+            int idPerfil,
+            int fkPaisOrigem,
+            String fkUfEntrada,
+            List<String> ufsDestino,
+            double permanenciaMediaDias
+    ) {
+        for (String ufDestino : ufsDestino) {
+            jdbcTemplate.update(SQL_INSERT_DESTINO,
+                    idPerfil,
+                    fkPaisOrigem,
+                    ufDestino,
+                    fkUfEntrada,
+                    permanenciaMediaDias
+            );
         }
     }
 }
+

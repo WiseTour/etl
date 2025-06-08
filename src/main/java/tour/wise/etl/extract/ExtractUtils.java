@@ -1,15 +1,13 @@
-package tour.wise.etl;
+package tour.wise.etl.extract;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-
 import org.apache.poi.ss.usermodel.*;
 
-
-public class Service {
+public class ExtractUtils {
 
 
     public static List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {

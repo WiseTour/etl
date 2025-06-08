@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import tour.wise.etl.extract.Extract;
+import tour.wise.etl.extract.ExtractUtils;
 import tour.wise.etl.load.Load;
 import tour.wise.etl.transform.Transform;
 import tour.wise.util.DataBaseConnection;
@@ -325,7 +326,7 @@ public class ETL {
             try {
                 workbook = S3.readFile(fileNameFichaSinteseBrasil);
 
-                columns = Service.getFirstTwoColumnIndexesByValueInRow(workbook, 1, 5, edicaoFichasSintesesReferencia);
+                columns = ExtractUtils.getFirstTwoColumnIndexesByValueInRow(workbook, 1, 5, edicaoFichasSintesesReferencia);
 
                 Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
@@ -456,8 +457,8 @@ public class ETL {
 
             List<List<List<List<Object>>>> todasFichasSintesePaisData = new ArrayList<>();
             boolean extracaoSucesso = true;
-            for (int indicePlanilha = 1; indicePlanilha < Service.getSheetNumber(workbook); indicePlanilha++) {
-                columns = Service.getFirstTwoColumnIndexesByValueInRow(workbook, indicePlanilha, 5, edicaoFichasSintesesReferencia);
+            for (int indicePlanilha = 1; indicePlanilha < ExtractUtils.getSheetNumber(workbook); indicePlanilha++) {
+                columns = ExtractUtils.getFirstTwoColumnIndexesByValueInRow(workbook, indicePlanilha, 5, edicaoFichasSintesesReferencia);
                 try {
                     List<List<List<Object>>> fichaSintesePaisData = Extract.extractFichasSintesePaisData(
                             workbook,
@@ -591,8 +592,8 @@ public class ETL {
             List<List<List<List<Object>>>> todasFichasSinteseEstadoData = new ArrayList<>();
             boolean extracaoEstadoSucesso = true;
 
-            for (int indicePlanilha = 1; indicePlanilha < Service.getSheetNumber(workbook); indicePlanilha++) {
-                columns = Service.getFirstTwoColumnIndexesByValueInRow(workbook, indicePlanilha, 5, edicaoFichasSintesesReferencia);
+            for (int indicePlanilha = 1; indicePlanilha < ExtractUtils.getSheetNumber(workbook); indicePlanilha++) {
+                columns = ExtractUtils.getFirstTwoColumnIndexesByValueInRow(workbook, indicePlanilha, 5, edicaoFichasSintesesReferencia);
                 try {
                     List<List<List<Object>>> fichaSinteseEstadoData = Extract.extractFichasSinteseEstadoData(
                             workbook,
@@ -787,7 +788,9 @@ public class ETL {
                                 perfil.getFonteInformacao(),
                                 perfil.getMotivo(),
                                 perfil.getMotivacaoViagemLazer(),
-                                perfil.getGastosMedioPerCapitaMotivo()
+                                perfil.getGastosMedioPerCapitaMotivo(),
+                                perfil.getPermanenciaMedia(),
+                                perfil.getDestinosMaisVisitado()
                         };
 
                         batchArgs.add(params);

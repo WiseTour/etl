@@ -19,13 +19,14 @@ public class PerfilDTO {
     private String motivo;
     private String motivacaoViagemLazer;
     private Double gastosMedioPerCapitaMotivo;
-    private DestinoMaisVisitadoDTO destinoMaisVisitado;
+    private List<String> destinosMaisVisitado;
+    private Double permanenciaMedia;
 
 
     public PerfilDTO() {
 
     }
-    public PerfilDTO(Double taxaTuristas, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, DestinoMaisVisitadoDTO destinoMaisVisitado) {
+    public PerfilDTO(Double taxaTuristas, Integer ano, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, List<String> destinosMaisVisitado, Double permanenciaMedia) {
         this.taxaTuristas = taxaTuristas;
         this.ano = ano;
         this.generoDTO = generoDTO;
@@ -35,11 +36,12 @@ public class PerfilDTO {
         this.motivo = motivo;
         this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
-        this.destinoMaisVisitado = destinoMaisVisitado;
+        this.destinosMaisVisitado = destinosMaisVisitado;
+        this.permanenciaMedia = permanenciaMedia;
     }
 
 
-    public PerfilDTO(Double taxaTuristas, Integer quantidadeTuristas, String paisesOrigem, Integer ano, Integer mes, String viaAcesso, String estadoEntrada, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, DestinoMaisVisitadoDTO destinoMaisVisitado) {
+    public PerfilDTO(Double taxaTuristas, Integer quantidadeTuristas, String paisesOrigem, Integer ano, Integer mes, String viaAcesso, String estadoEntrada, String generoDTO, String faixaEtariaDTO, String composicaoGruposViagem, String fonteInformacao, String motivo, String motivacaoViagemLazer, Double gastosMedioPerCapitaMotivo, List<String> destinosMaisVisitado, Double permanenciaMedia) {
         this.taxaTuristas = taxaTuristas;
         this.quantidadeTuristas = quantidadeTuristas;
         this.paisesOrigem = paisesOrigem;
@@ -54,7 +56,8 @@ public class PerfilDTO {
         this.motivo = motivo;
         this.motivacaoViagemLazer = motivacaoViagemLazer;
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
-        this.destinoMaisVisitado = destinoMaisVisitado;
+        this.destinosMaisVisitado = destinosMaisVisitado;
+        this.permanenciaMedia = permanenciaMedia;
     }
 
 
@@ -170,12 +173,20 @@ public class PerfilDTO {
         this.gastosMedioPerCapitaMotivo = gastosMedioPerCapitaMotivo;
     }
 
-    public DestinoMaisVisitadoDTO getDestinoMaisVisitadoDTO() {
-        return destinoMaisVisitado;
+    public List<String> getDestinosMaisVisitado() {
+        return destinosMaisVisitado;
     }
 
-    public void setDestinoMaisVisitadoDTO(DestinoMaisVisitadoDTO destinoMaisVisitado) {
-        this.destinoMaisVisitado = destinoMaisVisitado;
+    public void setDestinosMaisVisitado(List<String> destinosMaisVisitado) {
+        this.destinosMaisVisitado = destinosMaisVisitado;
+    }
+
+    public Double getPermanenciaMedia() {
+        return permanenciaMedia;
+    }
+
+    public void setPermanenciaMedia(Double permanenciamedia) {
+        this.permanenciaMedia = permanenciamedia;
     }
 
     @Override
@@ -195,7 +206,7 @@ public class PerfilDTO {
                 ", motivo='" + motivo + '\'' +
                 ", motivacaoViagemLazer='" + motivacaoViagemLazer + '\'' +
                 ", gastosMedioPerCapitaMotivo=" + gastosMedioPerCapitaMotivo +
-                ", listaDestinosDTO=" + destinoMaisVisitado +
+                ", listaDestinosDTO=" + destinosMaisVisitado +
                 '}';
     }
 }
