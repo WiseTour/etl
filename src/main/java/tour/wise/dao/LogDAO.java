@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import tour.wise.model.Log;
+import tour.wise.util.DataBaseConnection;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -14,13 +15,17 @@ import java.util.List;
 
 public class LogDAO {
 
-    private final JdbcTemplate jdbcTemplate;
+    private static final JdbcTemplate jdbcTemplate;
 
-    public LogDAO(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    static {
+        try {
+            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao inicializar JdbcTemplate no LogDAO: " + e.getMessage(), e);
+        }
     }
 
-    private final RowMapper<Log> rowMapper = (rs, rowNum) -> {
+    private static final RowMapper<Log> rowMapper = (rs, rowNum) -> {
         Log log = new Log();
         log.setIdLog(rs.getInt("id_log"));
         log.setFkLogCategoria(rs.getInt("fk_log_categoria"));
@@ -38,7 +43,7 @@ public class LogDAO {
         return log;
     };
 
-    public void insert(Log log) {
+    public static void insert(Log log) {
         String sql = "INSERT INTO log (fk_log_categoria, fk_etapa, fk_origem_dados, fk_perfil_estimado_turistas, fk_pais_origem, fk_uf_entrada, mensagem, erro, data_hora) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -46,51 +51,21 @@ public class LogDAO {
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            // fk_log_categoria (obrigatório)
             ps.setInt(1, log.getFkLogCategoria());
-
-            // fk_etapa (obrigatório)
             ps.setInt(2, log.getFkEtapa());
 
-            // fk_origem_dados
-            if (log.getFkOrigemDados() != null) {
-                ps.setInt(3, log.getFkOrigemDados());
-            } else {
-                ps.setNull(3, Types.INTEGER);
-            }
-
-            // fk_perfil_estimado_turistas
-            if (log.getFkPerfilEstimadoTuristas() != null) {
-                ps.setInt(4, log.getFkPerfilEstimadoTuristas());
-            } else {
-                ps.setNull(4, Types.INTEGER);
-            }
-
-            // fk_pais_origem
-            if (log.getFkPaisOrigem() != null) {
-                ps.setInt(5, log.getFkPaisOrigem());
-            } else {
-                ps.setNull(5, Types.INTEGER);
-            }
-
-            // fk_uf_entrada
-            if (log.getFkUfEntrada() != null) {
-                ps.setString(6, log.getFkUfEntrada());
-            } else {
-                ps.setNull(6, Types.VARCHAR);
-            }
-
-            // mensagem (obrigatório, pode ser vazio mas não nulo)
+            ps.setObject(3, log.getFkOrigemDados(), Types.INTEGER);
+            ps.setObject(4, log.getFkPerfilEstimadoTuristas(), Types.INTEGER);
+            ps.setObject(5, log.getFkPaisOrigem(), Types.INTEGER);
+            ps.setObject(6, log.getFkUfEntrada(), Types.VARCHAR);
             ps.setString(7, log.getMensagem());
 
-            // erro
             if (log.getErro() != null) {
-                ps.setTimestamp(8, Timestamp.valueOf(log.getErro()));
+                ps.setString(8, log.getErro());
             } else {
-                ps.setNull(8, Types.TIMESTAMP);
+                ps.setNull(8, Types.VARCHAR);
             }
 
-            // data_hora (obrigatório)
             if (log.getDataHora() != null) {
                 ps.setTimestamp(9, Timestamp.valueOf(log.getDataHora()));
             } else {
@@ -106,8 +81,7 @@ public class LogDAO {
         }
     }
 
-
-    public void update(Log log) {
+    public static void update(Log log) {
         String sql = "UPDATE log SET fk_log_categoria = ?, fk_etapa = ?, fk_origem_dados = ?, fk_perfil_estimado_turistas = ?, fk_pais_origem = ?, fk_uf_entrada = ?, mensagem = ?, erro = ?, data_hora = ? WHERE id_log = ?";
         jdbcTemplate.update(sql,
                 log.getFkLogCategoria(),
@@ -122,18 +96,18 @@ public class LogDAO {
                 log.getIdLog());
     }
 
-    public void delete(int idLog) {
+    public static void delete(int idLog) {
         String sql = "DELETE FROM log WHERE id_log = ?";
         jdbcTemplate.update(sql, idLog);
     }
 
-    public Log findById(int idLog) {
+    public static Log findById(int idLog) {
         String sql = "SELECT * FROM log WHERE id_log = ?";
         List<Log> logs = jdbcTemplate.query(sql, new Object[]{idLog}, rowMapper);
         return logs.isEmpty() ? null : logs.get(0);
     }
 
-    public List<Log> findAll() {
+    public static List<Log> findAll() {
         String sql = "SELECT * FROM log";
         return jdbcTemplate.query(sql, rowMapper);
     }

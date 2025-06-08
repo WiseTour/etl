@@ -15,7 +15,6 @@ public class Log {
     private String fkUfEntrada;
 
     private String mensagem;
-    private String erro;
     private LocalDateTime dataHora;
 
     public Log() {
@@ -33,7 +32,6 @@ public class Log {
         this.fkPaisOrigem = fkPaisOrigem;
         this.fkUfEntrada = fkUfEntrada;
         this.mensagem = mensagem;
-        this.erro = erro;
         this.dataHora =  LocalDateTime.now();
     }
 
@@ -48,7 +46,6 @@ public class Log {
         this.fkPaisOrigem = fkPaisOrigem;
         this.fkUfEntrada = fkUfEntrada;
         this.mensagem = mensagem;
-        this.erro = erro;
         this.dataHora = LocalDateTime.now();
     }
 
@@ -63,7 +60,6 @@ public class Log {
         this.fkPaisOrigem = null;
         this.fkUfEntrada = null;
         this.mensagem = mensagem;
-        this.erro = erro;
         this.dataHora = LocalDateTime.now();
     }
 
@@ -77,7 +73,18 @@ public class Log {
         this.fkPaisOrigem = null;
         this.fkUfEntrada = null;
         this.mensagem = mensagem;
-        this.erro = null;
+        this.dataHora = LocalDateTime.now();
+    }
+
+    public Log(Integer fkLogCategoria,
+               Integer fkEtapa) {
+        this.fkLogCategoria = fkLogCategoria;
+        this.fkEtapa = fkEtapa;
+        this.fkOrigemDados = null;
+        this.fkPerfilEstimadoTuristas = null;
+        this.fkPaisOrigem = null;
+        this.fkUfEntrada = null;
+        this.mensagem = null;
         this.dataHora = LocalDateTime.now();
     }
 
@@ -146,14 +153,6 @@ public class Log {
         this.mensagem = mensagem;
     }
 
-    public String getErro() {
-        return erro;
-    }
-
-    public void setErro(String erro) {
-        this.erro = erro;
-    }
-
     public LocalDateTime getDataHora() {
         return dataHora;
     }
@@ -173,7 +172,6 @@ public class Log {
                 ", fkPaisOrigem=" + fkPaisOrigem +
                 ", fkUfEntrada='" + fkUfEntrada + '\'' +
                 ", mensagem='" + mensagem + '\'' +
-                ", erro='" + erro + '\'' +
                 ", dataHora=" + dataHora +
                 '}';
     }

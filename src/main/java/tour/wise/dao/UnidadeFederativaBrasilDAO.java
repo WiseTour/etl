@@ -3,6 +3,7 @@ package tour.wise.dao;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import tour.wise.model.UnidadeFederativaBrasil;
+import tour.wise.util.DataBaseConnection;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,10 +11,14 @@ import java.util.List;
 
 public class UnidadeFederativaBrasilDAO {
 
-    private final JdbcTemplate jdbcTemplate;
+    private static final JdbcTemplate jdbcTemplate;
 
-    public UnidadeFederativaBrasilDAO(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    static {
+        try {
+            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao inicializar JdbcTemplate no UnidadeFederativaBrasilDAO: " + e.getMessage(), e);
+        }
     }
 
     // RowMapper para converter ResultSet em UnidadeFederativaBrasil
@@ -36,7 +41,7 @@ public class UnidadeFederativaBrasilDAO {
     }
 
     // Lista todos
-    public List<UnidadeFederativaBrasil> findAll() {
+    public static List<UnidadeFederativaBrasil> findAll() {
         String sql = "SELECT sigla, unidade_federativa, regiao FROM unidade_federativa_brasil";
         return jdbcTemplate.query(sql, new UnidadeFederativaBrasilRowMapper());
     }

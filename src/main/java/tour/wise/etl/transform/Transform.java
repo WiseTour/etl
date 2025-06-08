@@ -10,24 +10,14 @@ import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.PerfilDTO;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class Transform extends Util {
+public class Transform{
 
-    JdbcTemplate connection;
-    LogDAO logDAO;
-
-    public Transform(JdbcTemplate connection) throws IOException {
-        this.connection = connection;
-        this.logDAO = new LogDAO(connection);
-    }
-
-    public List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(
-            List<List<Object>> data, String fonte, String edicao) {
+    public static List<ChegadaTuristasInternacionaisBrasilMensalDTO> transformChegadasTuristasInternacionaisBrasilMensal(List<List<Object>> data, String fonte, String edicao) {
 
         System.out.println("[INÍCIO] Transformação dos dados iniciada.");
         System.out.println("[INFO] Fonte: " + fonte + ", Edição: " + edicao);
@@ -76,20 +66,20 @@ public class Transform extends Util {
         return result;
     }
 
-    public FichaSinteseBrasilDTO transformFichaSinteseBrasil(List<List<List<Object>>> data) {
+    public static FichaSinteseBrasilDTO transformFichaSinteseBrasil(List<List<List<Object>>> data) {
 
         try {
             return new FichaSinteseBrasilDTO(
-                    transformAno(data, 1),
-                    transformListGenero(data, 12),
-                    transformListFaixaEtaria(data, 13),
-                    transformListComposicoesGrupo(data, 4),
-                    transformListFontesInformacao(data, 10),
-                    transformListMotivosViagem(data, 2),
-                    transformListMotivacaoViagemLazer(data, 3),
-                    transformListGastosMedioMotivo(data, 5),
-                    transformListPermanenciaMediaMotivo(data, 6),
-                    transformListDestinosMaisVisitadosPorMotivo(data, 7)
+                    TransformUtils.transformAno(data, 1),
+                    TransformUtils.transformListGenero(data, 12),
+                    TransformUtils.transformListFaixaEtaria(data, 13),
+                    TransformUtils.transformListComposicoesGrupo(data, 4),
+                    TransformUtils.transformListFontesInformacao(data, 10),
+                    TransformUtils.transformListMotivosViagem(data, 2),
+                    TransformUtils.transformListMotivacaoViagemLazer(data, 3),
+                    TransformUtils.transformListGastosMedioMotivo(data, 5),
+                    TransformUtils.transformListPermanenciaMediaMotivo(data, 6),
+                    TransformUtils.transformListDestinosMaisVisitadosPorMotivo(data, 7)
 
 
             );
@@ -99,20 +89,20 @@ public class Transform extends Util {
         }
     }
 
-    public FichaSintesePaisDTO transformFichasSintesePais(List<List<List<Object>>> data) {
+    public static FichaSintesePaisDTO transformFichasSintesePais(List<List<List<Object>>> data) {
         try {
             return new FichaSintesePaisDTO(
-                    transformAno(data, 1),
-                    transformListGenero(data, 12),
-                    transformListFaixaEtaria(data, 13),
-                    transformListComposicoesGrupo(data, 4),
-                    transformListFontesInformacao(data, 10),
-                    transformListMotivosViagem(data, 2),
-                    transformListMotivacaoViagemLazer(data, 3),
-                    transformListGastosMedioMotivo(data, 5),
-                    transformListPermanenciaMediaMotivo(data, 6),
-                    transformListDestinosMaisVisitadosPorMotivo(data, 7),
-                    extractNomePais(data, 0)
+                    TransformUtils.transformAno(data, 1),
+                    TransformUtils.transformListGenero(data, 12),
+                    TransformUtils.transformListFaixaEtaria(data, 13),
+                    TransformUtils.transformListComposicoesGrupo(data, 4),
+                    TransformUtils.transformListFontesInformacao(data, 10),
+                    TransformUtils.transformListMotivosViagem(data, 2),
+                    TransformUtils.transformListMotivacaoViagemLazer(data, 3),
+                    TransformUtils.transformListGastosMedioMotivo(data, 5),
+                    TransformUtils.transformListPermanenciaMediaMotivo(data, 6),
+                    TransformUtils.transformListDestinosMaisVisitadosPorMotivo(data, 7),
+                    TransformUtils.extractNomePais(data, 0)
             );
 
         } catch (Exception e) {
@@ -131,25 +121,23 @@ public class Transform extends Util {
         }
     }
 
-    public FichaSinteseEstadoDTO transformFichasSinteseEstado(List<List<List<Object>>> data) {
+    public static FichaSinteseEstadoDTO transformFichasSinteseEstado(List<List<List<Object>>> data) {
 
         try {
             return new FichaSinteseEstadoDTO(
-                    transformAno(data, 1),
-                    transformListGenero(data, 14),
-                    transformListFaixaEtaria(data, 15),
-                    transformListComposicoesGrupo(data, 5),
-                    transformListFontesInformacao(data, 13),
-                    transformListMotivosViagem(data, 3),
-                    transformListMotivacaoViagemLazer(data, 4),
-                    transformListGastosMedioMotivo(data, 6),
-                    transformListPermanenciaMediaMotivo(data, 7),
-                    transformListDestinosMaisVisitadosPorMotivo(data, 9),
-                    transformListPaisesOrigem(data, 2),
-                    transformEstado(data, 0),
-                    transformListPermanenciaMediaMotivo(data, 8)
-
-
+                    TransformUtils.transformAno(data, 1),
+                    TransformUtils.transformListGenero(data, 14),
+                    TransformUtils.transformListFaixaEtaria(data, 15),
+                    TransformUtils.transformListComposicoesGrupo(data, 5),
+                    TransformUtils.transformListFontesInformacao(data, 13),
+                    TransformUtils.transformListMotivosViagem(data, 3),
+                    TransformUtils.transformListMotivacaoViagemLazer(data, 4),
+                    TransformUtils.transformListGastosMedioMotivo(data, 6),
+                    TransformUtils.transformListPermanenciaMediaMotivo(data, 7),
+                    TransformUtils.transformListDestinosMaisVisitadosPorMotivo(data, 9),
+                    TransformUtils.transformListPaisesOrigem(data, 2),
+                    TransformUtils.transformEstado(data, 0),
+                    TransformUtils.transformListPermanenciaMediaMotivo(data, 8)
             );
         } catch (Exception e) {
             // Log no banco
@@ -167,7 +155,7 @@ public class Transform extends Util {
         }
     }
 
-    public List<PerfilDTO> transformPerfis(
+    public static List<PerfilDTO> transformPerfis(
             ChegadaTuristasInternacionaisBrasilMensalDTO chegada,
             List<ChegadaTuristasInternacionaisBrasilMensalDTO> chegadas,
             List<FichaSinteseEstadoDTO> fichasSinteseEstadoDTO,
@@ -207,7 +195,7 @@ public class Transform extends Util {
 
                 FichaSinteseEstadoDTO fichaEstado = fichaEstadoOptional.get();
 
-                List<PerfilDTO> perfisEstado = createPerfisCombinations(fichaEstado);
+                List<PerfilDTO> perfisEstado = TransformUtils.createPerfisCombinations(fichaEstado);
 
                 for (PerfilDTO perfilDTOEstado : perfisEstado) {
                     perfilDTOEstado.setPaisesOrigem(paisOrigem);
@@ -273,7 +261,7 @@ public class Transform extends Util {
                     taxaTuristas = taxaTuristas / denominador;
                 }
 
-                List<PerfilDTO> perfisEstado = createPerfisCombinations(fichaEstado);
+                List<PerfilDTO> perfisEstado = TransformUtils.createPerfisCombinations(fichaEstado);
 
                 for (PerfilDTO perfilEstado : perfisEstado) {
                     perfilEstado.setPaisesOrigem(paisOrigem);
@@ -313,7 +301,7 @@ public class Transform extends Util {
             if (fichaPaisOptional.isPresent()) {
                 FichaSintesePaisDTO fichaPais = fichaPaisOptional.get();
 
-                List<PerfilDTO> perfisPais = createPerfisCombinations(fichaPais);
+                List<PerfilDTO> perfisPais = TransformUtils.createPerfisCombinations(fichaPais);
 
                 for (PerfilDTO perfilPais : perfisPais) {
                     perfilPais.setPaisesOrigem(paisOrigem);
@@ -345,7 +333,7 @@ public class Transform extends Util {
 
             FichaSinteseBrasilDTO fichaBrasil = fichaSinteseBrasilDTO;
 
-            List<PerfilDTO> perfisBrasil = createPerfisCombinations(fichaBrasil);
+            List<PerfilDTO> perfisBrasil = TransformUtils.createPerfisCombinations(fichaBrasil);
 
             for (PerfilDTO perfilBrasil : perfisBrasil) {
                 perfilBrasil.setPaisesOrigem(paisOrigem);

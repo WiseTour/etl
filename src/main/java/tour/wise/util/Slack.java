@@ -1,24 +1,22 @@
-package tour.wise.slack;
+package tour.wise.util;
 
-import com.slack.api.Slack;
 import com.slack.api.webhook.Payload;
 import com.slack.api.webhook.WebhookResponse;
 
 import java.util.Objects;
 
-public class SlackWiseTour {
-    private final String webhookUrl;
-    private final Slack slack;
+public class Slack {
+    private static final com.slack.api.Slack slack;
 
-    public SlackWiseTour(String webhookUrl) {
-        if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("A URL do Webhook não pode ser nula/vazia");
+    static {
+        try {
+            slack = com.slack.api.Slack.getInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao inicializar Slack: " + e.getMessage(), e);
         }
-        this.webhookUrl = webhookUrl;
-        this.slack = Slack.getInstance();
     }
 
-    public void sendNotification(String message) {
+    public static void sendNotification(String webhookUrl, String message) {
         Objects.requireNonNull(message, "A mensagem não pode ser nula");
 
         try {
@@ -27,8 +25,6 @@ public class SlackWiseTour {
                     .build();
 
             WebhookResponse response = slack.send(webhookUrl, payload);
-            System.out.println("Código HTTP: " + response.getCode());
-            System.out.println("Resposta: " + response.getBody());
 
             if (response.getCode() == 200) {
                 System.out.println("Mensagem enviada com sucesso para o Slack!");
@@ -37,7 +33,7 @@ public class SlackWiseTour {
             }
 
         } catch (Exception e) {
-            System.out.println("Erro ao enviar para o Slack: " + e.getMessage());
+            System.out.println("Erro ao enviar mensagem para o canal do Slack: " + webhookUrl +": " + e.getMessage());
             e.printStackTrace();
         }
     }

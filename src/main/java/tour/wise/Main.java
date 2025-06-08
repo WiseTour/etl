@@ -1,22 +1,17 @@
 package tour.wise;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.config.ConfigLoader;
-import tour.wise.dao.DataBase;
-import tour.wise.dao.LogDAO;
+import tour.wise.util.ConfigLoader;
 import tour.wise.etl.ETL;
-import tour.wise.s3.S3;
-import tour.wise.slack.SlackWiseTour;
+import tour.wise.util.S3;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws Exception {
 
         try {
             ConfigLoader.load(args.length == 0 ? "src/main/resources/config.properties" : args[0]);
@@ -25,9 +20,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        S3 s3 = new S3(new SlackWiseTour(ConfigLoader.get("SLACK_URL")));
-
-        List<String> files = s3.getFileNames();
+        List<String> files = S3.getFileNames();
 
         String caminhoChegadaTurista = null;
         String caminhoArquivoFichaSinteseBrasil = null;
@@ -90,21 +83,16 @@ public class Main {
 
             etl.exe(
                     caminhoChegadaTurista,
-                    "Chegadas 2019",
-                    "Ministério do Turismo",
-                    "2019",
                     caminhoArquivoFichaSintesePaises,
                     caminhoArquivoFichaSinteseBrasil,
                     caminhoArquivoFichaSinteseEstado,
-                    "Fichas Síntese 2019",
-                    "Ministério do Turismo",
-                    "2019"
+                    "Ministério do Turismo"
             );
 
-            s3.moveFile(caminhoChegadaTurista, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoChegadaTurista);
-            s3.moveFile(caminhoArquivoFichaSinteseBrasil, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSinteseBrasil);
-            s3.moveFile(caminhoArquivoFichaSinteseEstado, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSinteseEstado);
-            s3.moveFile(caminhoArquivoFichaSintesePaises, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSintesePaises);
+            S3.moveFile(caminhoChegadaTurista, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoChegadaTurista);
+            S3.moveFile(caminhoArquivoFichaSinteseBrasil, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSinteseBrasil);
+            S3.moveFile(caminhoArquivoFichaSinteseEstado, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSinteseEstado);
+            S3.moveFile(caminhoArquivoFichaSintesePaises, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSintesePaises);
         }
     }
 }

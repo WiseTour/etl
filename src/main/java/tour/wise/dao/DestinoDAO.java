@@ -4,13 +4,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 
 import tour.wise.model.Destino;
+import tour.wise.util.DataBaseConnection;
 
 public class DestinoDAO {
 
-    private final JdbcTemplate connection;
+    private static final JdbcTemplate jdbcTemplate;
 
-    public DestinoDAO(JdbcTemplate connection) {
-        this.connection = connection;
+    static {
+        try {
+            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao inicializar JdbcTemplate no DestinoDAO: " + e.getMessage(), e);
+        }
     }
 
     public void insertLote(List<Destino> destinos) {
@@ -35,7 +40,7 @@ public class DestinoDAO {
                 .toList();
 
         try {
-            int[] resultados = connection.batchUpdate(sql, batchArgs);
+            int[] resultados = jdbcTemplate.batchUpdate(sql, batchArgs);
             System.out.println("[DestinoDAO] Lote de destinos inserido. Registros inseridos: " + resultados.length);
         } catch (Exception e) {
             System.err.println("[DestinoDAO] Erro ao inserir lote de destinos:");

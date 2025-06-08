@@ -1,38 +1,19 @@
 package tour.wise.etl.load;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dao.*;
-import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
-import tour.wise.model.Destino;
 import tour.wise.model.OrigemDados;
 import tour.wise.model.Pais;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 
 public class Load {
 
-    JdbcTemplate connection;
-    LogDAO logDAO;
-
-    public Load(JdbcTemplate connection) {
-        this.connection = connection;
-        this.logDAO =  new LogDAO(connection);
-    }
-
-    public void loadOrigemDados(
-            OrigemDados origemDados
-    ){
+    public static void loadOrigemDados(OrigemDados origemDados){
         try {
             Integer quantidadeInserida;
 
             try {
-                OrigemDadosDAO origemDadosDAO =  new OrigemDadosDAO(connection);
-
-                quantidadeInserida = origemDadosDAO.insertIgnore(origemDados);
+                quantidadeInserida = OrigemDadosDAO.insertIgnore(origemDados);
             }catch (Exception e) {
                 // Log no banco
 //                logDAO.insertLog(
@@ -105,12 +86,9 @@ public class Load {
         }
     }
 
-    public void loadPais(Pais pais){
+    public static void loadPais(Pais pais){
         try{
-            PaisDAO paisDAO = new PaisDAO(connection);
-
-            paisDAO.insertIgnore(pais);
-
+            PaisDAO.insertIgnore(pais);
         }catch (Exception e) {
             // Log no banco
 //            logDAO.insertLog(
@@ -130,7 +108,7 @@ public class Load {
 
     }
 
-    public void loadPerfis(
+    public static void loadPerfis(
             List<Object[]> batchArgs,
             List<Integer> fkPaisesDoLote,
             List<String> fkUfsDoLote,
@@ -138,13 +116,8 @@ public class Load {
             String tituloArquivoFonteFichasSinteses
     ){
         try {
-            Perfil_Estimado_TuristasDAO perfilEstimadoTuristasDAO = new Perfil_Estimado_TuristasDAO(connection);
-            OrigemDadosDAO origemDadosDAO = new OrigemDadosDAO(connection);
-            PerfilEstimadoTuristaOrigemDAO perfilEstimadoTuristaFonteDAO = new PerfilEstimadoTuristaOrigemDAO(connection);
-
-
-            List<Integer> idsInseridos = perfilEstimadoTuristasDAO.insertLoteRetornandoIds(batchArgs);
-            int fkFonte = origemDadosDAO.findByTitulo(tituloArquivoFonteFichasSinteses).getIdOrigemDados();
+            List<Integer> idsInseridos = Perfil_Estimado_TuristasDAO.insertLoteRetornandoIds(batchArgs);
+            int fkFonte = OrigemDadosDAO.findByTitulo(tituloArquivoFonteFichasSinteses).getIdOrigemDados();
 
             for (int i = 0; i < idsInseridos.size(); i++) {
                 int fkPerfilEstimado = idsInseridos.get(i);
@@ -153,7 +126,7 @@ public class Load {
                 batchFonteArgs.add(new Object[]{fkFonte, fkPerfilEstimado, fkPaisInserido, fkUf});
             }
 
-            perfilEstimadoTuristaFonteDAO.insertLote(batchFonteArgs);
+            PerfilEstimadoTuristaOrigemDAO.insertLote(batchFonteArgs);
 
         }catch (Exception e) {
             // Log no banco
