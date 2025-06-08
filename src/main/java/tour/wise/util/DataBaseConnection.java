@@ -2,8 +2,6 @@ package tour.wise.util;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -13,6 +11,7 @@ public class DataBaseConnection {
     private static final String username;
     private static final String password;
 
+    private static final BasicDataSource dataSource;
     private static final JdbcTemplate jdbcTemplate;
 
     static {
@@ -25,14 +24,15 @@ public class DataBaseConnection {
             username = ConfigLoader.get("DB_USERNAME");
             password = ConfigLoader.get("DB_PASSWORD");
 
-            BasicDataSource dataSource = new BasicDataSource();
+            dataSource = new BasicDataSource();
             dataSource.setUrl(url);
             dataSource.setUsername(username);
             dataSource.setPassword(password);
 
-            jdbcTemplate = new JdbcTemplate(
-                    new SingleConnectionDataSource(dataSource.getConnection(), false)
-            );
+            // Configura autoCommit = false para todas as conexões
+            dataSource.setDefaultAutoCommit(false);
+
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
         } catch (Exception e) {
             throw new RuntimeException(
@@ -42,7 +42,7 @@ public class DataBaseConnection {
     }
 
     public static Connection getConnection() throws SQLException {
-        return jdbcTemplate.getDataSource().getConnection();
+        return dataSource.getConnection();
     }
 
     public static JdbcTemplate getJdbcTemplate() {

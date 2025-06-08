@@ -12,16 +12,8 @@ import java.util.List;
 
 public class Perfil_Estimado_TuristasDAO {
 
-    private static final JdbcTemplate jdbcTemplate;
 
-    static {
-        try {
-            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao inicializar JdbcTemplate no Perfil_Estimado_TuristasDAO: " + e.getMessage(), e);
-        }
-    }
-    public static List<Integer> insertLoteRetornandoIds(List<Object[]> batchArgs) {
+    public static List<Integer> insertLoteRetornandoIds(JdbcTemplate jdbcTemplate, List<Object[]> batchArgs) {
         String sql = """
         INSERT INTO perfil_estimado_turistas (
             fk_pais_origem, fk_uf_entrada, ano, mes, quantidade_turistas,

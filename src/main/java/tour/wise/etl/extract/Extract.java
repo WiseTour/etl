@@ -82,7 +82,7 @@ public class Extract {
 
             }
 
-
+            workbook.close();
             return data;
         }catch (Exception e) {
 
@@ -156,7 +156,7 @@ public class Extract {
                 );
 
             }
-
+            workbook.close();
             return data;
         }catch (Exception e) {
 
@@ -232,40 +232,25 @@ public class Extract {
 
 
             workbook.close();
-            System.out.println(LocalDateTime.now() + "\n Leitura finalizada\n");
 
             return data;
         }catch (Exception e) {
-            // Log no banco
-
             throw e;
         }
     }
 
-    public static List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(Workbook workbook, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) {
+    public static List<List<Object>> extractChegadasTuristasInternacionaisBrasilMensalData(Workbook workbook, Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types) throws IOException {
 
         List<List<Object>> data = null;
 
         try {
             data = Service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, workbook);
 
-            System.out.println("[SUCESSO] Extração finalizada com sucesso. Total de registros extraídos: " + (data != null ? data.size() : 0));
-            System.out.println();
+            workbook.close();
 
             return data;
 
         } catch (Exception e) {
-            // Log no banco
-//            logDAO.insertLog(
-//                    1,
-//                    1, // Erro
-//                    1,
-//                    "Erro ao tentar extrair dados de chegada: " + e.getMessage(),
-//                    LocalDateTime.now(),
-//                    0,
-//                    0,
-//                    "Fonte_Dados"
-//            );
             throw e;
         }
 

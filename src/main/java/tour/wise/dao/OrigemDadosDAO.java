@@ -4,18 +4,9 @@ import tour.wise.model.OrigemDados;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.dao.DataAccessException;
-import tour.wise.util.DataBaseConnection;
+
 public class OrigemDadosDAO {
 
-    private static final JdbcTemplate jdbcTemplate;
-
-    static {
-        try {
-            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao inicializar JdbcTemplate no OrigemDadosDAO: " + e.getMessage(), e);
-        }
-    }
 
     // RowMapper
     private static final RowMapper<OrigemDados> origemDadosRowMapper = (rs, rowNum) -> {
@@ -28,9 +19,9 @@ public class OrigemDadosDAO {
     };
 
     // Insert IGNORE (ou equivalente em MySQL)
-    public static int insertIgnore(OrigemDados origemDados) {
+    public static void insertIgnore(JdbcTemplate jdbcTemplate, OrigemDados origemDados) {
         String sql = "INSERT IGNORE INTO origem_dados (titulo_arquivo_fonte, edicao, orgao_emissor) VALUES (?, ?, ?)";
-        return jdbcTemplate.update(sql,
+        jdbcTemplate.update(sql,
                 origemDados.getTitulo(),
                 origemDados.getEdicao(),
                 origemDados.getOrgaoEmissor()
@@ -39,7 +30,7 @@ public class OrigemDadosDAO {
 
 
     // Find by Título
-    public static OrigemDados findByTitulo(String titulo) {
+    public static OrigemDados findByTitulo(JdbcTemplate jdbcTemplate, String titulo) {
         String sql = "SELECT * FROM origem_dados WHERE titulo_arquivo_fonte = ?";
         try {
             return jdbcTemplate.queryForObject(sql, origemDadosRowMapper, titulo);

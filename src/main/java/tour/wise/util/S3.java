@@ -4,6 +4,8 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -14,6 +16,7 @@ import tour.wise.model.EEtapa;
 import tour.wise.model.ELogCategoria;
 import tour.wise.model.Log;
 import java.io.InputStream;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,20 +46,13 @@ public class S3 {
         }
     }
 
-    public static String getBucketName() {
-        return bucketName;
-    }
-
-    public static S3Client getS3Client() {
-        return s3;
-    }
-
-    public static AwsSessionCredentials getCredentials() {
-        return credentials;
-    }
-
 
     public static Workbook readFile(String key) throws Exception {
+        Connection conn = DataBaseConnection.getConnection();
+        JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(conn, false));
+
+        InputStream inputStream = null;
+
         try {
             GetObjectRequest request = GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -64,34 +60,40 @@ public class S3 {
                     .build();
 
             ZipSecureFile.setMinInflateRatio(0.0);
-            InputStream inputStream = s3.getObject(request);
+            inputStream = s3.getObject(request);
+
+            Workbook workbook;
+            if (key.endsWith(".xlsx")) {
+                workbook = new XSSFWorkbook(inputStream);
+            } else {
+                workbook = new HSSFWorkbook(inputStream);
+            }
 
             String msg = "Leitura do arquivo: " + key + " realizada com sucesso.";
+            Event.registerEvent(jdbc, conn, new Log(ELogCategoria.SUCESSO.getId(), EEtapa.INCIALIZACAO.getId()), msg);
 
-            Event.registerEvent(
-                    new Log(ELogCategoria.SUCESSO.getId(),
-                    EEtapa.INCIALIZACAO.getId()),
-                    msg);
-
-            return key.endsWith(".xlsx") ?
-                    new XSSFWorkbook(inputStream) :
-                    new HSSFWorkbook(inputStream);
+            return workbook;
 
         } catch (Exception e) {
-
             String msg = "Não foi possível realizar a leitura do arquivo: " + key + ".";
-
-            Event.registerEvent(
-                    new Log(ELogCategoria.ERRO.getId(),
-                            EEtapa.INCIALIZACAO.getId()),
-                    msg);
-
+            Event.registerEvent(jdbc, conn, new Log(ELogCategoria.ERRO.getId(), EEtapa.INCIALIZACAO.getId()), msg, false);
             throw new RuntimeException(e);
+
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Exception ignored) {}
+            }
         }
     }
 
 
+
     public static void moveFile(String sourceKey, String destinationKey) throws Exception {
+        Connection conn = DataBaseConnection.getConnection();
+        JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(conn, false));
+
         try {
             // 1. Copiar o arquivo para o novo local
             CopyObjectRequest copyRequest = CopyObjectRequest.builder()
@@ -114,17 +116,23 @@ public class S3 {
             String msg = "Arquivo movido com sucesso de " + sourceKey + " para a pasta: " + destinationKey;
 
             Event.registerEvent(
+                    jdbc,
+                    conn,
                     new Log(ELogCategoria.SUCESSO.getId(),
                             EEtapa.FINALIZACAO.getId()),
-                    msg);
+                    msg,
+                    false);
 
         } catch (Exception e) {
             String msg = "Não foi possível mover o arquivo: " + sourceKey + " para a pasta: " + destinationKey;
 
             Event.registerEvent(
+                    jdbc,
+                    conn,
                     new Log(ELogCategoria.ERRO.getId(),
                             EEtapa.FINALIZACAO.getId()),
-                    msg);
+                    msg,
+                    false);
 
             throw new RuntimeException(e);
         }
@@ -132,6 +140,9 @@ public class S3 {
 
 
     public static List<String> getFileNames() throws Exception {
+        Connection conn = DataBaseConnection.getConnection();
+        JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(conn, false));
+
         List<String> fileNames = new ArrayList<>();
 
         try {
@@ -149,12 +160,15 @@ public class S3 {
                     })
                     .forEach(s3Object -> fileNames.add(s3Object.key()));
 
-            String msg = fileNames.size() + "arquivos encontrados no bucket: " + bucketName;
+            String msg = fileNames.size() + " arquivos encontrados no bucket: " + bucketName;
 
             Event.registerEvent(
+                    jdbc,
+                    conn,
                     new Log(ELogCategoria.SUCESSO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
-                    msg);
+                    msg,
+                    false);
 
             return fileNames;
 
@@ -162,9 +176,12 @@ public class S3 {
             String msg = "Não foi possível encontrar nenhum arquivo no bucket: " + bucketName;
 
             Event.registerEvent(
+                    jdbc,
+                    conn,
                     new Log(ELogCategoria.ERRO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
-                    msg);
+                    msg,
+                    false);
 
             throw new RuntimeException(e);
         }

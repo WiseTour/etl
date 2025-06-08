@@ -6,17 +6,8 @@ import java.util.List;
 
 public class ConfiguracaoSlackDAO {
 
-    private static final JdbcTemplate jdbcTemplate;
 
-    static {
-        try {
-            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao inicializar JdbcTemplate no LogDAO: " + e.getMessage(), e);
-        }
-    }
-
-    public static List<String> findWebhooksByEtapa(int idEtapa) {
+    public static List<String> findWebhooksByEtapa(JdbcTemplate jdbcTemplate, int idEtapa) {
         String sql = """
     SELECT DISTINCT cs.webhook_canal_padrao
     FROM configuracao_slack cs

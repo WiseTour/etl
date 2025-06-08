@@ -1,6 +1,8 @@
 package tour.wise.etl;
 
 import org.apache.poi.ss.usermodel.Workbook;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import tour.wise.etl.extract.Extract;
 import tour.wise.etl.load.Load;
 import tour.wise.etl.transform.Transform;
@@ -15,10 +17,8 @@ import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.model.*;
 import tour.wise.util.S3;
 import tour.wise.util.Slack;
-
 import java.io.IOException;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
@@ -34,29 +34,39 @@ public class ETL {
             String orgaoEmissor
     ) throws Exception {
 
+        Connection connection = DataBaseConnection.getConnection();
+        JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, false));
+
         try {
             // 1. INÍCIO DO PROCESSO
             Event.registerEvent(
+                    jdbc,
+                    connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
                     "Iniciando o processo de ETL...",
                     "gear"
             );
+            
 
-            String edicaoChegadas = fileNameChegadas.substring(fileNameChegadas.length() - 4);
-            String anoPais = fileNameFichaSintesePais.substring(fileNameFichaSintesePais.length() - 4);
-            String anoBrasil = fileNameFichaSinteseBrasil.substring(fileNameFichaSinteseBrasil.length() - 4);
-            String anoEstado = fileNameFichaSinteseEstado.substring(fileNameFichaSinteseEstado.length() - 4);
+            String edicaoChegadas = extrairAnoChegadas(fileNameChegadas);
+            String anoBrasil = extrairAno(fileNameFichaSinteseBrasil);
+            String anoPais = extrairAno(fileNameFichaSintesePais);
+            String anoEstado = extrairAno(fileNameFichaSinteseEstado);
 
+            assert anoPais != null;
             if (!anoPais.equals(anoBrasil) || !anoPais.equals(anoEstado)) {
                 String mensagemErro = "Os arquivos de ficha síntese têm anos diferentes: "
                         + "País = " + anoPais + ", Brasil = " + anoBrasil + ", Estado = " + anoEstado;
 
                 Event.registerEvent(
+                        jdbc,
+                        connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.INCIALIZACAO.getId()),
                         mensagemErro,
                         false
                 );
+                
 
                 throw new IllegalArgumentException(mensagemErro);
             }
@@ -67,7 +77,7 @@ public class ETL {
                 String mensagemErro = "A edição dos dados de chegada (" + edicaoChegadas + ") "
                         + "é diferente da edição das fichas síntese (" + edicaoFichasSinteses + ").";
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.INCIALIZACAO.getId()),
                         mensagemErro,
                         false
@@ -76,22 +86,22 @@ public class ETL {
                 throw new IllegalArgumentException(mensagemErro);
             }
 
-
+            
             // 2.0 EXTRAÇÃO DOS DADOS DE CHEGADAS
 
             // 2.1 CARREGAMENTO DA FONTE DAS CHEGADAS NA TABELA ORIGEM_DADOS
             try {
-                Load.loadOrigemDados(new OrigemDados("Chegadas " + edicaoChegadas, edicaoChegadas, orgaoEmissor));
-                DataBaseConnection.getConnection().commit();
+                Load.loadOrigemDados(jdbc, new OrigemDados("Chegadas " + edicaoChegadas, edicaoChegadas, orgaoEmissor));
+                connection.commit();
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Fonte de dados de chegadas de " + edicaoChegadas + " registrada com sucesso.",
                         false
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Falha ao registrar a fonte de dados de chegadas de" + edicaoChegadas + ".",
@@ -101,19 +111,19 @@ public class ETL {
             }
 
             // 2.1.2 RECUPERAÇÃO DO ID DA FONTE
-            Integer fkFonteChegadas = 0;
+            int fkFonteChegadas = 0;
             try {
-                Integer id = OrigemDadosDAO.findByTitulo("Chegadas " + edicaoChegadas).getIdOrigemDados();
+                Integer id = Objects.requireNonNull(OrigemDadosDAO.findByTitulo(jdbc, "Chegadas " + edicaoChegadas)).getIdOrigemDados();
                 fkFonteChegadas = (id == null) ? 0 : id;
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Identificador da fonte de dados recuperado com sucesso.",
                         false
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Erro ao recuperar o identificador da fonte de dados.",
@@ -127,14 +137,14 @@ public class ETL {
             try {
                 workbook = S3.readFile(fileNameChegadas);
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Arquivo Excel de chegadas de" + edicaoChegadas + "  aberto com sucesso!",
                         false
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Erro ao abrir o arquivo Excel de chegadas de" + edicaoChegadas + ".",
@@ -144,7 +154,7 @@ public class ETL {
             }
 
             // 2.3 EXTRAÇÃO DOS DADOS DE CHEGADAS INICIADA
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
                     "Iniciando processo de extração dos dados de chegadas de" + edicaoChegadas + "...",
@@ -166,7 +176,7 @@ public class ETL {
                 );
 
                 // 2.4 EXTRAÇÃO DOS DADOS DE CHEGADA FINALIZADA
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Processo de extração dos dados de chegadas de " + edicaoChegadas + " finalizados com sucesso!",
@@ -176,7 +186,7 @@ public class ETL {
             } catch (Exception e) {
 
                 // 2.3.1 FALHA NA EXTRAÇÃO DOS DADOS DE CHEGADA
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Falha ao extrair os dados de chegadas de" + edicaoChegadas + ".",
@@ -188,7 +198,7 @@ public class ETL {
 
             // 3.0 TRANSFORMAÇÃO DOS DADOS DE CHEGADAS
 
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.TRANSFORMACAO.getId()),
                     "Iniciando processo de tranformação dos dados de chegadas de " + edicaoChegadas + "...",
@@ -206,7 +216,7 @@ public class ETL {
 
                 chegadasTuristasInternacionaisBrasilMensalData.clear();
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.TRANSFORMACAO.getId()),
                         "Dados de chegadas de " + edicaoChegadas + " transformados com sucesso!",
@@ -214,7 +224,7 @@ public class ETL {
                         "page_facing_up"
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Falha ao transformados os dados de chegadas de" + edicaoChegadas + ".",
@@ -230,20 +240,20 @@ public class ETL {
                 // 4.1 LISTAR PAÍSES QUE AINDA NÃO ESTÃO NO BANCO
                 paises = listarPaisesNaoCadastrados(
                         chegadasTuristasInternacionaisBrasilMensalDTO,
-                        PaisDAO.findAll()
+                        PaisDAO.findAll(jdbc)
                 );
 
                 // 4.2 INSERIR PAÍSES NOVOS
                 if (!paises.isEmpty()) {
                     for (Pais pais : paises) {
-                        Load.loadPais(pais);
+                        Load.loadPais(jdbc, pais);
                     }
-                    DataBaseConnection.getConnection().commit();
+                    connection.commit();
                 }
 
                 paises.clear();
                 // 4.3 SUCESSO NO CARREGAMENTO DOS PAÍSES
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.CARREGAMENTO.getId()),
                         "Carregamento dos países novos finalizado com sucesso!",
                         false
@@ -251,7 +261,7 @@ public class ETL {
 
             } catch (Exception e) {
                 // 4.3.1 ERRO NO CARREGAMENTO DOS PAÍSES
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.CARREGAMENTO.getId()),
                         "Erro ao carregar países não cadastrados no banco.",
                         e,
@@ -260,7 +270,7 @@ public class ETL {
             }
 
             // 5.0 PROCESSAMENTO DAS FICHAS SÍNTESE
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.EXTRACAO.getId()),
                     "Iniciando o processamento das Fichas Sínteses de " + edicaoFichasSinteses + "...",
@@ -269,10 +279,10 @@ public class ETL {
 
             // 5.1 CARREGAMENTO DA FONTE DAS FICHAS SÍNTESES NA TABELA ORIGEM_DADOS
             try {
-                Load.loadOrigemDados(new OrigemDados("Fichas Síntese " + edicaoFichasSinteses, edicaoFichasSinteses, orgaoEmissor));
-                DataBaseConnection.getConnection().commit();
+                Load.loadOrigemDados(jdbc, new OrigemDados("Fichas Síntese " + edicaoFichasSinteses, edicaoFichasSinteses, orgaoEmissor));
+                connection.commit();
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Fonte de dados das Fichas Síntese de " + edicaoFichasSinteses + " registrada com sucesso.",
@@ -280,7 +290,7 @@ public class ETL {
                 );
             } catch (Exception e) {
                 // 5.1.1 ERRO NO CARREGAMENTO DA FONTE DAS FICHAS SÍNTESES NA TABELA ORIGEM_DADOS
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.CARREGAMENTO.getId()),
                         "Falha ao registrar a fonte de dados das Fichas Síntese de" + edicaoFichasSinteses + ".",
@@ -291,18 +301,17 @@ public class ETL {
 
             // 5.2 PROCESSAMENTO DA FICHA SÍNTESE BRASIL
             // 5.2.1 ABERTURA DO ARQUIVO EXCEL
-            workbook = null;
             try {
                 workbook = S3.readFile(fileNameFichaSinteseBrasil);
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Arquivo Excel de Ficha Síntese Brasil de" + edicaoFichasSinteses + "  aberto com sucesso!",
                         false
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Erro ao abrir o arquivo Excel de Ficha Síntese Brasil de" + edicaoFichasSinteses + ".",
@@ -315,7 +324,7 @@ public class ETL {
             List<List<List<Object>>> fichaSinteseBrasilData = null;
 
             // 5.2.2 EXTRAÇÃO DA FICHA SÍNTESE BRASIL
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
                     "Iniciando processo de extração dos dados da Ficha Síntese Brasil de" + edicaoFichasSinteses + "...",
@@ -332,14 +341,14 @@ public class ETL {
                         List.of("string", "numeric")
                 );
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.EXTRACAO.getId()),
                         "Extração da Ficha Síntese Brasil de " + edicaoFichasSinteses + " concluída com sucesso!",
                         true,
                         "white_check_mark"
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.EXTRACAO.getId()),
                         "Erro ao extrair a Ficha Síntese Brasil de " + edicaoFichasSinteses + ".",
                         e,
@@ -351,9 +360,10 @@ public class ETL {
             // 5.2.3 FECHAMENTO DO ARQUIVO FICHA SÍNTESE BRASIL
 
             try {
+                assert workbook != null;
                 workbook.close();
             } catch (IOException e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.FINALIZACAO.getId()),
                         "Erro ao fechar o arquivo de Ficha Síntese Brasil: " + fileNameFichaSinteseBrasil,
                         e,
@@ -362,7 +372,7 @@ public class ETL {
             }
 
             // 5.2.4 TRANSFORMAÇÃO DA FICHA SÍNTESE BRASIL
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.TRANSFORMACAO.getId()),
                     "Iniciando processo de tranformação dos dados da e Ficha Síntese Brasil " + edicaoFichasSinteses + "...",
@@ -372,7 +382,7 @@ public class ETL {
             try {
                 fichaSinteseBrasilDTO = Transform.transformFichaSinteseBrasil(fichaSinteseBrasilData);
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Transformação da Ficha Síntese Brasil de " + edicaoFichasSinteses + " concluída com sucesso!",
                         true,
@@ -380,7 +390,7 @@ public class ETL {
                 );
 
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Erro ao transformar a Ficha Síntese Brasil de " + edicaoFichasSinteses + ".",
                         e,
@@ -392,16 +402,18 @@ public class ETL {
             // 5.3 PROCESSAMENTO DA FICHA SÍNTESE POR PAÍS
 
             // 5.3.1 ABERTURA DO ARQUIVO EXCEL
+
+
             try {
                 workbook = S3.readFile(fileNameFichaSintesePais);
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Arquivo Excel de Ficha Síntese por País de" + edicaoFichasSinteses + "  aberto com sucesso!",
                         false
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Erro ao abrir o arquivo Excel de Ficha Síntese por País de" + edicaoFichasSinteses + ".",
@@ -412,7 +424,7 @@ public class ETL {
             }
 
             // 5.3.2 EXTRAÇÃO DAS FICHAS SÍNTESE POR PAÍS
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
                     "Iniciando processo de extração dos dados da Ficha Síntese por País de" + edicaoFichasSinteses + "...",
@@ -434,7 +446,7 @@ public class ETL {
 
                     todasFichasSintesePaisData.add(fichaSintesePaisData);
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.SUCESSO.getId(), EEtapa.EXTRACAO.getId()),
                             "Extração da Ficha Síntese País da planilha " + indicePlanilha + " de " + edicaoFichasSinteses + " concluída com sucesso!",
                             false
@@ -442,7 +454,7 @@ public class ETL {
                 } catch (Exception e) {
                     extracaoSucesso = false;
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.ERRO.getId(), EEtapa.EXTRACAO.getId()),
                             "Erro ao extrair Ficha Síntese País da planilha " + indicePlanilha + " de " + edicaoFichasSinteses + ".",
                             e,
@@ -451,15 +463,19 @@ public class ETL {
                 }
             }
 
+            // 5.3.3 FECHAMENTO DO ARQUIVO FICHA SÍNTESE POR PAÍS
+
+            workbook.close();
+
             if (extracaoSucesso) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.EXTRACAO.getId()),
                         "Extração de todas as planilhas da Ficha Síntese País " + edicaoChegadas + " concluída com sucesso!",
                         true,
                         "white_check_mark"
                 );
             } else {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.EXTRACAO.getId()),
                         "Houve erro(s) durante a extração das planilhas da Ficha Síntese País " + edicaoChegadas + ".",
                         true,
@@ -467,25 +483,13 @@ public class ETL {
                 );
             }
 
-            // 5.3.3 FECHAMENTO DO ARQUIVO FICHA SÍNTESE POR PAÍS
-
-            try {
-                workbook.close();
-            } catch (IOException e) {
-                Event.registerEvent(
-                        new Log(ELogCategoria.ERRO.getId(), EEtapa.FINALIZACAO.getId()),
-                        "Erro ao fechar o arquivo de Ficha Síntese por País: " + fileNameFichaSintesePais,
-                        e,
-                        false
-                );
-            }
 
             // 5.3.4 TRANSFORMAÇÃO DAS FICHAS SÍNTESE POR PAÍS
 
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.TRANSFORMACAO.getId()),
-                    "Iniciando processo de tranformação dos dados da e Ficha Síntese por País " + edicaoFichasSinteses + "...",
+                    "Iniciando processo de tranformação dos dados da Ficha Síntese por País " + edicaoFichasSinteses + "...",
                     true,
                     "arrows_counterclockwise"
             );
@@ -497,7 +501,7 @@ public class ETL {
                     FichaSintesePaisDTO dto = Transform.transformFichasSintesePais(fichaSintesePaisData);
                     fichasSintesePaisDTO.add(dto);
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                             "Transformação da Ficha Síntese País concluída com sucesso!",
                             false
@@ -505,7 +509,7 @@ public class ETL {
                 } catch (Exception e) {
                     transformacaoSucesso = false;
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                             "Erro ao transformar Ficha Síntese País.",
                             e,
@@ -515,7 +519,7 @@ public class ETL {
             }
 
             if (transformacaoSucesso) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Transformação de todas as planilhas da Ficha Síntese País concluída com sucesso!",
                         true,
@@ -523,7 +527,7 @@ public class ETL {
                 );
                 todasFichasSintesePaisData.clear();
             } else {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Houve erro(s) durante a transformação das planilhas da Ficha Síntese País.",
                         true,
@@ -536,14 +540,14 @@ public class ETL {
             // 5.4.1 ABERTURA DO ARQUIVO EXCEL
             try {
                 workbook = S3.readFile(fileNameFichaSinteseEstado);
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Arquivo Excel de Ficha Síntese por Estado de" + edicaoFichasSinteses + "  aberto com sucesso!",
                         false
                 );
             } catch (Exception e) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(),
                                 EEtapa.EXTRACAO.getId()),
                         "Erro ao abrir o arquivo Excel de Ficha Síntese por Estado de" + edicaoFichasSinteses + ".",
@@ -555,7 +559,7 @@ public class ETL {
 
 
             // 5.4.2 EXTRAÇÃO DAS FICHAS SÍNTESE POR ESTADO
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(), EEtapa.INCIALIZACAO.getId()),
                     "Iniciando processo de extração dos dados da Ficha Síntese por Estado de " + edicaoFichasSinteses + "...",
                     "mag"
@@ -577,7 +581,7 @@ public class ETL {
 
                     todasFichasSinteseEstadoData.add(fichaSinteseEstadoData);
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.SUCESSO.getId(), EEtapa.EXTRACAO.getId()),
                             "Extração da Ficha Síntese Estado da planilha " + indicePlanilha + " de " + edicaoFichasSinteses + " concluída com sucesso!",
                             false
@@ -585,7 +589,7 @@ public class ETL {
                 } catch (Exception e) {
                     extracaoEstadoSucesso = false;
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.ERRO.getId(), EEtapa.EXTRACAO.getId()),
                             "Erro ao extrair Ficha Síntese Estado da planilha " + indicePlanilha + " de " + edicaoFichasSinteses + ".",
                             e,
@@ -594,15 +598,18 @@ public class ETL {
                 }
             }
 
+            // 5.4.3 FECHAMENTO DO ARQUIVO FICHA SÍNTESE POR ESTADO
+            workbook.close();
+
             if (extracaoEstadoSucesso) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.EXTRACAO.getId()),
                         "Extração de todas as planilhas da Ficha Síntese Estado " + edicaoFichasSinteses + " concluída com sucesso!",
                         true,
                         "white_check_mark"
                 );
             } else {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.EXTRACAO.getId()),
                         "Houve erro(s) durante a extração das planilhas da Ficha Síntese Estado " + edicaoFichasSinteses + ".",
                         true,
@@ -610,20 +617,10 @@ public class ETL {
                 );
             }
 
-            // 5.4.3 FECHAMENTO DO ARQUIVO FICHA SÍNTESE POR ESTADO
-            try {
-                workbook.close();
-            } catch (IOException e) {
-                Event.registerEvent(
-                        new Log(ELogCategoria.ERRO.getId(), EEtapa.FINALIZACAO.getId()),
-                        "Erro ao fechar o arquivo de Ficha Síntese por Estado: " + fileNameFichaSinteseEstado,
-                        e,
-                        false
-                );
-            }
+
 
             // 5.4.4 TRANSFORMAÇÃO DAS FICHAS SÍNTESE POR ESTADO
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(), EEtapa.TRANSFORMACAO.getId()),
                     "Iniciando processo de transformação dos dados da Ficha Síntese por Estado " + edicaoFichasSinteses + "...",
                     true,
@@ -638,7 +635,7 @@ public class ETL {
                     FichaSinteseEstadoDTO dto = Transform.transformFichasSinteseEstado(fichaSinteseEstadoData);
                     fichasSinteseEstadoDTO.add(dto);
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                             "Transformação da Ficha Síntese Estado concluída com sucesso!",
                             false
@@ -646,7 +643,7 @@ public class ETL {
                 } catch (Exception e) {
                     transformacaoEstadoSucesso = false;
 
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                             "Erro ao transformar Ficha Síntese Estado.",
                             e,
@@ -656,7 +653,7 @@ public class ETL {
             }
 
             if (transformacaoEstadoSucesso) {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Transformação de todas as planilhas da Ficha Síntese Estado concluída com sucesso!",
                         true,
@@ -664,7 +661,7 @@ public class ETL {
                 );
                 todasFichasSinteseEstadoData.clear();
             } else {
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Houve erro(s) durante a transformação das planilhas da Ficha Síntese Estado.",
                         true,
@@ -673,7 +670,7 @@ public class ETL {
             }
 
             // 5.4.4 TRANSFORMAÇÃO DAS FICHAS SÍNTESE POR ESTADO
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                     "Processamento das Fichas Sínteses de " + edicaoFichasSinteses + " concluída com sucesso!",
                     true,
@@ -681,7 +678,7 @@ public class ETL {
             );
 
             // 6.0 PREPARAÇÃO DOS MAPAS PARA ACESSO RÁPIDO A PAÍSES E UFs
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(), EEtapa.INCIALIZACAO.getId()),
                     "Iniciando preparação dos mapas para acesso rápido a países e UFs...",
                     false
@@ -690,11 +687,9 @@ public class ETL {
             Map<String, Integer> mapaPaises = new HashMap<>();
             Map<String, String> mapaUfs = new HashMap<>();
 
-            boolean preparacaoMapasSucesso = true;
-
             try {
-                paises = PaisDAO.findAll();
-                List<UnidadeFederativaBrasil> ufs = UnidadeFederativaBrasilDAO.findAll();
+                paises = PaisDAO.findAll(jdbc);
+                List<UnidadeFederativaBrasil> ufs = UnidadeFederativaBrasilDAO.findAll(jdbc);
 
                 mapaPaises = paises.stream()
                         .collect(Collectors.toMap(p -> p.getNomePais().toLowerCase(), Pais::getIdPais));
@@ -702,16 +697,15 @@ public class ETL {
                 mapaUfs = ufs.stream()
                         .collect(Collectors.toMap(uf -> uf.getUnidadeFederativa().toLowerCase(), UnidadeFederativaBrasil::getSigla));
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.INCIALIZACAO.getId()),
                         "Mapas de países e UFs preparados com sucesso!",
                         false
                 );
 
             } catch (Exception e) {
-                preparacaoMapasSucesso = false;
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.INCIALIZACAO.getId()),
                         "Erro ao preparar mapas para acesso rápido a países e UFs.",
                         e,
@@ -726,14 +720,12 @@ public class ETL {
             int batchMax = 10000;
 
             // 7.0 PROCESSAMENTO DE PERFIS
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(), EEtapa.TRANSFORMACAO.getId()),
                     "Iniciando cruzamento dos dados das Chegadas com os das Fichas Sínteses para transformação dos perfis de turistas e inserção no banco...",
                     true,
                     "busts_in_silhouette"
             );
-
-            boolean processamentoPerfisSucesso = true;
 
             try {
                 Iterator<ChegadaTuristasInternacionaisBrasilMensalDTO> iterator = chegadasTuristasInternacionaisBrasilMensalDTO.iterator();
@@ -779,19 +771,19 @@ public class ETL {
                         fkUfsDoLote.add(fkUf);
 
                         if (batchArgs.size() >= batchMax) {
-                            Event.registerEvent(
+                            Event.registerEvent( jdbc, connection,
                                     new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                                     batchArgs.size() + " perfis criados com sucesso!",
                                     false
                             );
-                            Event.registerEvent(
+                            Event.registerEvent( jdbc, connection,
                                     new Log(ELogCategoria.INFO.getId(), EEtapa.CARREGAMENTO.getId()),
                                     "Inserindo lote de perfis de turistas no banco...",
                                     false
                             );
 
                             try {
-                                Load.loadPerfis(
+                                Load.loadPerfis(jdbc,
                                         batchArgs,
                                         fkPaisesDoLote,
                                         fkUfsDoLote,
@@ -799,14 +791,14 @@ public class ETL {
                                         "Fichas Síntese " + edicaoFichasSinteses
                                 );
 
-                                Event.registerEvent(
+                                Event.registerEvent( jdbc, connection,
                                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.CARREGAMENTO.getId()),
                                         "Perfis de turistas carregados com sucesso no banco.",
                                         false
                                 );
 
                             } catch (Exception e) {
-                                Event.registerEvent(
+                                Event.registerEvent( jdbc, connection,
                                         new Log(ELogCategoria.ERRO.getId(), EEtapa.CARREGAMENTO.getId()),
                                         "Erro ao carregar perfis de turistas no banco.",
                                         e,
@@ -814,14 +806,14 @@ public class ETL {
                                 );
                             }
 
-                            DataBaseConnection.getConnection().commit();
+                            connection.commit();
 
                             batchArgs.clear();
                             fkPaisesDoLote.clear();
                             fkUfsDoLote.clear();
                             batchFonteArgs.clear();
 
-                            Event.registerEvent(
+                            Event.registerEvent( jdbc, connection,
                                     new Log(ELogCategoria.INFO.getId(), EEtapa.TRANSFORMACAO.getId()),
                                     " Gerando mais perfis de turistas...",
                                     false
@@ -833,19 +825,19 @@ public class ETL {
                 }
 
                 if (!batchArgs.isEmpty()) {
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                             batchArgs.size() + " perfis criados com sucesso!",
                             false
                     );
-                    Event.registerEvent(
+                    Event.registerEvent( jdbc, connection,
                             new Log(ELogCategoria.INFO.getId(), EEtapa.CARREGAMENTO.getId()),
                             "Inserindo últimos perfis de turistas no banco...",
                             false
                     );
 
                     try {
-                        Load.loadPerfis(
+                        Load.loadPerfis(jdbc,
                                 batchArgs,
                                 fkPaisesDoLote,
                                 fkUfsDoLote,
@@ -853,7 +845,7 @@ public class ETL {
                                 "Fichas Síntese " + edicaoFichasSinteses
                         );
 
-                        Event.registerEvent(
+                        Event.registerEvent( jdbc, connection,
                                 new Log(ELogCategoria.SUCESSO.getId(), EEtapa.CARREGAMENTO.getId()),
                                 "Perfis de turistas carregados com sucesso no banco.",
                                 true,
@@ -861,7 +853,7 @@ public class ETL {
                         );
 
                     } catch (Exception e) {
-                        Event.registerEvent(
+                        Event.registerEvent( jdbc, connection,
                                 new Log(ELogCategoria.ERRO.getId(), EEtapa.CARREGAMENTO.getId()),
                                 "Erro ao carregar perfis de turistas no banco.",
                                 e,
@@ -870,7 +862,7 @@ public class ETL {
                         );
                     }
 
-                    DataBaseConnection.getConnection().commit();
+                    connection.commit();
 
                     batchArgs.clear();
                     fkPaisesDoLote.clear();
@@ -878,7 +870,7 @@ public class ETL {
                     batchFonteArgs.clear();
                 }
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Criação e inserção dos perfis finalizada com sucesso!",
                         true,
@@ -888,9 +880,8 @@ public class ETL {
                 DataBaseConnection.getConnection().close();
 
             } catch (Exception e) {
-                processamentoPerfisSucesso = false;
 
-                Event.registerEvent(
+                Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                         "Erro durante o processamento dos perfis de turistas.",
                         e,
@@ -900,7 +891,7 @@ public class ETL {
             }
 
             // 8. FIM DO PROCESSO ETL
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.INFO.getId(),
                             EEtapa.INCIALIZACAO.getId()),
                     "Fim do processo de ETL.",
@@ -908,16 +899,16 @@ public class ETL {
             );
 
 
-            List<String> webhooks = ConfiguracaoSlackDAO.findWebhooksByEtapa(EEtapa.FINALIZACAO.getId());
+            List<String> webhooks = ConfiguracaoSlackDAO.findWebhooksByEtapa(jdbc, EEtapa.FINALIZACAO.getId());
             if (!webhooks.isEmpty()) {
                 for (String webhook : webhooks) {
-                    Slack.sendNotification(webhook, "Sua dashboard está atualizada! Entre e confira já! " + "tada");
+                    Slack.sendNotification(webhook, ":tada: Sua dashboard está atualizada! Entre e confira já!");
                 }
             }
 
 
         } catch (Exception e) {
-            Event.registerEvent(
+            Event.registerEvent( jdbc, connection,
                     new Log(ELogCategoria.ERRO.getId(), EEtapa.TRANSFORMACAO.getId()),
                     "Erro durante o processamento dos perfis de turistas.",
                     e,
@@ -952,6 +943,30 @@ public class ETL {
             }
         }
         return paisesNovos;
+    }
+
+    public static String extrairAno(String nomeArquivo) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d{4})-(\\d{4})");
+        java.util.regex.Matcher matcher = pattern.matcher(nomeArquivo);
+
+        if (matcher.find()) {
+
+            return matcher.group(2);
+        } else {
+            return null;
+        }
+    }
+
+    public static String extrairAnoChegadas(String nomeArquivo) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d{4})");
+        java.util.regex.Matcher matcher = pattern.matcher(nomeArquivo);
+
+        String ultimoAnoEncontrado = null;
+        while (matcher.find()) {
+            ultimoAnoEncontrado = matcher.group(1); // guarda o último ano encontrado
+        }
+
+        return ultimoAnoEncontrado; // se encontrou pelo menos um ano, retorna o último
     }
 
 

@@ -106,17 +106,6 @@ public class Transform{
             );
 
         } catch (Exception e) {
-            // Log no banco
-//            logDAO.insertLog(
-//                    1,
-//                    1, // Erro
-//                    1,
-//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-//                    LocalDateTime.now(),
-//                    0,
-//                    0,
-//                    "Fonte_Dados"
-//            );
             throw e;
         }
     }
@@ -140,17 +129,6 @@ public class Transform{
                     TransformUtils.transformListPermanenciaMediaMotivo(data, 8)
             );
         } catch (Exception e) {
-            // Log no banco
-//            logDAO.insertLog(
-//                    1,
-//                    1, // Erro
-//                    1,
-//                    "Erro ao tentar transforma dados de chegada: " + e.getMessage(),
-//                    LocalDateTime.now(),
-//                    0,
-//                    0,
-//                    "Fonte_Dados"
-//            );
             throw e;
         }
     }
@@ -166,17 +144,6 @@ public class Transform{
         List<PerfilDTO> perfis = new ArrayList<>();
 
         try {
-
-//            logDAO.insertLog(
-//                    1,  // fk_fonte (ajuste conforme necessário)
-//                    3,  // Categoria: Sucesso (indica que o processo está começando)
-//                    1,  // Etapa: Extração (ajuste conforme necessário, ou utilize a etapa correta)
-//                    "Criando perfis",
-//                    LocalDateTime.now(),
-//                    0,  // Quantidade lida ainda não processada
-//                    0,  // Quantidade inserida
-//                    "Perfil_Estimado"
-//            );
 
             String paisOrigem = chegada.getPaisOrigem();
             String ufDestino = chegada.getUfDestino();

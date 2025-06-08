@@ -8,17 +8,7 @@ import tour.wise.util.DataBaseConnection;
 
 public class DestinoDAO {
 
-    private static final JdbcTemplate jdbcTemplate;
-
-    static {
-        try {
-            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao inicializar JdbcTemplate no DestinoDAO: " + e.getMessage(), e);
-        }
-    }
-
-    public void insertLote(List<Destino> destinos) {
+    public void insertLote(JdbcTemplate jdbcTemplate, List<Destino> destinos) {
         String sql = """
         INSERT INTO destino (
             fk_perfil_estimado_turistas,

@@ -3,9 +3,6 @@ package tour.wise;
 import tour.wise.util.ConfigLoader;
 import tour.wise.etl.ETL;
 import tour.wise.util.S3;
-
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -89,10 +86,6 @@ public class Main {
                     "Ministério do Turismo"
             );
 
-            S3.moveFile(caminhoChegadaTurista, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoChegadaTurista);
-            S3.moveFile(caminhoArquivoFichaSinteseBrasil, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSinteseBrasil);
-            S3.moveFile(caminhoArquivoFichaSinteseEstado, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSinteseEstado);
-            S3.moveFile(caminhoArquivoFichaSintesePaises, ConfigLoader.get("S3_PATH_FILES_LOAD_NAME") + "/" + caminhoArquivoFichaSintesePaises);
         }
     }
 }

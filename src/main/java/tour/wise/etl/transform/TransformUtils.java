@@ -172,7 +172,7 @@ public class TransformUtils {
         return destinosPorMotivo;
     }
 
-    protected List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
+    protected static List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
         Map<String, Double> destinosMap = new HashMap<>();
 
         for (List<Object> destinoData : destinosData) {
@@ -226,7 +226,7 @@ public class TransformUtils {
         return result;
     }
 
-    protected PaisOrigemDTO createPaisOrigem(List<Object> row) {
+    protected static PaisOrigemDTO createPaisOrigem(List<Object> row) {
         Object obj0 = row.get(0);
         String nome = (obj0 instanceof String) ? (String) obj0 : obj0.toString();
 

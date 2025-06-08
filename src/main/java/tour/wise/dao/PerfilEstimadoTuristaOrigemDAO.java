@@ -7,16 +7,8 @@ import java.util.List;
 
 public class PerfilEstimadoTuristaOrigemDAO {
 
-    private static final JdbcTemplate jdbcTemplate;
 
-    static {
-        try {
-            jdbcTemplate = DataBaseConnection.getJdbcTemplate();
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao inicializar JdbcTemplate no PerfilEstimadoTuristaOrigemDAO: " + e.getMessage(), e);
-        }
-    }
-    public static void insertLote(List<Object[]> batchArgs) {
+    public static void insertLote(JdbcTemplate jdbcTemplate, List<Object[]> batchArgs) {
         String sql = """
         INSERT INTO perfil_estimado_turista_origem
         (fk_origem_dados, fk_perfil_estimado_turistas, fk_pais_origem, fk_uf_entrada, data_coleta)
