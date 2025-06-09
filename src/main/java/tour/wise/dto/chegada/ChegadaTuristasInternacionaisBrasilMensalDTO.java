@@ -1,4 +1,4 @@
-package tour.wise.dto;
+package tour.wise.dto.chegada;
 
 public class ChegadaTuristasInternacionaisBrasilMensalDTO {
     private Integer mes;

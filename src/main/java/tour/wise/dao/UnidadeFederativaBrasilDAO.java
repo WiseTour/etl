@@ -3,8 +3,6 @@ package tour.wise.dao;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import tour.wise.model.UnidadeFederativaBrasil;
-import tour.wise.util.DataBaseConnection;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -22,7 +20,6 @@ public class UnidadeFederativaBrasilDAO {
             return uf;
         }
     }
-
 
     // Lista todos
     public static List<UnidadeFederativaBrasil> findAll(JdbcTemplate jdbcTemplate) {

@@ -1,7 +1,6 @@
 package tour.wise.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import tour.wise.util.DataBaseConnection;
 import java.util.List;
 
 public class ConfiguracaoSlackDAO {

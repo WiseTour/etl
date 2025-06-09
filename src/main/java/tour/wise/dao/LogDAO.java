@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import tour.wise.model.Log;
-import tour.wise.util.DataBaseConnection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;

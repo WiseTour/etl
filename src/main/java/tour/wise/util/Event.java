@@ -3,11 +3,8 @@ package tour.wise.util;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dao.ConfiguracaoSlackDAO;
 import tour.wise.dao.LogDAO;
-import tour.wise.model.ConfiguracaoSlack;
 import tour.wise.model.Log;
-
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,7 +26,6 @@ public class Event {
         System.out.println(LocalDateTime.now() + ": " + mensagemFormatada + (e != null ? " - " + e.getMessage() : ""));
         if(e != null) throw e;
     }
-
 
     public static void registerEvent(JdbcTemplate jdbcTemplate, Connection connection, Log log, String mensagem) throws Exception {
         registerEvent(jdbcTemplate, connection, log, mensagem, null, true, "");
