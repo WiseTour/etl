@@ -283,8 +283,8 @@ public class TransformUtils {
             List<String> destinosConvertidos = new ArrayList<>();
 
             if (destinosOriginal.isEmpty()) {
-                // Caso não tenha destinos, procurar se "Outros Estados" tem sigla
-                String siglaOutros = nomeParaSigla.getOrDefault("Outros Estados", "Outros Estados");
+                // Caso não tenha destinos
+                String siglaOutros = nomeParaSigla.getOrDefault("Outras Unidades da Federação", "Outras Unidades da Federação");
                 destinosConvertidos.add(siglaOutros);
             } else {
                 for (String destino : destinosOriginal) {

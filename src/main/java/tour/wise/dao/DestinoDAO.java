@@ -39,7 +39,7 @@ public class DestinoDAO {
                     fkPaisOrigem,
                     ufDestino,
                     fkUfEntrada,
-                    permanenciaMediaDias
+                    permanenciaMediaDias/ufsDestino.size()
             );
         }
     }

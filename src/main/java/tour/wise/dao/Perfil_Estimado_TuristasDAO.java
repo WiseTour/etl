@@ -45,8 +45,6 @@ public class Perfil_Estimado_TuristasDAO {
                 return ps;
             }, holder);
 
-            jdbcTemplate.getDataSource().getConnection().commit();
-
             Number idGerado = holder.getKey();
             if (idGerado != null) {
                 int idPerfil = idGerado.intValue();

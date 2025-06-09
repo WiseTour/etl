@@ -173,14 +173,11 @@ public class Transform{
                     perfilDTOEstado.setTaxaTuristas(
                             perfilDTOEstado.getTaxaTuristas()
                     );
-                    if (Double.isInfinite(perfilDTOEstado.getTaxaTuristas())) {
-                        System.out.println(perfilDTOEstado.getTaxaTuristas() + "TAXA - ESTADO/PAIS é infinito!");
-                    }
-                    Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas())).intValue();
+
+                    Integer qtdTuristas = (int) Math.round(chegada.getQtdChegadas() * perfilDTOEstado.getTaxaTuristas());
+
                     perfilDTOEstado.setQuantidadeTuristas(qtdTuristas);
-                    if (Double.isInfinite(qtdTuristas)) {
-                        System.out.println(qtdTuristas + "quantidade - ESTADO/PAIS é infinito!");
-                    }
+
 
                 }
 
@@ -241,11 +238,10 @@ public class Transform{
                             perfilEstado.getTaxaTuristas() *
                                     taxaTuristas / 100
                     );
-                    if (Double.isInfinite(perfilEstado.getTaxaTuristas())) {
 
-                    }
                     Double taxaAtualizada = perfilEstado.getTaxaTuristas();
-                    Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * taxaAtualizada)).intValue();
+                    Integer qtdTuristas = (int) Math.round(chegada.getQtdChegadas() * taxaAtualizada);
+
 
                     perfilEstado.setQuantidadeTuristas(qtdTuristas);
 
@@ -276,15 +272,8 @@ public class Transform{
                     perfilPais.setAno(chegada.getAno());
                     perfilPais.setMes(chegada.getMes());
                     perfilPais.setViaAcesso(chegada.getViaAcesso());
-                    Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilPais.getTaxaTuristas())).intValue();
+                    Integer qtdTuristas = (int) Math.round(chegada.getQtdChegadas() * perfilPais.getTaxaTuristas());
                     perfilPais.setQuantidadeTuristas(qtdTuristas);
-
-                    if (Double.isInfinite(perfilPais.getTaxaTuristas())) {
-                        System.out.println(perfilPais.getTaxaTuristas() + "TAXA - PAIS é infinito!");
-                    }
-                    if (Double.isInfinite(qtdTuristas)) {
-                        System.out.println(qtdTuristas + "QTD - PAIS é infinito!");
-                    }
 
                 }
 
@@ -308,15 +297,8 @@ public class Transform{
                 perfilBrasil.setAno(chegada.getAno());
                 perfilBrasil.setMes(chegada.getMes());
                 perfilBrasil.setViaAcesso(chegada.getViaAcesso());
-                Integer qtdTuristas = ((Double) (chegada.getQtdChegadas() * perfilBrasil.getTaxaTuristas())).intValue();
+                Integer qtdTuristas = (int) Math.round(chegada.getQtdChegadas() * perfilBrasil.getTaxaTuristas());
                 perfilBrasil.setQuantidadeTuristas(qtdTuristas);
-                if (Double.isInfinite(perfilBrasil.getTaxaTuristas())) {
-                    System.out.println(perfilBrasil.getTaxaTuristas() + "TAXA - BRASIL é infinito!");
-                }
-                if (Double.isInfinite(qtdTuristas)) {
-                    System.out.println(qtdTuristas + "QTD - BRASIL é infinito!");
-                }
-
             }
 
             // Remove todos os perfis com quantidadeTuristas < 1
