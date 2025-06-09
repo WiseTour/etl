@@ -2,7 +2,6 @@ package tour.wise.etl.extract;
 
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Workbook;
-import tour.wise.etl.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ public class Extract {
 
         try {
 
-            String sheetName = Service.getSheetName(workbook, sheetNumber);
+            String sheetName = ExtractUtils.getSheetName(workbook, sheetNumber);
             String estado = sheetName.split("\\s+", 2)[1]; // UF de entrada
 
             // Parâmetros das seções a serem lidas
@@ -43,7 +42,7 @@ public class Extract {
             for (int[] range : ranges) {
 
                 data.add(
-                        Service.extractRange(
+                        ExtractUtils.extractRange(
                                 fileName,
                                 workbook,
                                 sheetNumber,
@@ -68,7 +67,7 @@ public class Extract {
             for (int[] range : ranges) {
 
                 data.add(
-                        Service.extractRange(
+                        ExtractUtils.extractRange(
                                 fileName,
                                 workbook,
                                 sheetNumber,
@@ -93,7 +92,7 @@ public class Extract {
     public static List<List<List<Object>>> extractFichasSintesePaisData(Workbook workbook, String fileName, Integer sheetNumber, List<Integer> leftColluns, List<Integer> rightColluns, List<String> collunsType) throws IOException {
         try{
 
-            String sheetName = Service.getSheetName(workbook, sheetNumber);
+            String sheetName = ExtractUtils.getSheetName(workbook, sheetNumber);
             String pais = sheetName.split("\\s+", 2)[1]; // pais de origem
 
             // Parâmetros das seções a serem lidas
@@ -118,7 +117,7 @@ public class Extract {
             for (int[] range : ranges) {
 
                 data.add(
-                        Service.extractRange(
+                        ExtractUtils.extractRange(
                                 fileName,
                                 workbook,
                                 sheetNumber,
@@ -143,7 +142,7 @@ public class Extract {
             for (int[] range : ranges) {
 
                 data.add(
-                        Service.extractRange(
+                        ExtractUtils.extractRange(
                                 fileName,
                                 workbook,
                                 sheetNumber,
@@ -192,7 +191,7 @@ public class Extract {
             for (int[] range : ranges) {
 
                 data.add(
-                        Service.extractRange(
+                        ExtractUtils.extractRange(
                                 fileName,
                                 workbook,
                                 sheetNumber,
@@ -216,7 +215,7 @@ public class Extract {
             for (int[] range : ranges) {
 
                 data.add(
-                        Service.extractRange(
+                        ExtractUtils.extractRange(
                                 fileName,
                                 workbook,
                                 sheetNumber,
@@ -244,7 +243,7 @@ public class Extract {
         List<List<Object>> data = null;
 
         try {
-            data = Service.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, workbook);
+            data = ExtractUtils.extract(fkFonte, tabela, fileName, sheetNumber, header, colluns, types, workbook);
 
             workbook.close();
 

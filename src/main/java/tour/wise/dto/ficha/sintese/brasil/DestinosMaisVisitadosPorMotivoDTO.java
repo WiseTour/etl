@@ -4,9 +4,9 @@ import java.util.List;
 
 public class DestinosMaisVisitadosPorMotivoDTO {
     private String motivo;
-    private List<DestinoMaisVisitadoDTO> destinos_mais_visistado;
+    private List<CombinacaoDestinoDTO> destinos_mais_visistado;
 
-    public DestinosMaisVisitadosPorMotivoDTO(String motivo, List<DestinoMaisVisitadoDTO> destinos_mais_visistado) {
+    public DestinosMaisVisitadosPorMotivoDTO(String motivo, List<CombinacaoDestinoDTO> destinos_mais_visistado) {
         this.motivo = motivo;
         this.destinos_mais_visistado = destinos_mais_visistado;
     }
@@ -19,11 +19,11 @@ public class DestinosMaisVisitadosPorMotivoDTO {
         this.motivo = motivo;
     }
 
-    public List<DestinoMaisVisitadoDTO> getDestinos_mais_visistado() {
+    public List<CombinacaoDestinoDTO> getDestinos_mais_visistado() {
         return destinos_mais_visistado;
     }
 
-    public void setDestinos_mais_visistado(List<DestinoMaisVisitadoDTO> destinos_mais_visistado) {
+    public void setDestinos_mais_visistado(List<CombinacaoDestinoDTO> destinos_mais_visistado) {
         this.destinos_mais_visistado = destinos_mais_visistado;
     }
 

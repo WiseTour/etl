@@ -4,6 +4,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import tour.wise.dao.*;
 import tour.wise.model.OrigemDados;
 import tour.wise.model.Pais;
+
+import java.sql.SQLException;
 import java.util.List;
 
 public class Load {
@@ -36,7 +38,7 @@ public class Load {
             List<String> fkUfsDoLote,
             List<Object[]> batchFonteArgs,
             String tituloArquivoFonteFichasSinteses
-    ){
+    ) throws SQLException {
         try {
             List<Integer> idsInseridos = Perfil_Estimado_TuristasDAO.insertLoteRetornandoIds(jdbcTemplate, batchArgs);
             int fkFonte = OrigemDadosDAO.findByTitulo(jdbcTemplate, tituloArquivoFonteFichasSinteses).getIdOrigemDados();

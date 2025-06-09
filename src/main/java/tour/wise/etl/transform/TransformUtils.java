@@ -1,9 +1,13 @@
 package tour.wise.etl.transform;
 
+import tour.wise.dao.UnidadeFederativaBrasilDAO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.PaisOrigemDTO;
 import tour.wise.dto.perfil.PerfilDTO;
-import tour.wise.etl.Service;
+import tour.wise.etl.extract.ExtractUtils;
+import tour.wise.model.UnidadeFederativaBrasil;
+import tour.wise.util.DataBaseConnection;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,7 +24,7 @@ public class TransformUtils {
 
     protected static Integer transformAno(List<List<List<Object>>> data, Integer index) {
         // Apenas acessa e converte o valor necessário
-        return Service.parseToInteger(data.get(index).get(0).get(1).toString());
+        return ExtractUtils.parseToInteger(data.get(index).get(0).get(1).toString());
     }
 
     protected static List<GeneroDTO> transformListGenero(List<List<List<Object>>> data, Integer index) {
@@ -172,7 +176,7 @@ public class TransformUtils {
         return destinosPorMotivo;
     }
 
-    protected static List<DestinoMaisVisitadoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
+    protected static List<CombinacaoDestinoDTO> createListDestinosMaisVisitados(List<List<Object>> destinosData) {
         Map<String, Double> destinosMap = new HashMap<>();
 
         for (List<Object> destinoData : destinosData) {
@@ -189,18 +193,11 @@ public class TransformUtils {
         List<DestinoMaisVisitadoDTO> destinos = new ArrayList<>(destinosMap.size());
 
 
-        double total = 0;
         for (Map.Entry<String, Double> entry : destinosMap.entrySet()) {
             destinos.add(new DestinoMaisVisitadoDTO(entry.getKey(), entry.getValue()));
-            total += entry.getValue();
         }
 
-        double outrosValor = 100.0 - total;
-        if (outrosValor > 0) {
-            destinos.add(new DestinoMaisVisitadoDTO("Outros estados", outrosValor));
-        }
-
-        return destinos;
+        return estimarCombinacoesDestinos(destinos);
     }
 
     protected static String extractNomePais(List<List<List<Object>>> data, Integer index) {
@@ -241,6 +238,66 @@ public class TransformUtils {
 
         return new PaisOrigemDTO(nome, valor);
     }
+
+    public static List<CombinacaoDestinoDTO> estimarCombinacoesDestinos(List<DestinoMaisVisitadoDTO> destinos) {
+        List<CombinacaoDestinoDTO> resultadoBruto = new ArrayList<>();
+        int n = destinos.size();
+        int totalCombinacoes = 1 << n; // 2^n
+        double somaTotal = 0.0;
+
+        // Mapeia nome -> sigla
+        List<UnidadeFederativaBrasil> ufs = UnidadeFederativaBrasilDAO.findAll(DataBaseConnection.getJdbcTemplate());
+        Map<String, String> nomeParaSigla = new HashMap<>();
+        for (UnidadeFederativaBrasil uf : ufs) {
+            nomeParaSigla.put(uf.getUnidadeFederativa(), uf.getSigla());
+        }
+
+        for (int i = 0; i < totalCombinacoes; i++) {
+            List<String> destinosIncluidos = new ArrayList<>();
+            double probabilidade = 1.0;
+
+            for (int j = 0; j < n; j++) {
+                DestinoMaisVisitadoDTO destino = destinos.get(j);
+                double p = destino.getPorcentagem() / 100.0;
+                boolean incluido = (i & (1 << j)) != 0;
+
+                if (incluido) {
+                    probabilidade *= p;
+                    destinosIncluidos.add(destino.getDestino());
+                } else {
+                    probabilidade *= (1 - p);
+                }
+            }
+
+            resultadoBruto.add(new CombinacaoDestinoDTO(destinosIncluidos, probabilidade));
+            somaTotal += probabilidade;
+        }
+
+        // Normaliza para que a soma seja 100%
+        List<CombinacaoDestinoDTO> resultadoFinal = new ArrayList<>();
+        for (CombinacaoDestinoDTO combinacao : resultadoBruto) {
+            double porcentagemFinal = (combinacao.getPorcentagem() / somaTotal) * 100.0;
+            porcentagemFinal = Math.round(porcentagemFinal * 10.0) / 10.0;
+
+            List<String> destinosOriginal = combinacao.getDestinos();
+            List<String> destinosConvertidos = new ArrayList<>();
+
+            if (destinosOriginal.isEmpty()) {
+                // Caso não tenha destinos
+                String siglaOutros = nomeParaSigla.getOrDefault("Outras Unidades da Federação", "Outras Unidades da Federação");
+                destinosConvertidos.add(siglaOutros);
+            } else {
+                for (String destino : destinosOriginal) {
+                    destinosConvertidos.add(nomeParaSigla.getOrDefault(destino, destino));
+                }
+            }
+
+            resultadoFinal.add(new CombinacaoDestinoDTO(destinosConvertidos, porcentagemFinal));
+        }
+
+        return resultadoFinal;
+    }
+
 
     protected static List<PerfilDTO> createPerfisCombinations(FichaSinteseBrasilDTO fichaSinteseBrasilDTO) {
         List<PerfilDTO> perfis = new ArrayList<>();
@@ -288,8 +345,8 @@ public class TransformUtils {
                                 throw new IllegalArgumentException("Dados faltantes para o motivo '" + motivo + "'");
                             }
 
-                            for (DestinoMaisVisitadoDTO destino : destinosMotivo.getDestinos_mais_visistado()) {
-                                double taxaTuristasDestino = destino.getPorcentagem();
+                            for (CombinacaoDestinoDTO destinos : destinosMotivo.getDestinos_mais_visistado()) {
+                                double taxaTuristasDestino = destinos.getPorcentagem();
 
                                 double taxaTuristas = (generoPorc / 100.0) *
                                         (faixaPorc / 100.0) *
@@ -315,7 +372,8 @@ public class TransformUtils {
                                                 motivo,
                                                 motivacao.getMotivacao(),
                                                 gasto.getGasto() * permanencia.getDias(),
-                                                destino
+                                                destinos.getDestinos(),
+                                                permanencia.getDias()
                                         ));
                                     }
                                 } else {
@@ -329,7 +387,8 @@ public class TransformUtils {
                                             motivo,
                                             null,
                                             gasto.getGasto() * permanencia.getDias(),
-                                            destino
+                                            destinos.getDestinos(),
+                                            permanencia.getDias()
                                     ));
                                 }
                             }

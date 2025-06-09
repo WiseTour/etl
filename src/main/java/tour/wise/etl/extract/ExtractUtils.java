@@ -1,18 +1,13 @@
-package tour.wise.etl;
+package tour.wise.etl.extract;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import org.apache.poi.ss.usermodel.*;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-
-
-public class Service {
+public class ExtractUtils {
 
 
     public static List<List<Object>> extract(Integer fkFonte, String tabela, String fileName, Integer sheetNumber, Integer header, Integer colluns, List<String> types, Workbook workbook) {
@@ -159,5 +154,52 @@ public class Service {
             return 0; // ou lance uma exceção se quiser validar
         }
     }
+
+    public static List<Integer> getFirstTwoColumnIndexesByValueInRow(Workbook workbook, int sheetNumber, int rowIndex, String value) {
+        int numeroDePlanilhas = workbook.getNumberOfSheets();
+        List<Integer> colunasEncontradas = new ArrayList<>();
+
+        if (sheetNumber < 0 || sheetNumber >= numeroDePlanilhas) {
+            throw new IllegalArgumentException("Índice de planilha fora do intervalo. Total de planilhas: " + numeroDePlanilhas);
+        }
+
+        Sheet sheet = workbook.getSheetAt(sheetNumber);
+        Row row = sheet.getRow(rowIndex);
+
+        if (row == null) {
+            throw new IllegalArgumentException("Linha " + rowIndex + " não encontrada na planilha.");
+        }
+
+        for (Cell cell : row) {
+            String cellValue = "";
+
+            if (cell.getCellType() == CellType.STRING) {
+                cellValue = cell.getStringCellValue().trim();
+            } else if (cell.getCellType() == CellType.NUMERIC) {
+                double numericValue = cell.getNumericCellValue();
+                if (numericValue == (int) numericValue) {
+                    cellValue = String.valueOf((int) numericValue);
+                } else {
+                    cellValue = String.valueOf(numericValue);
+                }
+            }
+
+            if (cellValue.equalsIgnoreCase(value)) {
+                colunasEncontradas.add(cell.getColumnIndex());
+
+                if (colunasEncontradas.size() == 2) {
+                    break; // Para após encontrar as duas primeiras
+                }
+            }
+        }
+
+        if (colunasEncontradas.isEmpty()) {
+            throw new IllegalArgumentException("Valor \"" + value + "\" não encontrado na linha " + rowIndex + ".");
+        }
+
+        return colunasEncontradas;
+    }
+
+
 
 }

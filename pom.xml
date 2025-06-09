@@ -89,11 +89,17 @@
       <scope>compile</scope>
     </dependency>
 
-
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
       <version>9.0.0</version>
+    </dependency>
+
+    <!-- Logging simples para eliminar warnings -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>1.7.36</version>
     </dependency>
 
   </dependencies>
@@ -124,7 +130,7 @@
           </descriptorRefs>
           <archive>
             <manifest>
-              <mainClass>tour.wise.Main</mainClass> <!-- Substitua aqui também -->
+              <mainClass>tour.wise.Main</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -140,6 +146,5 @@
       </plugin>
     </plugins>
   </build>
-
 
 </project>
