@@ -7,7 +7,6 @@ import org.springframework.dao.DataAccessException;
 
 public class OrigemDadosDAO {
 
-
     // RowMapper
     private static final RowMapper<OrigemDados> origemDadosRowMapper = (rs, rowNum) -> {
         OrigemDados origem = new OrigemDados();
@@ -28,7 +27,6 @@ public class OrigemDadosDAO {
         );
     }
 
-
     // Find by Título
     public static OrigemDados findByTitulo(JdbcTemplate jdbcTemplate, String titulo) {
         String sql = "SELECT * FROM origem_dados WHERE titulo_arquivo_fonte = ?";
@@ -38,7 +36,5 @@ public class OrigemDadosDAO {
             return null;
         }
     }
-
-
 
 }

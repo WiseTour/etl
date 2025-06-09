@@ -7,7 +7,6 @@ import tour.wise.dto.perfil.PerfilDTO;
 import tour.wise.etl.extract.ExtractUtils;
 import tour.wise.model.UnidadeFederativaBrasil;
 import tour.wise.util.DataBaseConnection;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

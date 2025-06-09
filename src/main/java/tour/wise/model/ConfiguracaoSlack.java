@@ -1,7 +1,5 @@
 package tour.wise.model;
 
-import java.util.List;
-
 public class ConfiguracaoSlack {
     private int idConfiguracaoSlack;
     private int fkUsuario;

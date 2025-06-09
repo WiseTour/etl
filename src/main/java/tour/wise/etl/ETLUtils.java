@@ -1,8 +1,7 @@
 package tour.wise.etl;
 
-import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
+import tour.wise.dto.chegada.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.model.Pais;
-
 import java.time.Year;
 import java.util.*;
 import java.util.regex.Matcher;

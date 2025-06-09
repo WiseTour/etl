@@ -10,7 +10,7 @@ import tour.wise.etl.transform.Transform;
 import tour.wise.util.DataBaseConnection;
 import tour.wise.util.Event;
 import tour.wise.dao.*;
-import tour.wise.dto.ChegadaTuristasInternacionaisBrasilMensalDTO;
+import tour.wise.dto.chegada.ChegadaTuristasInternacionaisBrasilMensalDTO;
 import tour.wise.dto.ficha.sintese.FichaSintesePaisDTO;
 import tour.wise.dto.ficha.sintese.brasil.*;
 import tour.wise.dto.ficha.sintese.estado.FichaSinteseEstadoDTO;
@@ -112,7 +112,7 @@ public class ETL {
 
             // 2.1 CARREGAMENTO DA FONTE DAS CHEGADAS NA TABELA ORIGEM_DADOS
             try {
-                Load.loadOrigemDados(jdbc, new OrigemDados("Chegadas " + edicaoChegadas, edicaoChegadas, orgaoEmissor));
+                Load.loadOrigemDados(jdbc, connection, new OrigemDados("Chegadas " + edicaoChegadas, edicaoChegadas, orgaoEmissor));
                 connection.commit();
 
                 Event.registerEvent( jdbc, connection,
@@ -193,7 +193,9 @@ public class ETL {
                         0,
                         0,
                         12,
-                        List.of("String", "Numeric", "String", "Numeric", "String", "Numeric", "String", "Numeric", "Numeric", "String", "Numeric", "Numeric")
+                        List.of("String", "Numeric", "String", "Numeric", "String", "Numeric", "String", "Numeric", "Numeric", "String", "Numeric", "Numeric"),
+                        jdbc,
+                        connection
                 );
 
                 // 2.4 EXTRAÇÃO DOS DADOS DE CHEGADA FINALIZADA
@@ -231,6 +233,8 @@ public class ETL {
             try {
                 chegadasTuristasInternacionaisBrasilMensalDTO =
                         Transform.transformChegadasTuristasInternacionaisBrasilMensal(
+                                jdbc,
+                                connection,
                                 chegadasTuristasInternacionaisBrasilMensalData,
                                 orgaoEmissor,
                                 edicaoChegadas);
@@ -267,7 +271,7 @@ public class ETL {
                 // 4.2 INSERIR PAÍSES NOVOS
                 if (!paises.isEmpty()) {
                     for (Pais pais : paises) {
-                        Load.loadPais(jdbc, pais);
+                        Load.loadPais(jdbc, connection, pais);
                     }
                     connection.commit();
                 }
@@ -300,7 +304,7 @@ public class ETL {
 
             // 5.1 CARREGAMENTO DA FONTE DAS FICHAS SÍNTESES NA TABELA ORIGEM_DADOS
             try {
-                Load.loadOrigemDados(jdbc, new OrigemDados("Fichas Síntese " + edicaoFichasSinteses, edicaoFichasSinteses, orgaoEmissor));
+                Load.loadOrigemDados(jdbc, connection, new OrigemDados("Fichas Síntese " + edicaoFichasSinteses, edicaoFichasSinteses, orgaoEmissor));
                 connection.commit();
 
                 Event.registerEvent( jdbc, connection,
@@ -362,7 +366,9 @@ public class ETL {
                         1,
                         List.of(1, columns.getFirst()),
                         List.of(10, columns.getLast()),
-                        List.of("string", "numeric")
+                        List.of("string", "numeric"),
+                        jdbc,
+                        connection
                 );
 
                 Event.registerEvent( jdbc, connection,
@@ -404,7 +410,7 @@ public class ETL {
                     "arrows_counterclockwise"
             );
             try {
-                fichaSinteseBrasilDTO = Transform.transformFichaSinteseBrasil(fichaSinteseBrasilData);
+                fichaSinteseBrasilDTO = Transform.transformFichaSinteseBrasil(jdbc, connection, fichaSinteseBrasilData);
 
                 Event.registerEvent( jdbc, connection,
                         new Log(ELogCategoria.SUCESSO.getId(), EEtapa.TRANSFORMACAO.getId()),
@@ -466,7 +472,9 @@ public class ETL {
                             indicePlanilha,
                             List.of(1, columns.getFirst()),
                             List.of(10, columns.getLast()),
-                            List.of("string", "numeric")
+                            List.of("string", "numeric"),
+                            jdbc,
+                            connection
                     );
 
                     todasFichasSintesePaisData.add(fichaSintesePaisData);
@@ -523,7 +531,7 @@ public class ETL {
             boolean transformacaoSucesso = true;
             for (List<List<List<Object>>> fichaSintesePaisData : todasFichasSintesePaisData) {
                 try {
-                    FichaSintesePaisDTO dto = Transform.transformFichasSintesePais(fichaSintesePaisData);
+                    FichaSintesePaisDTO dto = Transform.transformFichasSintesePais(jdbc, connection, fichaSintesePaisData);
                     fichasSintesePaisDTO.add(dto);
 
                     Event.registerEvent( jdbc, connection,
@@ -601,7 +609,9 @@ public class ETL {
                             indicePlanilha,
                             List.of(1, columns.getFirst()),
                             List.of(10, columns.getLast()),
-                            List.of("string", "numeric")
+                            List.of("string", "numeric"),
+                            jdbc,
+                            connection
                     );
 
                     todasFichasSinteseEstadoData.add(fichaSinteseEstadoData);
@@ -657,7 +667,7 @@ public class ETL {
 
             for (List<List<List<Object>>> fichaSinteseEstadoData : todasFichasSinteseEstadoData) {
                 try {
-                    FichaSinteseEstadoDTO dto = Transform.transformFichasSinteseEstado(fichaSinteseEstadoData);
+                    FichaSinteseEstadoDTO dto = Transform.transformFichasSinteseEstado(jdbc, connection, fichaSinteseEstadoData);
                     fichasSinteseEstadoDTO.add(dto);
 
                     Event.registerEvent( jdbc, connection,
@@ -760,6 +770,8 @@ public class ETL {
 
                     // TRANSFORMAÇÃO
                     List<PerfilDTO> perfisEstimadosTuristas = Transform.transformPerfis(
+                            jdbc,
+                            connection,
                             chegada,
                             chegadasTuristasInternacionaisBrasilMensalDTO,
                             fichasSinteseEstadoDTO,
@@ -813,6 +825,7 @@ public class ETL {
 
                             try {
                                 Load.loadPerfis(jdbc,
+                                        connection,
                                         batchArgs,
                                         fkPaisesDoLote,
                                         fkUfsDoLote,
@@ -872,6 +885,7 @@ public class ETL {
 
                     try {
                         Load.loadPerfis(jdbc,
+                                connection,
                                 batchArgs,
                                 fkPaisesDoLote,
                                 fkUfsDoLote,

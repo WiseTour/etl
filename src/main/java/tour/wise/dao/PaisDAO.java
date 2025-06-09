@@ -1,10 +1,8 @@
 package tour.wise.dao;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import tour.wise.model.Pais;
-import tour.wise.util.DataBaseConnection;
 import java.util.List;
 
 public class PaisDAO {
