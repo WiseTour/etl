@@ -38,7 +38,7 @@ public class Transform{
             try {
                 String paisOrigem = String.valueOf(row.get(2));
                 String ufDestino = String.valueOf(row.get(4));
-                String viaAcesso = String.valueOf(row.get(6));
+                String viaAcesso = TransformUtils.padronizarViaAcesso(String.valueOf(row.get(6)));
 
                 Object anoObj = row.get(8);
                 Object mesObj = row.get(10);

@@ -297,6 +297,37 @@ public class TransformUtils {
         return resultadoFinal;
     }
 
+    static String padronizarViaAcesso(String viaAcesso) {
+        if (viaAcesso == null || viaAcesso.trim().isEmpty()) {
+            return viaAcesso;
+        }
+
+        String via = viaAcesso.trim().toLowerCase();
+
+        // Mapeamento de termos masculinos/variações para feminino
+        switch (via) {
+            case "aéreo":
+            case "aereo":
+                return "Aérea";
+            case "terrestre":
+                return "Terrestre";
+            case "marítimo":
+            case "maritimo":
+                return "Marítima";
+            case "fluvial":
+                return "Fluvial";
+            case "rodoviário":
+            case "rodoviario":
+                return "Rodoviária";
+            case "ferroviário":
+            case "ferroviario":
+                return "Ferroviária";
+            default:
+
+                return via.substring(0, 1).toUpperCase() + via.substring(1);
+        }
+    }
+
 
     protected static List<PerfilDTO> createPerfisCombinations(FichaSinteseBrasilDTO fichaSinteseBrasilDTO) {
         List<PerfilDTO> perfis = new ArrayList<>();
