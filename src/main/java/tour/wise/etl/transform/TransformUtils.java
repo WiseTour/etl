@@ -251,6 +251,9 @@ public class TransformUtils {
             nomeParaSigla.put(uf.getUnidadeFederativa(), uf.getSigla());
         }
 
+        // Garantir que "Outras Unidades da Federação" seja mapeada para "OF"
+        nomeParaSigla.put("Outras Unidades da Federação", "OF");
+
         for (int i = 0; i < totalCombinacoes; i++) {
             List<String> destinosIncluidos = new ArrayList<>();
             double probabilidade = 1.0;
@@ -282,12 +285,19 @@ public class TransformUtils {
             List<String> destinosConvertidos = new ArrayList<>();
 
             if (destinosOriginal.isEmpty()) {
-                // Caso não tenha destinos
-                String siglaOutros = nomeParaSigla.getOrDefault("Outras Unidades da Federação", "Outras Unidades da Federação");
-                destinosConvertidos.add(siglaOutros);
+                // Caso não tenha destinos, usar "OF" para "Outras"
+                destinosConvertidos.add("OF");
             } else {
                 for (String destino : destinosOriginal) {
-                    destinosConvertidos.add(nomeParaSigla.getOrDefault(destino, destino));
+                    // Usar getOrDefault com "OF" como padrão para "Outras Unidades da Federação"
+                    String sigla = nomeParaSigla.getOrDefault(destino, destino);
+
+                    // Verificação adicional para garantir que "Outras Unidades da Federação" vire "OF"
+                    if ("Outras Unidades da Federação".equals(destino)) {
+                        sigla = "OF";
+                    }
+
+                    destinosConvertidos.add(sigla);
                 }
             }
 
